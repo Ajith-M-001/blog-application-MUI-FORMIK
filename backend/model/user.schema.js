@@ -1,5 +1,12 @@
 import mongoose from "mongoose";
 import bcrypt from "bcrypt";
+import {
+  SESSION_PREFERENCE,
+  USER_ROLES,
+} from "../../common/constants/constants.js";
+import { v4 as uuidv4 } from "uuid";
+
+// Constants for reusable values
 
 // Session Schema
 const sessionSchema = new mongoose.Schema(
@@ -8,8 +15,8 @@ const sessionSchema = new mongoose.Schema(
       type: String,
       required: true,
       unique: true,
+      default: () => uuidv4(),
     },
-    maxSession: { type: Number, default: 5 },
     deviceInfo: {
       os: String,
       browser: String,
@@ -64,7 +71,7 @@ const userSchema = new mongoose.Schema(
     email: {
       type: String,
       unique: true,
-      sparse: false,
+      sparse: true,
       trim: true,
       lowercase: true,
     },
@@ -74,7 +81,7 @@ const userSchema = new mongoose.Schema(
     phoneNumber: {
       type: String,
       unique: true,
-      sparse: false,
+      sparse: true,
     },
     password: {
       type: String,
@@ -83,14 +90,15 @@ const userSchema = new mongoose.Schema(
     },
     roles: {
       type: [String],
-      enum: ["Super Admin", "Admin", "Author", "Reader", "Subscriber"],
-      default: ["Reader"],
+      enum: Object.values(USER_ROLES),
+      default: [USER_ROLES.READER],
     },
     sessionPreference: {
       type: String,
-      enum: ["single", "multiple"],
-      default: "multiple",
+      enum: Object.values(SESSION_PREFERENCE),
+      default: SESSION_PREFERENCE.MULTIPLE,
     },
+    maxSession: { type: Number, default: 5, min: 1, max: 5 },
     isActive: {
       type: Boolean,
       default: false,
@@ -133,14 +141,6 @@ userSchema.pre("save", async function (next) {
   if (this.isModified("password")) {
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
-  }
-  next();
-});
-
-// Ensure either email or phoneNumber is provided
-userSchema.pre("validate", function (next) {
-  if (!this.email && !this.phoneNumber) {
-    next(new Error("Either email or phone number is required"));
   }
   next();
 });

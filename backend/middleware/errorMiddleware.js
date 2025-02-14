@@ -7,7 +7,6 @@ const notFound = (req, res, next) => {
 };
 
 const errorHandler = (err, req, res, next) => {
-  // Log error in development
   if (process.env.NODE_ENV !== "production") {
     console.error("Error:", err);
   }
@@ -39,16 +38,16 @@ const errorHandler = (err, req, res, next) => {
   //   message = `Invalid ${err.path}: ${err.value}`;
   // }
 
-  // // Handle JWT errors
-  // if (err.name === "JsonWebTokenError") {
-  //   statusCode = 401;
-  //   message = "Invalid token";
-  // }
+  // Handle JWT errors
+  if (err.name === "JsonWebTokenError") {
+    statusCode = 401;
+    message = "Invalid token";
+  }
 
-  // if (err.name === "TokenExpiredError") {
-  //   statusCode = 401;
-  //   message = "Token expired";
-  // }
+  if (err.name === "TokenExpiredError") {
+    statusCode = 401;
+    message = "Your session has expired. Please log in again to continue.";
+  }
 
   // // Handle multer errors
   // if (err.name === "MulterError") {

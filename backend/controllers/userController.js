@@ -1,6 +1,8 @@
 import User from "../model/user.schema.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/AsyncHandler.js";
+import bcrypt from "bcrypt";
+import { generateToken } from "../utils/generateTokens.js";
 
 export const signUpUser = asyncHandler(async (req, res) => {
   const { firstName, lastName, email, password, phoneNumber, countryCode } =
@@ -20,25 +22,24 @@ export const signUpUser = asyncHandler(async (req, res) => {
     $or: queryConditions,
   });
 
-  // If the user exists, handle conflicts
-  // if (existingUser) {
-  //   const conflictMessages = [];
+  if (existingUser) {
+    const conflictMessages = [];
 
-  //   if (email && existingUser.email === email.toLowerCase()) {
-  //     conflictMessages.push(`User with email ${email} already exists.`);
-  //   }
+    if (email && existingUser.email === email.toLowerCase()) {
+      conflictMessages.push(`User with email ${email} already exists.`);
+    }
 
-  //   if (phoneNumber && existingUser.phoneNumber === phoneNumber) {
-  //     conflictMessages.push(
-  //       `User with phone number ${phoneNumber} already exists.`
-  //     );
-  //   }
+    if (phoneNumber && existingUser.phoneNumber === phoneNumber) {
+      conflictMessages.push(
+        `User with phone number ${phoneNumber} already exists.`
+      );
+    }
 
-  //   // Return conflict response with 409 status code
-  //   return res
-  //     .status(409)
-  //     .json(ApiResponse.error(conflictMessages.join(" and "), 409));
-  // }
+    // Return conflict response with 409 status code
+    return res
+      .status(409)
+      .json(ApiResponse.error(conflictMessages.join(" and "), 409));
+  }
 
   // Create a new user instance with normalized email
   const newUser = new User({
@@ -66,5 +67,69 @@ export const signUpUser = asyncHandler(async (req, res) => {
 });
 
 export const signInUser = asyncHandler(async (req, res) => {
-  res.send({ message: "working sign in route" });
+  const { email, password, phoneNumber } = req.body;
+  console.log("login ", email, password, phoneNumber);
+
+  let user;
+  if (email) {
+    user = await User.findOne({ email: email.toLowerCase() }).select(
+      "+password"
+    );
+  } else {
+    user = await User.findOne({ phoneNumber }).select("+password");
+  }
+
+  if (!user) {
+    return res.status(404).json(ApiResponse.notFound("invalid credentials"));
+  }
+
+  const isPasswordMAtched = await bcrypt.compare(password, user.password);
+
+  if (!isPasswordMAtched) {
+    return res.status(404).json(ApiResponse.notFound("invalid credentials"));
+  }
+
+  const tokens = await generateToken(user);
+  const refreshTokenExpiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
+  user.refreshTokens.push({
+    token: tokens.refreshToken,
+    issueAt: Date.now(),
+    expiresAt: refreshTokenExpiry,
+  });
+
+  await user.save();
+
+  // Create cookie options for the access token
+  const accessTokenCookieOptions = {
+    httpOnly: true, // Cannot be accessed via client-side JavaScript
+    secure: process.env.NODE_ENV === "production", // Send cookie only over HTTPS in production
+    sameSite: "strict", // Helps mitigate CSRF attacks
+    maxAge: 1 * 60 * 60 * 1000, // 1 hour in milliseconds
+  };
+
+  // Create cookie options for the refresh token
+  const refreshTokenCookieOptions = {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
+  };
+
+  // Set both tokens as cookies
+  res.cookie("access_token", tokens.accessToken, accessTokenCookieOptions);
+  res.cookie("refresh_token", tokens.refreshToken, refreshTokenCookieOptions);
+
+  const responseObj = {
+    _id: user._id,
+    firstName: user.firstName,
+    lastName: user.lastName,
+    email: user.email,
+    roles: user.roles,
+  };
+  res.status(200).json(ApiResponse.success("sign in successful", responseObj));
+});
+
+export const protectRoute = asyncHandler(async (req, res, next) => {
+  res.send({ message: "protect route working" });
 });

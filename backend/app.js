@@ -2,6 +2,7 @@ import express from "express";
 import "dotenv/config";
 import connectDB from "./config/database.js";
 import userRoutes from "./routes/userRoutes.js";
+import cookieParser from "cookie-parser";
 import { errorHandler, notFound } from "./middleware/errorMiddleware.js";
 
 const app = express();
@@ -17,6 +18,8 @@ app.use(express.json());
 
 // Body parser for URL encoded form data
 app.use(express.urlencoded({ extended: true }));
+
+app.use(cookieParser());
 
 // Mount user routes
 app.use("/api/v1/users", userRoutes);

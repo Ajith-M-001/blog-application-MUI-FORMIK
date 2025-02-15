@@ -16,7 +16,6 @@ export const verifyAccessToken = async (req, res, next) => {
   }
   try {
     const decoded = jwt.verify(token, authConfig.JWT_ACCESS_SECRET);
-    console.log(decoded);
     const user = await User.findById(decoded._id).select(
       "email firstName lastName roles isActive"
     );
@@ -40,4 +39,38 @@ export const verifyAccessToken = async (req, res, next) => {
   }
 };
 
-export const verifyRefreshToken = (req, res, next) => {};
+export const verifyRefreshToken = async (req, res, next) => {
+  const refreshToken = req.cookies.refresh_token;
+  if (!refreshToken) {
+    return res
+      .status(401)
+      .json(
+        ApiResponse.unauthorized(
+          "unauthorized : refresh token is missing. Please log in."
+        )
+      );
+  }
+  try {
+    const decoded = jwt.verify(refreshToken, authConfig.JWT_REFRESH_SECRET);
+    const user = await User.findById(decoded._id).select(
+      "email firstName lastName roles isActive"
+    );
+    if (!user) {
+      return res
+        .status(401)
+        .json(
+          ApiResponse.unauthorized(
+            "unauthorized: Invalid refresh token: User not found."
+          )
+        );
+    }
+
+    if (!user.isActive) {
+      return res.status(403).json(ApiResponse.forbidden("Account is inactive"));
+    }
+    req.user = user;
+    next();
+  } catch (error) {
+    next(error);
+  }
+};

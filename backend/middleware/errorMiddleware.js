@@ -33,10 +33,10 @@ const errorHandler = (err, req, res, next) => {
   }
 
   // Handle Mongoose CastError (invalid ObjectId)
-  // if (err.name === "CastError") {
-  //   statusCode = 400;
-  //   message = `Invalid ${err.path}: ${err.value}`;
-  // }
+  if (err.name === "CastError") {
+    statusCode = 400;
+    message = `Invalid ${err.path}: ${err.value}`;
+  }
 
   // Handle JWT errors
   if (err.name === "JsonWebTokenError") {

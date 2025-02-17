@@ -2,6 +2,7 @@ import jwt from "jsonwebtoken";
 import { ApiResponse } from "./ApiResponse.js";
 import { authConfig } from "../config/auth.config.js";
 import User from "../model/user.schema.js";
+import { blacklistedTokens } from "../model/token.blacklist.js";
 
 export const verifyAccessToken = async (req, res, next) => {
   const token = req.cookies.access_token;
@@ -13,6 +14,13 @@ export const verifyAccessToken = async (req, res, next) => {
           "unauthorized : Access token is missing. Please log in."
         )
       );
+  }
+
+  const isblackListed = await blacklistedTokens.findOne({ token });
+  if (isblackListed) {
+    return res
+      .status(401)
+      .json(ApiResponse.unauthorized("unauthorized:access token is invalid"));
   }
   try {
     const decoded = jwt.verify(token, authConfig.JWT_ACCESS_SECRET);

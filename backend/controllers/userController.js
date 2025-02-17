@@ -3,6 +3,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/AsyncHandler.js";
 import bcrypt from "bcrypt";
 import { generateToken } from "../utils/generateTokens.js";
+import { blacklistedTokens } from "../model/token.blacklist.js";
 
 // Create cookie options for the access token
 const accessTokenCookieOptions = {
@@ -84,7 +85,6 @@ export const signUpUser = asyncHandler(async (req, res) => {
 
 export const signInUser = asyncHandler(async (req, res) => {
   const { email, password, phoneNumber } = req.body;
-  console.log("login ", email, password, phoneNumber);
 
   let user;
   if (email) {
@@ -136,6 +136,7 @@ export const protectRoute = asyncHandler(async (req, res, next) => {
 
 export const signOutUser = asyncHandler(async (req, res, next) => {
   const refreshToken = req.cookies.refresh_token;
+  const accessToken = req.cookies.access_token;
   const userId = req.user._id;
   const user = await User.findById(userId);
 
@@ -146,6 +147,13 @@ export const signOutUser = asyncHandler(async (req, res, next) => {
   user.refreshTokens = user.refreshTokens.filter(
     (token) => token.token !== refreshToken
   );
+
+  if (accessToken) {
+    await blacklistedTokens.create({
+      token: accessToken,
+      expiresAt: new Date(Date.now() + 15 * 60 * 1000),
+    });
+  }
 
   await user.save();
 

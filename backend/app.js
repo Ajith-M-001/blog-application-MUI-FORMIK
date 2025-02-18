@@ -3,11 +3,17 @@ import "dotenv/config";
 import connectDB from "./config/database.js";
 import userRoutes from "./routes/userRoutes.js";
 import cookieParser from "cookie-parser";
+import helmet from "helmet";
+import cors from "cors";
 import { errorHandler, notFound } from "./middleware/errorMiddleware.js";
+import { authLimiter, limiter } from "./config/auth.config.js";
 
 const app = express();
 
 const PORT = process.env.PORT || 4000;
+
+// Disables the X-Powered-By header to hide the fact that the server is using Express
+// app.disable('x-powered-by');
 
 app.get("/", (req, res) => {
   res.send("Welcome to BLOG Application - build by Ajith");
@@ -21,8 +27,14 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use(cookieParser());
 
+app.use(helmet());
+
+app.use(cors());
+
 // Mount user routes
-app.use("/api/v1/users", userRoutes);
+const apiRouter = express.Router();
+app.use("/api/v1", limiter, apiRouter);
+apiRouter.use("/users", authLimiter, userRoutes);
 
 // Handle 404 errors for non-existent routes
 app.use(notFound);

@@ -4,7 +4,6 @@ import {
   SESSION_PREFERENCE,
   USER_ROLES,
 } from "../../common/constants/constants.js";
-import { v4 as uuidv4 } from "uuid";
 
 // Constants for reusable values
 
@@ -13,7 +12,7 @@ const sessionSchema = new mongoose.Schema(
   {
     sessionId: {
       type: String,
-      required: true,
+      sparse: true,
       unique: true,
       default: () => uuidv4(),
     },

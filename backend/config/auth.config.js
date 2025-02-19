@@ -5,25 +5,28 @@ dotenv.config();
 
 // Rate limiter for authentication endpoints
 export const authLimiter = rateLimit({
-  windowMs: 5 * 60 * 1000, // 5 minutes
-  max: 5, // Limit each IP to 5 requests per windowMs for auth endpoints
+  windowMs: 1 * 60 * 1000, // 5 minutes
+  max: 500, // Limit each IP to 5 requests per windowMs for auth endpoints
   message: "Too many attempts, please try again later.",
   standardHeaders: true, // Return rate limit info in the RateLimit-* headers
   legacyHeaders: false, // Disable the X-RateLimit-* headers
 
   // Custom handler to include the remaining time in the response
   handler: (req, res, next, options) => {
-    const retryAfter = Math.ceil(options.windowMs / 1000); // Time in seconds
+    const retryAfter = res.get("Retry-After");
+    const retryAfterSeconds = retryAfter
+      ? parseInt(retryAfter, 10)
+      : Math.ceil(options.windowMs / 1000);
     res.status(options.statusCode).send({
-      message: `Too many attempts, please try again after ${retryAfter} seconds.`,
+      message: `Too many attempts, please try again after ${retryAfterSeconds} seconds.`,
     });
   },
 });
 
 // Global rate limiter for all API endpoints
 export const limiter = rateLimit({
-  windowMs: 5 * 60 * 1000, // 5 minutes
-  max: 100, // Limit each IP to 100 requests per 5-minute window
+  windowMs: 1 * 60 * 1000, // 5 minutes
+  max: 1000, // Limit each IP to 100 requests per 5-minute window
   message: "Too many requests from this IP, please try again later.",
   standardHeaders: true, // Return rate limit info in the RateLimit-* headers
   legacyHeaders: false, // Disable the X-RateLimit-* headers

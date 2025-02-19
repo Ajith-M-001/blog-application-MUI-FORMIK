@@ -2,13 +2,19 @@ import express from "express";
 import "dotenv/config";
 import connectDB from "./config/database.js";
 import userRoutes from "./routes/userRoutes.js";
+import userSessionRoutes from "./routes/user.session.router.js";
 import cookieParser from "cookie-parser";
+import session from "express-session";
+import MongoStore from "connect-mongo";
 import helmet from "helmet";
 import cors from "cors";
 import { errorHandler, notFound } from "./middleware/errorMiddleware.js";
 import { authLimiter, limiter } from "./config/auth.config.js";
+import useragent from "express-useragent";
 
 const app = express();
+
+app.use(useragent.express());
 
 const PORT = process.env.PORT || 4000;
 
@@ -18,6 +24,25 @@ const PORT = process.env.PORT || 4000;
 app.get("/", (req, res) => {
   res.send("Welcome to BLOG Application - build by Ajith");
 });
+
+// Session configuration
+app.use(
+  session({
+    name: "blog.sid",
+    secret: process.env.SESSION_SECRET, // Secure this secret in production
+    resave: false,
+    saveUninitialized: false,
+    store: MongoStore.create({
+      mongoUrl: process.env.MONGODB_URI,
+    }),
+    cookie: {
+      httpOnly: true, // Mitigates XSS attacks by making the cookie inaccessible via JavaScript
+      secure: process.env.NODE_ENV === "production", // Only set in HTTPS in production
+      maxAge: 1000 * 60 * 60 * 24, // 1 day
+      sameSite: "lax", // Prevents CSRF attacks
+    },
+  })
+);
 
 // Body parser middleware (parsing incoming JSON requests)
 app.use(express.json());
@@ -35,6 +60,7 @@ app.use(cors());
 const apiRouter = express.Router();
 app.use("/api/v1", limiter, apiRouter);
 apiRouter.use("/users", authLimiter, userRoutes);
+apiRouter.use("/users/session", authLimiter, userSessionRoutes);
 
 // Handle 404 errors for non-existent routes
 app.use(notFound);

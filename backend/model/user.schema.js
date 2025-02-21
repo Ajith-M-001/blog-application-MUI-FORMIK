@@ -4,41 +4,6 @@ import {
   SESSION_PREFERENCE,
   USER_ROLES,
 } from "../../common/constants/constants.js";
-import { v4 as uuidv4 } from "uuid";
-
-// Constants for reusable values
-
-// Session Schema
-const sessionSchema = new mongoose.Schema(
-  {
-    sessionId: {
-      type: String,
-      required: true,
-      unique: true,
-      default: () => uuidv4(),
-    },
-    deviceInfo: {
-      os: String,
-      browser: String,
-      ip: String,
-      userAgent: String,
-      lastLocation: String,
-    },
-    loggedInAt: {
-      type: Date,
-      default: Date.now,
-    },
-    lastActive: {
-      type: Date,
-      default: Date.now,
-    },
-    isValid: {
-      type: Boolean,
-      default: true,
-    },
-  },
-  { _id: false }
-);
 
 // Auth Provider Schema
 const authProviderSchema = new mongoose.Schema(
@@ -99,9 +64,10 @@ const userSchema = new mongoose.Schema(
       default: SESSION_PREFERENCE.MULTIPLE,
     },
     maxSession: { type: Number, default: 5, min: 1, max: 5 },
-    isActive: {
-      type: Boolean,
-      default: false,
+    accountStatus: {
+      type: String,
+      enum: ["active", "inactive", "suspended"],
+      default: "inactive",
     },
     isEmailVerified: {
       type: Boolean,
@@ -129,7 +95,19 @@ const userSchema = new mongoose.Schema(
         expiresAt: Date,
       },
     ],
-    sessions: { type: [sessionSchema], select: false },
+    lastLogin: {
+      type: Date,
+      select: false,
+    },
+    failedLoginAttempts: {
+      type: Number,
+      default: 0,
+      select: false,
+    },
+    lockUntil: {
+      type: Date,
+      select: false,
+    },
   },
   {
     timestamps: true,

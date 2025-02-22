@@ -5,6 +5,31 @@ import {
   USER_ROLES,
 } from "../../common/constants/constants.js";
 
+// Session Metadata Schema
+const sessionMetadataSchema = new mongoose.Schema(
+  {
+    sessionId: { type: String, required: true },
+    device: {
+      browser: String,
+      version: String,
+      os: String,
+      platform: String,
+      isMobile: Boolean,
+      isTablet: Boolean,
+      isDesktop: Boolean,
+    },
+    ipAddress: String,
+    location: {
+      country: String,
+      region: String,
+      city: String,
+    },
+    createdAt: { type: Date, default: Date.now },
+    lastActivity: Date,
+  },
+  { _id: false }
+);
+
 // Auth Provider Schema
 const authProviderSchema = new mongoose.Schema(
   {
@@ -63,7 +88,7 @@ const userSchema = new mongoose.Schema(
       enum: Object.values(SESSION_PREFERENCE),
       default: SESSION_PREFERENCE.MULTIPLE,
     },
-    maxSession: { type: Number, default: 5, min: 1, max: 5 },
+    maxSession: { type: Number, default: 5, min: 2, max: 10 },
     accountStatus: {
       type: String,
       enum: ["active", "inactive", "suspended"],
@@ -104,6 +129,7 @@ const userSchema = new mongoose.Schema(
       default: 0,
       select: false,
     },
+    sessions: [sessionMetadataSchema],
     lockUntil: {
       type: Date,
       select: false,

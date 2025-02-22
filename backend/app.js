@@ -41,7 +41,7 @@ app.use(session(sessionConfig));
 // Mount user routes
 const apiRouter = express.Router();
 app.use("/api/v1", limiter, apiRouter);
-apiRouter.use("/users", authLimiter, userRoutes);
+apiRouter.use("/users", userRoutes);
 apiRouter.use("/users/session", userSessionRoutes);
 
 // Handle 404 errors for non-existent routes

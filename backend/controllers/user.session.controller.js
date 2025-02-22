@@ -1,13 +1,13 @@
+import { COOKIE_NAME } from "../config/session.config.js";
 import userModel from "../model/user.schema.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler, transactionHandler } from "../utils/AsyncHandler.js";
+import bcrypt from "bcrypt";
 
 export const registerUser = transactionHandler(
   async (req, res, next, session) => {
     const { firstName, lastName, email, password, phoneNumber, countryCode } =
       req.body;
-
-    console.log("asdfsadfasdfasd", session);
 
     const queryConditions = [];
 
@@ -41,6 +41,8 @@ export const registerUser = transactionHandler(
         .json(ApiResponse.error(message.join(" and "), 409));
     }
 
+    const hashedPassword = await bcrypt.hash(password, 10);
+
     // Create a new user instance with normalized email
     const newUser = new userModel({
       firstName,
@@ -48,7 +50,7 @@ export const registerUser = transactionHandler(
       email: email ? email.toLowerCase() : undefined,
       phoneNumber: phoneNumber || undefined,
       countryCode,
-      password,
+      password: hashedPassword,
     });
 
     // Save the new user to the database
@@ -65,8 +67,79 @@ export const registerUser = transactionHandler(
       .json(
         ApiResponse.created(
           { user: responseObj },
-          "User registerd successfully! please verify"
+          "User registered successfully! please verify"
         )
       );
   }
 );
+
+export const loginUser = asyncHandler(async (req, res, next) => {
+  const { email, password, phoneNumber } = req.body;
+
+  const queryCondition = [];
+  if (email) {
+    queryCondition.push({ email: email.toLowerCase() });
+  }
+  if (phoneNumber) {
+    queryCondition.push({ phoneNumber });
+  }
+  const user = await userModel
+    .findOne({
+      $or: queryCondition,
+    })
+    .select("+password");
+
+  if (!user) {
+    return res.status(404).json(ApiResponse.error("Invalid credentials", 401));
+  }
+
+  const isMatch = await bcrypt.compare(password, user.password);
+
+  if (!isMatch) {
+    return res.status(401).json(ApiResponse.error("Invalid credentials", 401));
+  }
+
+  //store session state
+
+  req.session.regenerate((err) => {
+    if (err) {
+      return res
+        .status(500)
+        .json(ApiResponse.error("Failed to regenerate session", 500));
+    }
+  });
+
+  req.session.user = {
+    _id: user._id,
+  };
+  req.session.lastActivity = Date.now();
+  await req.session.save();
+
+  const responseObj = {
+    _id: user._id,
+    firstName: user.firstName,
+    lastName: user.lastName,
+    email: user.email,
+    roles: user.roles,
+    phoneNumber: user.phoneNumber,
+    countryCode: user.countryCode,
+  };
+
+  return res
+    .status(200)
+    .json(
+      ApiResponse.success({ user: responseObj }, "User logged in successfully")
+    );
+});
+
+export const protectedRoute = asyncHandler(async (req, res, next) => {
+  return res
+    .status(200)
+    .json(ApiResponse.success({}, "Protected route accessed successfully"));
+});
+
+export const logoutUser = asyncHandler(async (req, res) => {
+  await req.session.destroy();
+  res.clearCookie(COOKIE_NAME); // Match your session cookie name
+  res.status(200).json(ApiResponse.success(null, "Logged out successfully"));
+});

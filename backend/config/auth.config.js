@@ -15,7 +15,7 @@ export const authLimiter = rateLimit({
   handler: (req, res, next, options) => {
     const retryAfter = Math.ceil(options.windowMs / 1000); // Time in seconds
     res.status(options.statusCode).send({
-      message: `Too many attempts, please try again after ${retryAfter} seconds.`,
+      message: `Too many attempts 123, please try again after ${retryAfter} seconds.`,
     });
   },
 });

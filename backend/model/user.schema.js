@@ -99,9 +99,10 @@ const userSchema = new mongoose.Schema(
       default: SESSION_PREFERENCE.MULTIPLE,
     },
     maxSession: { type: Number, default: 5, min: 1, max: 5 },
-    isActive: {
-      type: Boolean,
-      default: false,
+    accountStatus: {
+      type: String,
+      enum: ["active", "inactive", "suspended"],
+      default: "inactive",
     },
     isEmailVerified: {
       type: Boolean,

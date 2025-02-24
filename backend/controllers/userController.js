@@ -1,9 +1,11 @@
 import User from "../model/user.schema.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
-import { asyncHandler } from "../utils/AsyncHandler.js";
+import { asyncHandler, transactionHandler } from "../utils/AsyncHandler.js";
 import bcrypt from "bcrypt";
 import { generateToken } from "../utils/generateTokens.js";
 import { blacklistedTokens } from "../model/token.blacklist.js";
+import { generateOTP } from "../utils/otpUtils.js";
+import { sendOTPViaEmail } from "../services/emailService.js";
 
 // Create cookie options for the access token
 const accessTokenCookieOptions = {
@@ -21,67 +23,90 @@ const refreshTokenCookieOptions = {
   maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
 };
 
-export const signUpUser = asyncHandler(async (req, res) => {
-  const { firstName, lastName, email, password, phoneNumber, countryCode } =
-    req.body;
+export const signUpUser = transactionHandler(
+  async (req, res, next, session) => {
+    const { firstName, lastName, email, password, phoneNumber, countryCode } =
+      req.body;
 
-  const queryConditions = [];
+    const queryConditions = [];
 
-  if (email) {
-    queryConditions.push({ email: email.toLowerCase() });
-  }
-
-  if (phoneNumber) {
-    queryConditions.push({ phoneNumber });
-  }
-
-  const existingUser = await User.findOne({
-    $or: queryConditions,
-  });
-
-  if (existingUser) {
-    const conflictMessages = [];
-
-    if (email && existingUser.email === email.toLowerCase()) {
-      conflictMessages.push(`User with email ${email} already exists.`);
+    if (email) {
+      queryConditions.push({ email: email.toLowerCase() });
     }
 
-    if (phoneNumber && existingUser.phoneNumber === phoneNumber) {
-      conflictMessages.push(
-        `User with phone number ${phoneNumber} already exists.`
-      );
+    if (phoneNumber) {
+      queryConditions.push({ phoneNumber });
     }
 
-    // Return conflict response with 409 status code
+    const existingUser = await User.findOne({
+      $or: queryConditions,
+    }).session(session);
+
+    if (existingUser) {
+      const conflictMessages = [];
+
+      if (email && existingUser.email === email.toLowerCase()) {
+        conflictMessages.push(`User with email ${email} already exists.`);
+      }
+
+      if (phoneNumber && existingUser.phoneNumber === phoneNumber) {
+        conflictMessages.push(
+          `User with phone number ${phoneNumber} already exists.`
+        );
+      }
+
+      // Return conflict response with 409 status code
+      return res
+        .status(409)
+        .json(ApiResponse.error(conflictMessages.join(" and "), 409));
+    }
+
+    const otp = generateOTP();
+    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes validity
+
+    // Create a new user instance with normalized email
+    const newUser = new User({
+      firstName,
+      lastName,
+      email: email ? email.toLowerCase() : undefined,
+      phoneNumber: phoneNumber || undefined,
+      countryCode,
+      password,
+      verificationCode: otp,
+      verificationCodeExpires: otpExpiry,
+    });
+
+    // Save the new user to the database
+    const savedUser = await newUser.save({ session });
+
+    if (email) {
+      await sendOTPViaEmail(savedUser.email, "Your Verification OTP", otp);
+    } else if (phoneNumber) {
+      await sendOTPViaSMS(phoneNumber, otp);
+    }
+
+    // Convert to a plain object and remove the password field manually
+    const responseObj = email
+      ? { _id: savedUser._id, email: savedUser.email }
+      : {
+          _id: savedUser._id,
+          phoneNumber: savedUser.phoneNumber,
+          countryCode: savedUser.countryCode,
+        };
+
+    // Send a success response
     return res
-      .status(409)
-      .json(ApiResponse.error(conflictMessages.join(" and "), 409));
+      .status(201)
+      .json(
+        ApiResponse.created(
+          { user: responseObj },
+          `Verification code sent to your ${
+            email ? "email" : "phone"
+          }. Please verify to activate your account.`
+        )
+      );
   }
-
-  // Create a new user instance with normalized email
-  const newUser = new User({
-    firstName,
-    lastName,
-    email: email ? email.toLowerCase() : undefined,
-    phoneNumber: phoneNumber || undefined,
-    countryCode,
-    password,
-  });
-
-  // Save the new user to the database
-  const savedUser = await newUser.save();
-
-  // Convert to a plain object and remove the password field manually
-  const responseObj = savedUser.toObject();
-  delete responseObj.password;
-
-  // Send a success response
-  return res
-    .status(201)
-    .json(
-      ApiResponse.created({ user: responseObj }, "User signed up successfully")
-    );
-});
+);
 
 export const signInUser = asyncHandler(async (req, res) => {
   const { email, password, phoneNumber } = req.body;
@@ -203,4 +228,49 @@ export const refreshAccessToken = asyncHandler(async (req, res, next) => {
   return res
     .status(200)
     .json(ApiResponse.success("Access token refreshed successfully"));
+});
+
+export const verifyOtp = asyncHandler(async (req, res, next) => {
+  const { email, phoneNumber, otp } = req.body;
+
+  if (!email && !phoneNumber) {
+    return res
+      .status(400)
+      .json(ApiResponse.error("Either Email or phone number is required", 400));
+  }
+
+  if (!otp) {
+    return res.status(400).json(ApiResponse.error("OTP is required", 400));
+  }
+
+  const query = {};
+  if (email) {
+    query.email = email.toLowerCase();
+  } else {
+    query.phoneNumber = phoneNumber;
+  }
+
+  console.log(query);
+
+  const user = await User.findOne({ $or: [query] }).select(
+    "+verificationCode +verificationCodeExpires"
+  );
+  if (!user) {
+    return res.status(404).json(ApiResponse.notFound("User not found"));
+  }
+
+  if (user.verificationCode !== otp) {
+    return res.status(400).json(ApiResponse.error("Invalid OTP", 400));
+  }
+
+  if (user.verificationCodeExpires < new Date()) {
+    return res.status(400).json(ApiResponse.error("OTP has expired", 400));
+  }
+
+  user.accountStatus = "active";
+  email ? (user.isEmailVerified = true) : (user.isPhoneVerified = true);
+  user.verificationCode = undefined;
+  user.verificationCodeExpires = undefined;
+  await user.save();
+  return res.status(200).json(ApiResponse.success("OTP verified successfully"));
 });

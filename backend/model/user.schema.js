@@ -8,7 +8,7 @@ import {
 // Session Metadata Schema
 const sessionMetadataSchema = new mongoose.Schema(
   {
-    sessionId: { type: String, required: true },
+    sessionId: { type: String, required: true , unique: true  },
     device: {
       browser: String,
       version: String,
@@ -25,7 +25,8 @@ const sessionMetadataSchema = new mongoose.Schema(
       city: String,
     },
     createdAt: { type: Date, default: Date.now },
-    lastActivity: Date,
+    lastActivity: { type: Date, default: Date.now },
+    expiresAt: { type: Date },
   },
   { _id: false }
 );
@@ -88,11 +89,12 @@ const userSchema = new mongoose.Schema(
       enum: Object.values(SESSION_PREFERENCE),
       default: SESSION_PREFERENCE.MULTIPLE,
     },
-    maxSession: { type: Number, default: 5, min: 2, max: 10 },
+    maxSession: { type: Number, default: 5, min: 1, max: 10 },
     accountStatus: {
       type: String,
-      enum: ["active", "inactive", "suspended"],
+      enum: ["active", "inactive", "suspended", "locked"],
       default: "inactive",
+      select: false,
     },
     isEmailVerified: {
       type: Boolean,
@@ -129,7 +131,10 @@ const userSchema = new mongoose.Schema(
       default: 0,
       select: false,
     },
-    sessions: [sessionMetadataSchema],
+    sessions: {
+      type: [sessionMetadataSchema],
+      select: false,
+    },
     lockUntil: {
       type: Date,
       select: false,
@@ -141,13 +146,13 @@ const userSchema = new mongoose.Schema(
 );
 
 // Password hashing middleware
-userSchema.pre("save", async function (next) {
-  if (this.isModified("password")) {
-    const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
-  }
-  next();
-});
+// userSchema.pre("save", async function (next) {
+//   if (this.isModified("password")) {
+//     const salt = await bcrypt.genSalt(10);
+//     this.password = await bcrypt.hash(this.password, salt);
+//   }
+//   next();
+// });
 
 const userModel = mongoose.model("User", userSchema);
 

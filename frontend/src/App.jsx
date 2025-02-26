@@ -1,24 +1,29 @@
-// App.jsx
-import { Button, Container, Typography } from "@mui/material";
+import { BrowserRouter, Route, Routes } from "react-router";
+import { Suspense, lazy } from "react";
+import LoadingFallback from "./components/LoadingFallback";
 
-function App({ toggleTheme, isDarkMode }) {
+const AppLayout = lazy(() => import("./layout/AppLayout"));
+const Home = lazy(() => import("./pages/Home"));
+const About = lazy(() => import("./pages/About"));
+const Contact = lazy(() => import("./pages/Contact"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+
+const App = () => {
   return (
-    <Container>
-      <Typography variant="h1">My Blog</Typography>
-      <Button variant="contained" onClick={toggleTheme} sx={{ mt: 2 }}>
-        Switch to {isDarkMode ? "Light" : "Dark"} Mode
-      </Button>
-      <Button
-        variant="contained"
-        color="secondary"
-        onClick={toggleTheme}
-        sx={{ mt: 2 }}
-      >
-        secondary button
-      </Button>
-      {/* Rest of your app content */}
-    </Container>
+    <BrowserRouter>
+      <Suspense fallback={<LoadingFallback />}>
+        <Routes>
+          <Route path="/" element={<AppLayout />}>
+            <Route index element={<Home />} />
+            <Route path="about" element={<About />} />
+            <Route path="contact" element={<Contact />} />
+            <Route path="loading" element={<LoadingFallback />} />
+            <Route path="*" element={<NotFound />} />
+          </Route>
+        </Routes>
+      </Suspense>
+    </BrowserRouter>
   );
-}
+};
 
 export default App;

@@ -12,21 +12,17 @@
   "dependencies": {
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
-<<<<<<< HEAD
     "@fontsource-variable/inter": "^5.1.1",
     "@fontsource-variable/open-sans": "^5.1.1",
+    "@fontsource/roboto": "^5.1.1",
     "@mui/icons-material": "^6.4.5",
     "@mui/material": "^6.4.5",
     "immer": "^10.1.1",
     "lucide-react": "^0.476.0",
     "motion": "^12.4.7",
-=======
-    "@fontsource/roboto": "^5.1.1",
-    "@mui/icons-material": "^6.4.5",
-    "@mui/material": "^6.4.5",
->>>>>>> 5d5a56cc09247243475a0f16cd3709649a8587a5
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-router": "^7.2.0",
     "zustand": "^5.0.3"
   },
   "devDependencies": {

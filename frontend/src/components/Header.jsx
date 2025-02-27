@@ -1,5 +1,5 @@
 import * as React from "react";
-import { styled, alpha } from "@mui/material/styles";
+import { styled, alpha, useTheme } from "@mui/material/styles";
 import AppBar from "@mui/material/AppBar";
 import Box from "@mui/material/Box";
 import Toolbar from "@mui/material/Toolbar";
@@ -16,6 +16,9 @@ import MailIcon from "@mui/icons-material/Mail";
 import NotificationsIcon from "@mui/icons-material/Notifications";
 import MoreIcon from "@mui/icons-material/MoreVert";
 import { Container } from "@mui/material";
+import { Sun, Moon } from "lucide-react";
+import useStore from "../store/zustand.store";
+import { useShallow } from "zustand/react/shallow";
 
 const Search = styled("div")(({ theme }) => ({
   position: "relative",
@@ -153,10 +156,25 @@ export default function Header() {
       </MenuItem>
     </Menu>
   );
+  const { isDarkTheme, toggleTheme } = useStore(
+    useShallow((state) => ({
+      isDarkTheme: state.isDarkTheme,
+      toggleTheme: state.toggleTheme,
+    }))
+  );
+
+  const theme = useTheme();
 
   return (
     <Box sx={{ flexGrow: 1 }}>
-      <AppBar position="fixed">
+      <AppBar
+        sx={{
+          backgroundColor: theme.palette.background.paper,
+          color: theme.palette.text.primary,
+          boxShadow: theme.shadows[1],
+        }}
+        position="fixed"
+      >
         <Container maxWidth="xl">
           <Toolbar>
             <IconButton
@@ -187,6 +205,14 @@ export default function Header() {
             </Search>
             <Box sx={{ flexGrow: 1 }} />
             <Box sx={{ display: { xs: "none", md: "flex" } }}>
+              <IconButton
+                onClick={toggleTheme}
+                size="large"
+                aria-label="toggle theme"
+                color="inherit"
+              >
+                {isDarkTheme ? <Sun /> : <Moon />}
+              </IconButton>
               <IconButton
                 size="large"
                 aria-label="show 4 new mails"

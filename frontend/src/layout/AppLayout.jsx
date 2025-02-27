@@ -1,4 +1,4 @@
-import { Box, useTheme } from "@mui/material";
+import { Box, Container, useTheme } from "@mui/material";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { Outlet } from "react-router";
@@ -9,6 +9,7 @@ const AppLayout = () => {
     <Box>
       <Header />
       <Box
+        id="main-content"
         component={"main"}
         sx={{
           minHeight: `calc(100vh - ${theme.mixins.toolbar.minHeight + 4}px)`,
@@ -17,7 +18,9 @@ const AppLayout = () => {
           pb: theme.spacing(1),
         }}
       >
-        <Outlet />
+        <Container maxWidth="xl">
+          <Outlet />
+        </Container>
       </Box>
       <Footer />
     </Box>

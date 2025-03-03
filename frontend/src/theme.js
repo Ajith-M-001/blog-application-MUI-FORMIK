@@ -2,7 +2,6 @@
 import { createTheme, responsiveFontSizes } from "@mui/material/styles";
 import { deepmerge } from "@mui/utils";
 
-
 // Common base theme settings
 const baseTheme = createTheme({
   typography: {
@@ -76,11 +75,6 @@ const baseTheme = createTheme({
       lineHeight: 2.5,
       textTransform: "uppercase",
     },
-    button: {
-      fontSize: "0.875rem",
-      textTransform: "none",
-      fontWeight: 600,
-    },
   },
   shape: {
     borderRadius: 8,
@@ -96,7 +90,60 @@ const baseTheme = createTheme({
       xl: 1536,
     },
   },
-  components:{}
+  components: {
+    MuiCssBaseline: {
+      styleOverrides: (theme) => ({
+        body: {
+          scrollBehavior: "smooth",
+          margin: 0,
+          padding: 0,
+          boxSizing: "border-box",
+          WebkitFontSmoothing: "antialiased",
+          MozOsxFontSmoothing: "grayscale",
+          "&::-webkit-scrollbar": {
+            width: "10px",
+          },
+          "&::-webkit-scrollbar-track": {
+            background: theme.palette.background.card,
+          },
+          "&::-webkit-scrollbar-thumb": {
+            background: theme.palette.divider,
+            borderRadius: "4px",
+            "&:hover": {
+              background: theme.palette.text.disabled,
+            },
+          },
+        },
+        "*, *::before, *::after": {
+          boxSizing: "inherit",
+          margin: 0,
+          padding: 0,
+        },
+        html: {
+          WebkitTextSizeAdjust: "100%",
+          height: "100%",
+        },
+        "img, picture, video, canvas, svg": {
+          display: "block",
+          maxWidth: "100%",
+        },
+        "p, h1, h2, h3, h4, h5, h6": {
+          overflowWrap: "break-word",
+        },
+      }),
+    },
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          borderRadius: 35,
+          textTransform: "none",
+          fontWeight: 600,
+          fontSize: "1rem",
+          padding: "8px 20px",
+        },
+      },
+    },
+  },
 });
 
 // Create the Light theme by merging palette overrides with the base theme
@@ -120,9 +167,9 @@ const lightPalette = {
     info: { main: "#2196f3" },
     success: { main: "#4caf50" },
     background: {
-      default: "#f9f9f9",
-      paper: "#ffffff",
-      card: "#fafafa",
+      default: "#fafaf9", // Very light blue tint
+      paper: "#ffffff", // Pure white
+      card: "#f1f5f9", // Light blue tint
     },
     text: {
       primary: "#1a1a1a",
@@ -161,9 +208,9 @@ const darkPalette = {
     info: { main: "#29b6f6" },
     success: { main: "#66bb6a" },
     background: {
-      default: "#111827", // Dark blue-gray
-      paper: "#1e293b", // Darker blue-gray
-      card: "#1f2937", // Medium blue-gray
+      default: "#121212", // Base dark surface
+      paper: "#1E1E1E", // Elevated surfaces
+      card: "#252525", // For cards and intermediate surfaces
     },
     text: {
       primary: "#f3f4f6", // Very light gray

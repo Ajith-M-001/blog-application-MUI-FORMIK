@@ -1,6 +1,6 @@
 import { Box, Container, useTheme } from "@mui/material";
-import Header from "../components/Header";
-import Footer from "../components/Footer";
+import { Header } from "../components/Header";
+import { Footer } from "../components/Footer";
 import { Outlet } from "react-router";
 
 const AppLayout = () => {

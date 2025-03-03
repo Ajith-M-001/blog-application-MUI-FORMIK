@@ -1,6 +1,6 @@
 import { BrowserRouter, Route, Routes } from "react-router";
 import { Suspense, lazy } from "react";
-import LoadingFallback from "./components/LoadingFallback";
+import { LoadingFallback } from "./components/LoadingFallback";
 
 const AppLayout = lazy(() => import("./layout/AppLayout"));
 const Home = lazy(() => import("./pages/Home"));
@@ -17,7 +17,6 @@ const App = () => {
             <Route index element={<Home />} />
             <Route path="about" element={<About />} />
             <Route path="contact" element={<Contact />} />
-            <Route path="loading" element={<LoadingFallback />} />
             <Route path="*" element={<NotFound />} />
           </Route>
         </Routes>

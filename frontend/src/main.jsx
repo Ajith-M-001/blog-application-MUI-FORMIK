@@ -18,7 +18,7 @@ const RootApp = () => {
 
   return (
     <ThemeProvider theme={isDarkTheme ? darkTheme : lightTheme}>
-      <CssBaseline />
+      <CssBaseline enableColorScheme="true" />
       <App />
     </ThemeProvider>
   );

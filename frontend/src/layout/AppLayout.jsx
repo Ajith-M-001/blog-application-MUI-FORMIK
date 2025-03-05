@@ -18,7 +18,7 @@ const AppLayout = () => {
           pb: theme.spacing(1),
         }}
       >
-        <Container maxWidth="xl">
+        <Container maxWidth="xl" sx={{ height: "100%" }}>
           <Outlet />
         </Container>
       </Box>

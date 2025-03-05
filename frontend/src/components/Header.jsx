@@ -314,46 +314,48 @@ const Header = () => {
                   >
                     {isDarkTheme ? <Sun /> : <Moon />}
                   </IconButton>
-
-                  <Button
-                    component={motion.button}
-                    whileHover={"hover"}
-                    whileTap={{ scale: 0.9 }}
-                    variant="outlined"
-                    color="secondary"
-                    variants={buttonHoverVariants}
-                    sx={{
-                      [theme.breakpoints.down("laptop")]: {
-                        borderRadius: 35,
-                        textTransform: "none",
-                        fontWeight: 600,
-                        fontSize: "0.9rem",
-                        padding: "6px 12px",
-                      },
-                    }}
-                  >
-                    Sign In
-                  </Button>
-
-                  <Button
-                    component={motion.button}
-                    whileHover={"hover"}
-                    whileTap={{ scale: 0.9 }}
-                    variant="contained"
-                    color="primary"
-                    variants={buttonHoverVariants}
-                    sx={{
-                      [theme.breakpoints.down("laptop")]: {
-                        borderRadius: 35,
-                        textTransform: "none",
-                        fontWeight: 600,
-                        fontSize: "0.9rem",
-                        padding: "6px 12px",
-                      },
-                    }}
-                  >
-                    Sign Up
-                  </Button>
+                  <Link to={"sign-in"}>
+                    <Button
+                      component={motion.button}
+                      whileHover={"hover"}
+                      whileTap={{ scale: 0.9 }}
+                      variant="outlined"
+                      color="secondary"
+                      variants={buttonHoverVariants}
+                      sx={{
+                        [theme.breakpoints.down("laptop")]: {
+                          borderRadius: 35,
+                          textTransform: "none",
+                          fontWeight: 600,
+                          fontSize: "0.9rem",
+                          padding: "6px 12px",
+                        },
+                      }}
+                    >
+                      Sign In
+                    </Button>
+                  </Link>
+                  <Link to={"sign-up"}>
+                    <Button
+                      component={motion.button}
+                      whileHover={"hover"}
+                      whileTap={{ scale: 0.9 }}
+                      variant="contained"
+                      color="primary"
+                      variants={buttonHoverVariants}
+                      sx={{
+                        [theme.breakpoints.down("laptop")]: {
+                          borderRadius: 35,
+                          textTransform: "none",
+                          fontWeight: 600,
+                          fontSize: "0.9rem",
+                          padding: "6px 12px",
+                        },
+                      }}
+                    >
+                      Sign Up
+                    </Button>
+                  </Link>
                 </Box>
               </>
             )}
@@ -465,26 +467,30 @@ const Header = () => {
             transition={{ delay: 0.7 }}
             sx={{ mt: 2, display: "flex", flexDirection: "column", gap: 2 }}
           >
-            <Button
-              variant="outlined"
-              fullWidth
-              component={motion.button}
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.9 }}
-              color="secondary"
-            >
-              Sign In
-            </Button>
-            <Button
-              variant="contained"
-              fullWidth
-              component={motion.button}
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.9 }}
-              color="primary"
-            >
-              Sign Up
-            </Button>
+            <Link to={"sign-in"}>
+              <Button
+                variant="outlined"
+                fullWidth
+                component={motion.button}
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.9 }}
+                color="secondary"
+              >
+                Sign In
+              </Button>
+            </Link>
+            <Link to={"sign-up"}>
+              <Button
+                variant="contained"
+                fullWidth
+                component={motion.button}
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.9 }}
+                color="primary"
+              >
+                Sign Up
+              </Button>
+            </Link>
           </Box>
         </Box>
       </Drawer>

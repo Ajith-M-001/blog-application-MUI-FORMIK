@@ -14,7 +14,7 @@ const Footer = () => {
       }}
     >
       <Typography variant="body2" color="text.secondary">
-        © {currentYear} NEXUS Blog. All Rights Reserved.
+        © {currentYear} NEXUS Blog Platform. All Rights Reserved.
       </Typography>
     </Box>
   );

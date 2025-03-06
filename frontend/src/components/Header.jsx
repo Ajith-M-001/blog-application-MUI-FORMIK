@@ -139,7 +139,7 @@ const Header = () => {
   };
 
   return (
-    <Box component={"header"} sx={{ flexGrow: 1, backgroundColor: "red" }}>
+    <>
       <AppBar
         component={motion.div}
         position="fixed"
@@ -243,7 +243,7 @@ const Header = () => {
                           sx={{
                             cursor: "pointer",
                             fontWeight: 500,
-                            paddingX: 2,
+                            paddingX: { xs: 1, laptop: 2 },
                             paddingBottom: theme.spacing(0.9),
                             "&:hover": {
                               backgroundColor: "transparent",
@@ -494,7 +494,7 @@ const Header = () => {
           </Box>
         </Box>
       </Drawer>
-    </Box>
+    </>
   );
 };
 

@@ -455,7 +455,7 @@ const Header = () => {
                   },
                 }}
               >
-                <ListItemText primary={item} />
+                <ListItemText primary={item.label} />
               </ListItem>
             ))}
           </List>
@@ -469,6 +469,7 @@ const Header = () => {
           >
             <Link to={"sign-in"}>
               <Button
+                onClick={toggleMobileMenu}
                 variant="outlined"
                 fullWidth
                 component={motion.button}
@@ -481,6 +482,7 @@ const Header = () => {
             </Link>
             <Link to={"sign-up"}>
               <Button
+                onClick={toggleMobileMenu}
                 variant="contained"
                 fullWidth
                 component={motion.button}

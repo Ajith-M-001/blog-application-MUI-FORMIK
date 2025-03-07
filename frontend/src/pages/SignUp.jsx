@@ -67,7 +67,7 @@ const SignUp = () => {
           padding: { xs: 2, sm: 4 },
         }}
       >
-        <Container maxWidth="lg" height="100%">
+        <Container disableGutters maxWidth="lg" height="100%">
           <Grid2 container spacing={10} alignItems="center" height={"100%"}>
             <Grid2 size={{ xs: 12, md: 6 }}>
               <motion.div
@@ -75,7 +75,7 @@ const SignUp = () => {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.5 }}
               >
-                <Box textAlign={{ xs: "center", md: "left" }}>
+                <Box  textAlign={{ xs: "center", md: "left" }}>
                   <Typography variant="h2" color="text.primary">
                     Join NEXUS
                   </Typography>

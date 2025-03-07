@@ -88,7 +88,7 @@ const SignUp = () => {
                     validationSchema={SignUpSchema}
                     onSubmit={handleSubmit}
                   >
-                    {() => (
+                    {({ dirty, isValid }) => (
                       <Form style={{ width: "100%" }}>
                         <Grid2 container spacing={2}>
                           <Grid2 size={{ xs: 12, md: 6 }}>
@@ -98,7 +98,6 @@ const SignUp = () => {
                               id="firstName"
                               name="firstName"
                               placeholder="John"
-                              autoFocus
                             />
                           </Grid2>
                           <Grid2 size={{ xs: 12, md: 6 }}>
@@ -144,7 +143,7 @@ const SignUp = () => {
                           variant="contained"
                           color="primary"
                           fullWidth
-                          // disabled={}
+                          disabled={!(dirty && isValid)}
                           sx={{ mt: 3, mb: 2 }}
                         >
                           Sign Up

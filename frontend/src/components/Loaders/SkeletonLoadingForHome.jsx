@@ -1,31 +1,7 @@
-// import { Box, CircularProgress, Typography } from "@mui/material";
-
-// const LoadingFallback = () => {
-//   return (
-//     <Box
-//       sx={{
-//         display: "flex",
-//         flexDirection: "column",
-//         alignItems: "center",
-//         justifyContent: "center",
-//         minHeight: "100vh",
-//         gap: 2,
-//       }}
-//     >
-//       <CircularProgress size={40} />
-//       <Typography variant="body1" color="text.secondary">
-//         Loading...
-//       </Typography>
-//     </Box>
-//   );
-// };
-
-// export { LoadingFallback };
-
 import { Box, Skeleton, Container, useTheme } from "@mui/material";
 import { keyframes } from "@mui/system";
 
-const LoadingFallback = () => {
+const SkeletonLoadingForHome = () => {
   const theme = useTheme();
 
   // Create shimmering animation keyframes
@@ -266,4 +242,4 @@ const LoadingFallback = () => {
   );
 };
 
-export { LoadingFallback };
+export { SkeletonLoadingForHome };

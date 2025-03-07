@@ -1,6 +1,6 @@
 import { BrowserRouter, Route, Routes } from "react-router";
 import { Suspense, lazy } from "react";
-import { LoadingFallback } from "./components/LoadingFallback";
+import { FallBackLoader } from "./components/Loaders/FallBackLoader";
 
 const AppLayout = lazy(() => import("./layout/AppLayout"));
 const Home = lazy(() => import("./pages/Home"));
@@ -13,8 +13,8 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const App = () => {
   return (
     <BrowserRouter>
-      <Suspense fallback={<LoadingFallback />}>
-        <Routes>
+      <Suspense>
+        <Routes fallback={<FallBackLoader />}>
           <Route path="/" element={<AppLayout />}>
             <Route index element={<Home />} />
             <Route path="about" element={<About />} />

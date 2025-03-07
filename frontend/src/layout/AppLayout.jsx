@@ -6,19 +6,19 @@ import { Outlet } from "react-router";
 const AppLayout = () => {
   const theme = useTheme();
   return (
-    <Box>
+    <Box sx={{ height: "100vh", display: "flex", flexDirection: "column" }}>
       <Header />
       <Box
         id="main-content"
-        component={"main"}
+        component="main"
         sx={{
-          minHeight: `calc(100vh - ${theme.mixins.toolbar.minHeight + 4}px)`,
+          flexGrow: 1,
           width: "100%",
-          pt: `${theme.mixins.toolbar.minHeight + 16}px`,
-          pb: theme.spacing(1),
+          pt: `${theme.mixins.toolbar["@media (min-width:600px)"].minHeight}px`,
+          pb: theme.spacing(0.2),
         }}
       >
-        <Container maxWidth="xl" sx={{ height: "100%" }}>
+        <Container maxWidth="xl" sx={{ height: "100%"}}>
           <Outlet />
         </Container>
       </Box>

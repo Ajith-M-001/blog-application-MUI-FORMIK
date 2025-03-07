@@ -1,5 +1,15 @@
+import { Box } from "@mui/material";
+
 const SignIn = () => {
-  return <div>SignIn</div>;
+  return (
+    <Box
+      sx={{
+        height: "100%",
+      }}
+    >
+      SignIn
+    </Box>
+  );
 };
 
 export default SignIn;

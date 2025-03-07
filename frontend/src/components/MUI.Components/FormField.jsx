@@ -1,6 +1,7 @@
 import { CustomTextField } from "./CustomTextField";
+import { memo } from "react";
 
-const FormField = ({ fieldType, ...props }) => {
+const FormField = memo(({ fieldType, ...props }) => {
   console.log("checking");
   switch (fieldType) {
     case "autocomplete":
@@ -14,6 +15,8 @@ const FormField = ({ fieldType, ...props }) => {
     default:
       return <CustomTextField fieldType={fieldType} {...props} />;
   }
-};
+});
+
+FormField.displayName = "FormField";
 
 export { FormField };

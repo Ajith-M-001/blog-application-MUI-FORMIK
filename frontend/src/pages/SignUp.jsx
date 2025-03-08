@@ -3,7 +3,8 @@ import { AnimatePresence, motion } from "motion/react";
 import { Form, Formik } from "formik";
 import * as Yup from "yup";
 import { FormField } from "../components/MUI.Components/FormField";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
+import { useSignUpUser } from "../hooks/tanStackquery/users";
 
 const SignUpSchema = Yup.object().shape({
   firstName: Yup.string()
@@ -37,6 +38,12 @@ const SignUpSchema = Yup.object().shape({
 });
 
 const SignUp = () => {
+  const {
+    mutate: SignUpUser,
+    isPending: signUpPending,
+    error: signUpError,
+  } = useSignUpUser();
+  const navigate = useNavigate();
   const initialValues = {
     firstName: "",
     lastName: "",
@@ -45,9 +52,20 @@ const SignUp = () => {
     confirmPassword: "",
   };
 
-  const handleSubmit = () => {
-    console.log("Form submitted");
+  const handleSubmit = (values) => {
+    console.log("Form submitted", values);
+    SignUpUser(values, {
+      onSuccess: (data) => {
+        console.log("User signed up successfully", data);
+        navigate("/sign-in");
+      },
+      onError: (error) => {
+        console.log("Error signing up user", error?.response?.data?.message);
+      },
+    });
   };
+
+  console.log(signUpError);
 
   return (
     <AnimatePresence>
@@ -113,7 +131,7 @@ const SignUp = () => {
                 <Formik
                   initialValues={initialValues}
                   validationSchema={SignUpSchema}
-                  onSubmit={handleSubmit}
+                  onSubmit={(values) => handleSubmit(values)}
                 >
                   {({ dirty, isValid }) => (
                     <Form
@@ -174,10 +192,10 @@ const SignUp = () => {
                         variant="contained"
                         color="primary"
                         fullWidth
-                        disabled={!(dirty && isValid)}
+                        disabled={!(dirty && isValid) || signUpPending}
                         sx={{ mt: 3, mb: 2 }}
                       >
-                        Sign Up
+                        {signUpPending ? "Signing Up..." : "Sign Up"}
                       </Button>
                     </Form>
                   )}

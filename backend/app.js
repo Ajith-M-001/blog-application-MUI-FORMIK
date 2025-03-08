@@ -4,6 +4,7 @@ import connectDB from "./config/database.js";
 import userRoutes from "./routes/userRoutes.js";
 import cookieParser from "cookie-parser";
 import { errorHandler, notFound } from "./middleware/errorMiddleware.js";
+import cors from "cors";
 
 const app = express();
 
@@ -18,6 +19,15 @@ app.use(express.json());
 
 // Body parser for URL encoded form data
 app.use(express.urlencoded({ extended: true }));
+
+const corsOptions = {
+  origin: "http://localhost:5173",
+  credentials: true,
+  methods: "GET,PUT,POST,DELETE",
+  allowedHeaders: "Content-Type, Authorization",
+};
+// Enable CORS
+app.use(cors(corsOptions));
 
 app.use(cookieParser());
 

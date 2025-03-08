@@ -131,6 +131,15 @@ const baseTheme = createTheme({
         "p, h1, h2, h3, h4, h5, h6": {
           overflowWrap: "break-word",
         },
+        a: {
+          color: theme.palette.mode === "light" ? "#003F7A" : "#85C4FF",
+          textDecoration: "none",
+          transition: "color 0.2s ease",
+          "&:hover": {
+            textDecoration: "underline",
+            color: theme.palette.mode === "light" ? "#012b52" : "#68A5FA",
+          },
+        },
       }),
     },
     MuiButton: {

@@ -1,8 +1,9 @@
-import { motion, AnimatePresence } from "motion/react";
-import { Box, Button, Container, Grid2, Typography } from "@mui/material";
+import { Box, Button, Grid2, Paper, Typography, useTheme } from "@mui/material";
+import { AnimatePresence, motion } from "motion/react";
 import { Form, Formik } from "formik";
 import * as Yup from "yup";
 import { FormField } from "../components/MUI.Components/FormField";
+import { Link } from "react-router";
 
 const SignUpSchema = Yup.object().shape({
   firstName: Yup.string()
@@ -44,113 +45,154 @@ const SignUp = () => {
     confirmPassword: "",
   };
 
-  console.log("rendering");
-
-  const handleSubmit = (values, { resetForm }) => {
-    console.log(values);
-    resetForm();
+  const handleSubmit = () => {
+    console.log("Form submitted");
   };
 
   return (
     <AnimatePresence>
       <Box
-        component="motion.div"
-        initial={{ opacity: 0, y: 50 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -50 }}
-        transition={{ duration: 0.5 }}
         sx={{
           height: "100%",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          padding: { xs: 2, sm: 4 },
+          padding: { xs: 1, sm: 4 },
         }}
       >
-        <Container disableGutters maxWidth="lg" height="100%">
-          <Grid2 container spacing={10} alignItems="center" height={"100%"}>
-            <Grid2 size={{ xs: 12, md: 6 }}>
+        <Paper
+          elevation={1}
+          sx={{
+            width: "100%",
+            height: "100%",
+            borderRadius: 2,
+            maxWidth: { xs: "100%", md: "950px" },
+          }}
+        >
+          <Grid2
+            container
+            sx={{
+              height: "100%",
+              width: "100%",
+            }}
+          >
+            <Grid2
+              size={{ xs: 12, md: 6 }}
+              sx={{
+                height: "100%",
+                width: "100%",
+                display: "flex",
+                alignItems: "center",
+                p: 2,
+                justifyContent: { xs: "center", md: "flex-start" },
+              }}
+            >
               <motion.div
                 initial={{ opacity: 0, x: -50 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.5 }}
               >
-                <Box  textAlign={{ xs: "center", md: "left" }}>
-                  <Typography variant="h2" color="text.primary">
-                    Join NEXUS
-                  </Typography>
-                  <Typography color="text.secondary">
-                    Create your account and start your blogging journey
-                  </Typography>
+                <Typography
+                  variant="h2"
+                  color="text.primary"
+                  sx={{
+                    textAlign: { xs: "center", md: "left" },
+                  }}
+                >
+                  Join NEXUS
+                </Typography>
+                <Typography
+                  color="text.secondary"
+                  sx={{
+                    textAlign: { xs: "center", md: "left" },
+                  }}
+                >
+                  Create your account and start your blogging journey
+                </Typography>
 
-                  <Formik
-                    initialValues={initialValues}
-                    validationSchema={SignUpSchema}
-                    onSubmit={handleSubmit}
-                  >
-                    {({ dirty, isValid }) => (
-                      <Form style={{ width: "100%" }}>
-                        <Grid2 container spacing={2}>
-                          <Grid2 size={{ xs: 12, md: 6 }}>
-                            <FormField
-                              fieldType="text"
-                              label="First Name"
-                              id="firstName"
-                              name="firstName"
-                              placeholder="John"
-                            />
-                          </Grid2>
-                          <Grid2 size={{ xs: 12, md: 6 }}>
-                            <FormField
-                              fieldType="text"
-                              label="Last Name"
-                              id="lastName"
-                              name="lastName"
-                              placeholder="Doe"
-                            />
-                          </Grid2>
-                          <Grid2 size={{ xs: 12 }}>
-                            <FormField
-                              fieldType="email"
-                              label="Email Address"
-                              id="email"
-                              name="email"
-                              placeholder="John.doe@example.com"
-                            />
-                          </Grid2>
-                          <Grid2 size={{ xs: 12 }}>
-                            <FormField
-                              fieldType="password"
-                              label="Password"
-                              id="password"
-                              name="password"
-                              placeholder="********"
-                            />
-                          </Grid2>
-                          <Grid2 size={{ xs: 12 }}>
-                            <FormField
-                              fieldType="password"
-                              label="Confirm Password"
-                              id="confirmPassword"
-                              name="confirmPassword"
-                              placeholder="********"
-                            />
-                          </Grid2>
+                <Formik
+                  initialValues={initialValues}
+                  validationSchema={SignUpSchema}
+                  onSubmit={handleSubmit}
+                >
+                  {({ dirty, isValid }) => (
+                    <Form
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                      }}
+                    >
+                      <Grid2 container spacing={2}>
+                        <Grid2 size={{ xs: 12, md: 6 }}>
+                          <FormField
+                            fieldType="text"
+                            label="First Name"
+                            id="firstName"
+                            name="firstName"
+                            placeholder="John"
+                          />
                         </Grid2>
-
-                        <Button
-                          type="submit"
-                          variant="contained"
-                          color="primary"
-                          fullWidth
-                          disabled={!(dirty && isValid)}
-                          sx={{ mt: 3, mb: 2 }}
-                        >
-                          Sign Up
-                        </Button>
-                      </Form>
-                    )}
-                  </Formik>
+                        <Grid2 size={{ xs: 12, md: 6 }}>
+                          <FormField
+                            fieldType="text"
+                            label="Last Name"
+                            id="lastName"
+                            name="lastName"
+                            placeholder="Doe"
+                          />
+                        </Grid2>
+                        <Grid2 size={{ xs: 12 }}>
+                          <FormField
+                            fieldType="email"
+                            label="Email Address"
+                            id="email"
+                            name="email"
+                            placeholder="John.doe@example.com"
+                          />
+                        </Grid2>
+                        <Grid2 size={{ xs: 12 }}>
+                          <FormField
+                            fieldType="password"
+                            label="Password"
+                            id="password"
+                            name="password"
+                            placeholder="********"
+                          />
+                        </Grid2>
+                        <Grid2 size={{ xs: 12 }}>
+                          <FormField
+                            fieldType="password"
+                            label="Confirm Password"
+                            id="confirmPassword"
+                            name="confirmPassword"
+                            placeholder="********"
+                          />
+                        </Grid2>
+                      </Grid2>
+                      <Button
+                        type="submit"
+                        variant="contained"
+                        color="primary"
+                        fullWidth
+                        disabled={!(dirty && isValid)}
+                        sx={{ mt: 3, mb: 2 }}
+                      >
+                        Sign Up
+                      </Button>
+                    </Form>
+                  )}
+                </Formik>
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 1,
+                  }}
+                >
+                  <Typography variant="h6" color="text.secondary">
+                    Already have an account? <Link to="/sign-in">Sign In</Link>
+                  </Typography>
                 </Box>
               </motion.div>
             </Grid2>
@@ -158,9 +200,11 @@ const SignUp = () => {
               size={{ xs: 12, md: 6 }}
               sx={{
                 display: { xs: "none", md: "block" },
-                bgcolor: "#1E293B",
+                bgcolor: "#616161",
                 color: "white",
                 height: "100%",
+                borderTopRightRadius: 16,
+                borderBottomRightRadius: 16,
               }}
             >
               <Box
@@ -178,18 +222,32 @@ const SignUp = () => {
                   p: 4,
                 }}
               >
-                <Typography
-                  variant="h2"
-                  component="div"
-                  fontWeight="bold"
-                  sx={{
-                    background: "linear-gradient(to right, white, #D1D5DB)",
-                    WebkitBackgroundClip: "text",
-                    WebkitTextFillColor: "transparent",
+                {/* Adding the slow up-and-down motion here */}
+                <motion.div
+                  animate={{
+                    y: [0, -10, 0], // Move up by -10px and come back to original position
+                  }}
+                  transition={{
+                    duration: 3, // Slow movement (3 seconds for one cycle)
+                    repeat: Infinity, // Repeat the animation indefinitely
+                    repeatType: "loop", // Continuously loop the animation
+                    ease: "easeInOut", // Smooth easing for the up-down motion
                   }}
                 >
-                  NEXUS
-                </Typography>
+                  <Typography
+                    variant="h2"
+                    component="div"
+                    fontWeight="bold"
+                    sx={{
+                      background: "linear-gradient(to right, white, #D1D5DB)",
+                      WebkitBackgroundClip: "text",
+                      WebkitTextFillColor: "transparent",
+                    }}
+                  >
+                    NEXUS
+                  </Typography>
+                </motion.div>
+
                 <Box
                   sx={{
                     mt: 1,
@@ -229,7 +287,7 @@ const SignUp = () => {
               </Box>
             </Grid2>
           </Grid2>
-        </Container>
+        </Paper>
       </Box>
     </AnimatePresence>
   );

@@ -1,3 +1,6 @@
+//frontend\src\api\endpoints.js
+
+
 const USER_URL = "/users";
 export const API_ENDPOINTS = {
   users: {

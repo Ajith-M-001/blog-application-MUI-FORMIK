@@ -1,10 +1,10 @@
-import { Box, Button, Grid2, Paper, Typography, useTheme } from "@mui/material";
+import { Box, Button, Grid2, Paper, Typography } from "@mui/material";
 import { AnimatePresence, motion } from "motion/react";
 import { Form, Formik } from "formik";
 import * as Yup from "yup";
 import { FormField } from "../components/MUI.Components/FormField";
 import { Link, useNavigate } from "react-router";
-import { useSignUpUser } from "../hooks/tanStackquery/users";
+import { useSignUpUser } from "../hooks/api/users";
 
 const SignUpSchema = Yup.object().shape({
   firstName: Yup.string()
@@ -24,6 +24,7 @@ const SignUpSchema = Yup.object().shape({
       /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
       "Invalid email format"
     ),
+  phoneNumber: Yup.string().required("Phone number is required"),
   password: Yup.string()
     .required("Password is required")
     .min(8, "Password must be at least 8 characters")
@@ -38,11 +39,7 @@ const SignUpSchema = Yup.object().shape({
 });
 
 const SignUp = () => {
-  const {
-    mutate: SignUpUser,
-    isPending: signUpPending,
-    error: signUpError,
-  } = useSignUpUser();
+  const { mutate: SignUpUser, isPending: signUpPending } = useSignUpUser();
   const navigate = useNavigate();
   const initialValues = {
     firstName: "",
@@ -50,22 +47,17 @@ const SignUp = () => {
     email: "",
     password: "",
     confirmPassword: "",
+    phoneNumber: "",
+    useEmail: true,
   };
 
   const handleSubmit = (values) => {
-    console.log("Form submitted", values);
     SignUpUser(values, {
-      onSuccess: (data) => {
-        console.log("User signed up successfully", data);
+      onSuccess: () => {
         navigate("/sign-in");
-      },
-      onError: (error) => {
-        console.log("Error signing up user", error?.response?.data?.message);
       },
     });
   };
-
-  console.log(signUpError);
 
   return (
     <AnimatePresence>
@@ -133,7 +125,7 @@ const SignUp = () => {
                   validationSchema={SignUpSchema}
                   onSubmit={(values) => handleSubmit(values)}
                 >
-                  {({ dirty, isValid }) => (
+                  {({ dirty, isValid, values, setFieldValue }) => (
                     <Form
                       style={{
                         width: "100%",
@@ -159,15 +151,44 @@ const SignUp = () => {
                             placeholder="Doe"
                           />
                         </Grid2>
-                        <Grid2 size={{ xs: 12 }}>
-                          <FormField
-                            fieldType="email"
-                            label="Email Address"
-                            id="email"
-                            name="email"
-                            placeholder="John.doe@example.com"
-                          />
-                        </Grid2>
+                        {values.useEmail ? (
+                          <Grid2 size={{ xs: 12 }}>
+                            <FormField
+                              fieldType="email"
+                              label="Email Address"
+                              id="email"
+                              name="email"
+                              placeholder="John.doe@example.com"
+                            />
+                            <Typography
+                              variant="body2"
+                              color="primary"
+                              sx={{ cursor: "pointer", mt: 1 }}
+                              onClick={() => setFieldValue("useEmail", false)}
+                            >
+                              use phone number instead
+                            </Typography>
+                          </Grid2>
+                        ) : (
+                          <Grid2 size={{ xs: 12 }}>
+                            <FormField
+                              fieldType="number"
+                              label="Phone Number"
+                              id="phoneNumber"
+                              name="phoneNumber"
+                              placeholder="9900887766"
+                            />
+                            <Typography
+                              variant="body2"
+                              color="primary"
+                              sx={{ cursor: "pointer", mt: 1 }}
+                              onClick={() => setFieldValue("useEmail", true)}
+                            >
+                              use email instead
+                            </Typography>
+                          </Grid2>
+                        )}
+
                         <Grid2 size={{ xs: 12 }}>
                           <FormField
                             fieldType="password"

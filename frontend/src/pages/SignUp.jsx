@@ -1,11 +1,23 @@
-import { Box, Button, Grid2, Paper, Typography } from "@mui/material";
+import {
+  Box,
+  Button,
+  Grid2,
+  Paper,
+  Typography,
+  Link as MuiLink,
+} from "@mui/material";
 import { AnimatePresence, motion } from "motion/react";
 import { Form, Formik } from "formik";
 import * as Yup from "yup";
 import { FormField } from "../components/MUI.Components/FormField";
 import { Link, useNavigate } from "react-router";
 import { useSignUpUser } from "../hooks/api/users";
+import { LoaderCircle, Phone, Mail } from "lucide-react";
+import { useGetAllCountry } from "../hooks/api/countries";
+import { parsePhoneNumber } from "libphonenumber-js/max";
+import CountryPhoneSelector from "../components/MUI.Components/CountryPhoneSelector";
 
+// Validation schema with conditional validation for email/phone
 const SignUpSchema = Yup.object().shape({
   firstName: Yup.string()
     .min(3, "Too Short!")
@@ -17,14 +29,46 @@ const SignUpSchema = Yup.object().shape({
     .max(50, "Too Long!")
     .matches(/^[a-zA-Z]+$/, "Only alphabets are allowed")
     .required("Last Name is required"),
-  email: Yup.string()
-    .email("Invalid email address")
-    .required("Email is required")
-    .matches(
-      /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
-      "Invalid email format"
-    ),
-  phoneNumber: Yup.string().required("Phone number is required"),
+  email: Yup.string().when("useEmail", {
+    is: true,
+    then: () =>
+      Yup.string()
+        .email("Invalid email address")
+        .required("Email is required")
+        .matches(
+          /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+          "Invalid email format"
+        ),
+    otherwise: () => Yup.string().notRequired(),
+  }),
+  phoneNumber: Yup.string().when("useEmail", {
+    is: false,
+    then: () =>
+      Yup.string()
+        .required("Phone number is required")
+        .test("is-mobile", "Invalid mobile number", function (value) {
+          const country = this.parent.country;
+          if (!country || !value) return false;
+
+          try {
+            const phoneNumber = parsePhoneNumber(value, country.code);
+            return (
+              !!phoneNumber &&
+              phoneNumber.isValid() &&
+              phoneNumber.getType() === "MOBILE"
+            );
+          } catch (e) {
+            console.error(e);
+            return false;
+          }
+        }),
+    otherwise: () => Yup.string().notRequired(),
+  }),
+  country: Yup.object().when("useEmail", {
+    is: false,
+    then: () => Yup.object().required("Please Select Country"),
+    otherwise: () => Yup.object().notRequired(),
+  }),
   password: Yup.string()
     .required("Password is required")
     .min(8, "Password must be at least 8 characters")
@@ -36,22 +80,29 @@ const SignUpSchema = Yup.object().shape({
   confirmPassword: Yup.string()
     .required("Confirm Password is required")
     .oneOf([Yup.ref("password"), null], "Passwords must match"),
+  useEmail: Yup.boolean(),
 });
 
 const SignUp = () => {
   const { mutate: SignUpUser, isPending: signUpPending } = useSignUpUser();
+  const { data: allCountries } = useGetAllCountry();
   const navigate = useNavigate();
+
+  // Initial values with default values
   const initialValues = {
     firstName: "",
     lastName: "",
     email: "",
     password: "",
     confirmPassword: "",
+    country: null,
     phoneNumber: "",
-    useEmail: true,
+    useEmail: true, // Default to email input
   };
 
   const handleSubmit = (values) => {
+    console.log("Submission Data:", values);
+
     SignUpUser(values, {
       onSuccess: () => {
         navigate("/sign-in");
@@ -125,7 +176,7 @@ const SignUp = () => {
                   validationSchema={SignUpSchema}
                   onSubmit={(values) => handleSubmit(values)}
                 >
-                  {({ dirty, isValid, values, setFieldValue }) => (
+                  {({ dirty, isValid, values, setFieldValue, resetForm }) => (
                     <Form
                       style={{
                         width: "100%",
@@ -151,41 +202,62 @@ const SignUp = () => {
                             placeholder="Doe"
                           />
                         </Grid2>
+
                         {values.useEmail ? (
+                          // Email input field
                           <Grid2 size={{ xs: 12 }}>
                             <FormField
                               fieldType="email"
                               label="Email Address"
                               id="email"
                               name="email"
-                              placeholder="John.doe@example.com"
+                              placeholder="john.doe@example.com"
                             />
-                            <Typography
-                              variant="body2"
-                              color="primary"
-                              sx={{ cursor: "pointer", mt: 1 }}
-                              onClick={() => setFieldValue("useEmail", false)}
-                            >
-                              use phone number instead
-                            </Typography>
+                            <Box sx={{ mt: 1 }}>
+                              <MuiLink
+                                component="button"
+                                type="button"
+                                variant="body2"
+                                onClick={() => {
+                                  resetForm();
+                                  setFieldValue("useEmail", false);
+                                }}
+                                sx={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: 1,
+                                  textDecoration: "none",
+                                  cursor: "pointer",
+                                }}
+                              >
+                                <Phone size={18} /> Use phone number instead
+                              </MuiLink>
+                            </Box>
                           </Grid2>
                         ) : (
+                          // Phone number input with country code
                           <Grid2 size={{ xs: 12 }}>
-                            <FormField
-                              fieldType="number"
-                              label="Phone Number"
-                              id="phoneNumber"
-                              name="phoneNumber"
-                              placeholder="9900887766"
-                            />
-                            <Typography
-                              variant="body2"
-                              color="primary"
-                              sx={{ cursor: "pointer", mt: 1 }}
-                              onClick={() => setFieldValue("useEmail", true)}
-                            >
-                              use email instead
-                            </Typography>
+                            <CountryPhoneSelector countries={allCountries} />
+                            <Box sx={{ mt: 1 }}>
+                              <MuiLink
+                                component="button"
+                                type="button"
+                                variant="body2"
+                                onClick={() => {
+                                  resetForm();
+                                  setFieldValue("useEmail", true);
+                                }}
+                                sx={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: 1,
+                                  textDecoration: "none",
+                                  cursor: "pointer",
+                                }}
+                              >
+                                <Mail size={18} /> Use email instead
+                              </MuiLink>
+                            </Box>
                           </Grid2>
                         )}
 
@@ -214,9 +286,22 @@ const SignUp = () => {
                         color="primary"
                         fullWidth
                         disabled={!(dirty && isValid) || signUpPending}
-                        sx={{ mt: 3, mb: 2 }}
+                        sx={{
+                          mt: 3,
+                          mb: 2,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
                       >
-                        {signUpPending ? "Signing Up..." : "Sign Up"}
+                        {signUpPending ? (
+                          <>
+                            <LoaderCircle size={16} />
+                            Signing Up...
+                          </>
+                        ) : (
+                          "Sign Up"
+                        )}
                       </Button>
                     </Form>
                   )}
@@ -235,6 +320,7 @@ const SignUp = () => {
                 </Box>
               </motion.div>
             </Grid2>
+            {/* Right side decoration panel - keep as is */}
             <Grid2
               size={{ xs: 12, md: 6 }}
               sx={{
@@ -261,16 +347,15 @@ const SignUp = () => {
                   p: 4,
                 }}
               >
-                {/* Adding the slow up-and-down motion here */}
                 <motion.div
                   animate={{
-                    y: [0, -10, 0], // Move up by -10px and come back to original position
+                    y: [0, -10, 0],
                   }}
                   transition={{
-                    duration: 3, // Slow movement (3 seconds for one cycle)
-                    repeat: Infinity, // Repeat the animation indefinitely
-                    repeatType: "loop", // Continuously loop the animation
-                    ease: "easeInOut", // Smooth easing for the up-down motion
+                    duration: 3,
+                    repeat: Infinity,
+                    repeatType: "loop",
+                    ease: "easeInOut",
                   }}
                 >
                   <Typography

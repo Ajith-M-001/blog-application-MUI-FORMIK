@@ -1,7 +1,7 @@
 //frontend\src\api\endpoints.js
 
-
 const USER_URL = "/users";
+const COUNTRY_URL = "/countries";
 export const API_ENDPOINTS = {
   users: {
     signUp: `${USER_URL}/sign-up`,
@@ -11,4 +11,7 @@ export const API_ENDPOINTS = {
     refreshToken: `${USER_URL}/refresh`,
     verifyOtp: `${USER_URL}/verify-otp`,
   },
+  countries: {
+    all: `${COUNTRY_URL}/all`,
+  }
 };

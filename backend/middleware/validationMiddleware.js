@@ -30,7 +30,9 @@ export const validateSignUp = [
     .withMessage("First name is required")
     .bail()
     .isLength({ min: 3, max: 50 })
-    .withMessage("First name must be between 3 and 50 characters"),
+    .withMessage("First name must be between 3 and 50 characters")
+    .matches(/^[a-zA-Z]+$/)
+    .withMessage("Only alphabets are allowed"),
 
   body("lastName")
     .trim()
@@ -38,9 +40,14 @@ export const validateSignUp = [
     .withMessage("Last name is required")
     .bail()
     .isLength({ min: 1, max: 50 })
-    .withMessage("Last name must be between 2 and 50 characters"),
+    .withMessage("Last name must be between 2 and 50 characters")
+    .matches(/^[a-zA-Z]+$/)
+    .withMessage("Only alphabets are allowed"),
+
+  body("useEmail").isBoolean().withMessage("useEmail must be a boolean"),
 
   body("email")
+    .if((value, { req }) => req.body.useEmail === true)
     .optional()
     .isEmail()
     .withMessage({ path: "email", message: "Invalid email address" })
@@ -48,24 +55,17 @@ export const validateSignUp = [
     .normalizeEmail(),
 
   body("phoneNumber")
-    .optional()
+    .if((value, { req }) => req.body.useEmail !== true)
+    .notEmpty()
+    .withMessage("Phone number is required")
+    .bail()
     .isMobilePhone()
     .withMessage({ path: "phoneNumber", message: "Invalid phone number" }),
 
-  body("countryCode")
-    .optional()
-    .matches(/^\+?[1-9]\d{0,3}$/)
-    .withMessage({ path: "countryCode", message: "Invalid country code" })
-    .bail()
-    .custom((value, { req }) => {
-      if (req.body.phoneNumber && !value) {
-        throw {
-          path: "countryCode",
-          message: "Country code is required with phone number",
-        };
-      }
-      return true;
-    }),
+  body("country")
+    .if((value, { req }) => req.body.useEmail !== true)
+    .notEmpty()
+    .withMessage("Country code is required with phone number"),
 
   body("password")
     .isStrongPassword({
@@ -97,30 +97,23 @@ export const validateSignUp = [
       return true;
     }),
 
-  body().custom((value, { req }) => {
-    // Contact information validation
-    if (!req.body.email && !req.body.phoneNumber) {
-      throw {
-        path: "emailORPhoneNumber",
-        message: "Either email or phone number must be provided",
-      };
+  body().custom((_, { req }) => {
+    if (req.body.useEmail === true) {
+      if (!req.body.email) {
+        throw {
+          path: "email",
+          message: "Email is required when useEmail is true",
+        };
+      }
+    } else {
+      if (!req.body.phoneNumber || !req.body.country) {
+        throw {
+          path: "phoneNumber",
+          message:
+            "Phone number and country code are required when useEmail is false",
+        };
+      }
     }
-
-    // Phone number and country code dependency validation
-    if (req.body.phoneNumber && !req.body.countryCode) {
-      throw {
-        path: "countryCode",
-        message: "Country code is required with phone number",
-      };
-    }
-
-    if (req.body.countryCode && !req.body.phoneNumber) {
-      throw {
-        path: "phoneNumber",
-        message: "Phone number is required with country code",
-      };
-    }
-
     return true;
   }),
 

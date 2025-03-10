@@ -25,7 +25,7 @@ const refreshTokenCookieOptions = {
 
 export const signUpUser = transactionHandler(
   async (req, res, next, session) => {
-    const { firstName, lastName, email, password, phoneNumber, countryCode } =
+    const { firstName, lastName, email, password, phoneNumber, country} =
       req.body;
 
     const queryConditions = [];
@@ -70,7 +70,7 @@ export const signUpUser = transactionHandler(
       lastName,
       email: email ? email.toLowerCase() : undefined,
       phoneNumber: phoneNumber || undefined,
-      countryCode,
+      country,
       password,
       verificationCode: otp,
       verificationCodeExpires: otpExpiry,
@@ -82,7 +82,7 @@ export const signUpUser = transactionHandler(
     if (email) {
       await sendOTPViaEmail(savedUser.email, "Your Verification OTP", otp);
     } else if (phoneNumber) {
-      await sendOTPViaSMS(phoneNumber, otp);
+      // await sendOTPViaSMS(phoneNumber, otp);
     }
 
     // Convert to a plain object and remove the password field manually

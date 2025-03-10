@@ -2,6 +2,7 @@ import express from "express";
 import "dotenv/config";
 import connectDB from "./config/database.js";
 import userRoutes from "./routes/userRoutes.js";
+import countryRoute from "./routes/countriesRoute.js";
 import cookieParser from "cookie-parser";
 import { errorHandler, notFound } from "./middleware/errorMiddleware.js";
 import cors from "cors";
@@ -33,6 +34,7 @@ app.use(cookieParser());
 
 // Mount user routes
 app.use("/api/v1/users", userRoutes);
+app.use("/api/v1/countries", countryRoute);
 
 // Handle 404 errors for non-existent routes
 app.use(notFound);

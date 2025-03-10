@@ -124,7 +124,6 @@ const Header = () => {
     hover: {
       scaleX: 1,
       opacity: 1,
-      ease: "easeOut",
     },
   };
 

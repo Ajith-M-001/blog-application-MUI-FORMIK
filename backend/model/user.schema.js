@@ -55,6 +55,15 @@ const authProviderSchema = new mongoose.Schema(
   { _id: false }
 );
 
+const countrySchema = new mongoose.Schema(
+  {
+    name: String,
+    code: String,
+    dial_code: String,
+  },
+  { _id: false }
+);
+
 // User Schema
 const userSchema = new mongoose.Schema(
   {
@@ -75,9 +84,7 @@ const userSchema = new mongoose.Schema(
       trim: true,
       lowercase: true,
     },
-    countryCode: {
-      type: String,
-    },
+    country: countrySchema,
     phoneNumber: {
       type: String,
       unique: true,

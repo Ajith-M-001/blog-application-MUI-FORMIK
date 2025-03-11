@@ -6,6 +6,7 @@ import { generateToken } from "../utils/generateTokens.js";
 import { blacklistedTokens } from "../model/token.blacklist.js";
 import { generateOTP } from "../utils/otpUtils.js";
 import { sendOTPViaEmail } from "../services/emailService.js";
+import { sendOTPViaSMS } from "../services/smsServices.js";
 
 // Create cookie options for the access token
 const accessTokenCookieOptions = {
@@ -25,7 +26,7 @@ const refreshTokenCookieOptions = {
 
 export const signUpUser = transactionHandler(
   async (req, res, next, session) => {
-    const { firstName, lastName, email, password, phoneNumber, country} =
+    const { firstName, lastName, email, password, phoneNumber, country } =
       req.body;
 
     const queryConditions = [];
@@ -70,7 +71,7 @@ export const signUpUser = transactionHandler(
       lastName,
       email: email ? email.toLowerCase() : undefined,
       phoneNumber: phoneNumber || undefined,
-      country,
+      country: country || undefined,
       password,
       verificationCode: otp,
       verificationCodeExpires: otpExpiry,
@@ -82,7 +83,7 @@ export const signUpUser = transactionHandler(
     if (email) {
       await sendOTPViaEmail(savedUser.email, "Your Verification OTP", otp);
     } else if (phoneNumber) {
-      // await sendOTPViaSMS(phoneNumber, otp);
+      await sendOTPViaSMS(`${country?.dial_code}${phoneNumber}`, otp);
     }
 
     // Convert to a plain object and remove the password field manually

@@ -11,6 +11,7 @@ const Contact = lazy(() => import("./pages/Contact"));
 const SignIn = lazy(() => import("./pages/SignIn"));
 const SignUp = lazy(() => import("./pages/SignUp"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+const OtpVerificationPage = lazy(() => import("./pages/OtpVerificationPage"));
 
 const App = () => {
   return (
@@ -24,6 +25,10 @@ const App = () => {
               <Route path="contact" element={<Contact />} />
               <Route path="sign-in" element={<SignIn />} />
               <Route path="sign-up" element={<SignUp />} />
+              <Route
+                path="otp-verification"
+                element={<OtpVerificationPage />}
+              />
               <Route path="*" element={<NotFound />} />
             </Route>
           </Routes>

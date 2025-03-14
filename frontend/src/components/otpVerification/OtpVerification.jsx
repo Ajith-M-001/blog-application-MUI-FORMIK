@@ -1,7 +1,8 @@
-import { Box, Stack, Typography } from "@mui/material";
-import { useState } from "react";
+import { Box, Button, Stack, TextField, Typography } from "@mui/material";
+import { useRef, useState } from "react";
 import { Form, Formik } from "formik";
 import * as Yup from "yup";
+import { LoaderCircle, BadgeCheck, MoveRight } from "lucide-react";
 
 const OtpVerification = ({
   contactType,
@@ -9,6 +10,7 @@ const OtpVerification = ({
   onVerificationComplete,
 }) => {
   const [error, setError] = useState("hello world");
+  const inputRefs = useRef([]);
 
   // Mask the contact value (email or phone)
   const maskedContact = () => {
@@ -39,13 +41,18 @@ const OtpVerification = ({
       )
       .length(6, "Must enter all digits"),
   });
+
+  const handleInputChange = (e, index, values, setFieldValue) => {};
   return (
     <Box
       sx={{
-        // backgroundColor: "red",
-        maxWidth: 450,
+        maxWidth: { xs: "100%", sm: "30rem" },
+        width: "100%",
         mx: "auto",
-        p: 2,
+        p: { xs: 2, sm: 3 },
+        borderRadius: 1.5,
+        border: "1px solid",
+        borderColor: "divider",
       }}
     >
       <Stack
@@ -56,7 +63,7 @@ const OtpVerification = ({
       >
         <Typography
           variant="h4"
-          component="h1"
+          component="h4"
           sx={{ fontWeight: "bold", color: "text.primary" }}
         >
           Verify Your Account
@@ -79,7 +86,108 @@ const OtpVerification = ({
           initialValues={{ otp: Array(6).fill("") }}
           validationSchema={validationSchema}
           onSubmit={handleSubmit}
-        ></Formik>
+        >
+          {({
+            values,
+            handleChange,
+            errors,
+            touched,
+            isSubmitting,
+            setFieldValue,
+          }) => (
+            <Form>
+              <Stack spacing={3} width={"100%"}>
+                <Stack
+                  direction={"row"}
+                  spacing={{ xs: 0.5, sm: 1 }}
+                  justifyContent="center"
+                  onPaste={(e) => handlePaste(e, setFieldValue)}
+                >
+                  {values.otp.map((digit, index) => (
+                    <TextField
+                      key={`otp-${index}`}
+                      name={`otp[${index}]`}
+                      value={values.otp[index]}
+                      inputRef={(el) => (inputRefs.current[index] = el)}
+                      onChange={(e) => {
+                        const { value } = e.target;
+
+                        // Allow only one digit, replacing the old number
+                        if (value && !/^\d?$/.test(value)) return;
+
+                        // Update the specific index value with the new digit
+                        const newOtp = [...values.otp];
+                        newOtp[index] = value ? value[0] : ""; // Always take the first digit only
+                        setFieldValue("otp", newOtp);
+
+                        if (value && index < 5) {
+                          inputRefs.current[index + 1]?.focus();
+                        }
+                      }}
+                      onKeyDown={(e) => {
+                        if (
+                          e.key === "Backspace" &&
+                          !values.otp[index] &&
+                          index > 0
+                        ) {
+                          inputRefs.current[index - 1]?.focus();
+                        }
+                        if (e.key === "ArrowLeft" && index > 0) {
+                          inputRefs.current[index - 1]?.focus();
+                        }
+                        if (e.key === "ArrowRight" && index < 5) {
+                          inputRefs.current[index + 1]?.focus();
+                        }
+                      }}
+                      variant="outlined"
+                      type="text"
+                      inputMode="numeric"
+                      error={touched.otp && Boolean(errors.otp?.[index])}
+                      slotProps={{
+                        "aria-label": `digit ${index + 1} of verification code`,
+                      }}
+                      sx={{
+                        width: {
+                          xs: "clamp(2.6rem, 5vw, 3rem)",
+                          sm: "clamp(3rem, 7vw, 3.5rem)",
+                          "& input": {
+                            textAlign: "center",
+                            p: { xs: 1, sm: 1.5 },
+                            fontSize: { xs: "1.125rem", sm: "1.5rem" },
+                            fontWeight: "medium",
+                          },
+                        },
+                      }}
+                    />
+                  ))}
+                </Stack>
+                <Button
+                  type="submit"
+                  variant="contained"
+                  disabled={isSubmitting || values.otp.some((digit) => !digit)}
+                  endIcon={
+                    isSubmitting ? (
+                      <LoaderCircle />
+                    ) : values.otp.every((digit) => digit) ? (
+                      <BadgeCheck />
+                    ) : (
+                      <MoveRight />
+                    )
+                  }
+                  size="small"
+                  fullWidth
+                  sx={{
+                    py: 1,
+                    mt: 2,
+                    textTransform: "none",
+                  }}
+                >
+                  {isSubmitting ? "Verifying..." : "Verify Code"}
+                </Button>
+              </Stack>
+            </Form>
+          )}
+        </Formik>
       </Stack>
     </Box>
   );

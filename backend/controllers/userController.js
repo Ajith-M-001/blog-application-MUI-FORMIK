@@ -92,7 +92,7 @@ export const signUpUser = transactionHandler(
       : {
           _id: savedUser._id,
           phoneNumber: savedUser.phoneNumber,
-          countryCode: savedUser.countryCode,
+          country: savedUser.country,
         };
 
     // Send a success response

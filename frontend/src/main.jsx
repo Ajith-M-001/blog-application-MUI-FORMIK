@@ -11,6 +11,7 @@ import { useShallow } from "zustand/react/shallow";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { NotificationToaster } from "./components/Toaster.jsx";
+import "./index.css";
 
 const RootApp = () => {
   const { isDarkTheme } = useStore(

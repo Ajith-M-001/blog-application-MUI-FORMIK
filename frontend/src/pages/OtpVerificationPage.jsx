@@ -1,12 +1,11 @@
 import { Box } from "@mui/material";
 import { useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router";
+import { useLocation } from "react-router";
 import { OtpVerification } from "../components/otpVerification/OtpVerification";
 import { AnimatePresence } from "motion/react";
 
 const OtpVerificationPage = () => {
   const [mounted, setMounted] = useState(false);
-  const navigate = useNavigate();
   const location = useLocation();
 
   const contactType = location.state?.contactType || "email";
@@ -17,11 +16,6 @@ const OtpVerificationPage = () => {
   useEffect(() => {
     setMounted(true);
   }, []);
-
-  const handleVerificationComplete = () => {
-    // Navigate to the main app or dashboard after successful verification
-    navigate("/");
-  };
 
   return (
     <AnimatePresence>
@@ -38,7 +32,6 @@ const OtpVerificationPage = () => {
           <OtpVerification
             contactType={contactType}
             contactValue={contactValue}
-            onVerificationComplete={handleVerificationComplete}
           />
         )}
       </Box>

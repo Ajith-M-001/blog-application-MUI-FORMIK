@@ -22,3 +22,17 @@ export const useSignUpUser = () => {
     },
   });
 };
+
+export const useVerifyOtp = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: usersService.verifyOtp,
+    onSuccess: () => {
+      queryClient.invalidateQueries(QUERY_KEYS.USERS);
+    },
+    onError: (error) => {
+      console.log("Error verifying otp", error?.response?.data);
+      showToast(error?.response?.data?.message, { type: "error" });
+    },
+  });
+};

@@ -12,10 +12,11 @@ import * as Yup from "yup";
 import { FormField } from "../components/MUI.Components/FormField";
 import { Link, useNavigate } from "react-router";
 import { useSignUpUser } from "../hooks/api/users";
-import { LoaderCircle, Phone, Mail } from "lucide-react";
+import { LoaderCircle, BadgeCheck, MoveRight, Phone, Mail } from "lucide-react";
 import { useGetAllCountry } from "../hooks/api/countries";
 import { parsePhoneNumber } from "libphonenumber-js/max";
 import CountryPhoneSelector from "../components/MUI.Components/CountryPhoneSelector";
+import { showToast } from "../utils/toast";
 
 // Validation schema with conditional validation for email/phone
 const SignUpSchema = Yup.object().shape({
@@ -104,8 +105,17 @@ const SignUp = () => {
     console.log("Submission Data:", values);
 
     SignUpUser(values, {
-      onSuccess: () => {
-        navigate("/sign-in");
+      onSuccess: (data) => {
+        console.log("data_data", data);
+        showToast(data.message, { type: "success" });
+        navigate("/otp-verification", {
+          state: {
+            contactType: values.useEmail ? "email" : "phone",
+            contactValue: values.useEmail
+              ? data?.data?.user?.email
+              : `${data?.data?.user?.country?.dial_code}${data?.data?.user?.phoneNumber}`,
+          },
+        });
       },
     });
   };
@@ -286,6 +296,15 @@ const SignUp = () => {
                         color="primary"
                         fullWidth
                         disabled={!(dirty && isValid) || signUpPending}
+                        endIcon={
+                          signUpPending ? (
+                            <LoaderCircle className="loader-circle" />
+                          ) : dirty && isValid ? (
+                            <BadgeCheck />
+                          ) : (
+                            <MoveRight />
+                          )
+                        }
                         sx={{
                           mt: 3,
                           mb: 2,
@@ -294,14 +313,7 @@ const SignUp = () => {
                           justifyContent: "center",
                         }}
                       >
-                        {signUpPending ? (
-                          <>
-                            <LoaderCircle size={16} />
-                            Signing Up...
-                          </>
-                        ) : (
-                          "Sign Up"
-                        )}
+                        {signUpPending ? "Signing Up..." : "Sign Up"}
                       </Button>
                     </Form>
                   )}

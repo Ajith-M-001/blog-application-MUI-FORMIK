@@ -3,14 +3,16 @@ import { useRef, useState } from "react";
 import { Form, Formik } from "formik";
 import * as Yup from "yup";
 import { LoaderCircle, BadgeCheck, MoveRight } from "lucide-react";
+import { useVerifyOtp } from "../../hooks/api/users";
+import { useNavigate } from "react-router";
+import { showToast } from "../../utils/toast";
 
-const OtpVerification = ({
-  contactType,
-  contactValue,
-  onVerificationComplete,
-}) => {
+const OtpVerification = ({ contactType, contactValue }) => {
   const [error, setError] = useState("hello world");
   const inputRefs = useRef([]);
+  const navigate = useNavigate();
+
+  const { mutate: verifyOTP, isPending: isVerifying } = useVerifyOtp();
 
   // Mask the contact value (email or phone)
   const maskedContact = () => {
@@ -28,8 +30,19 @@ const OtpVerification = ({
     }
   };
 
-  const handleSubmit = () => {
-    console.log("form submitted");
+  const handleSubmit = (values) => {
+    const OTP = values.otp.join("");
+    console.log("contact", contactType, contactValue, OTP);
+    verifyOTP(
+      { [contactType]: contactValue, otp: OTP },
+      {
+        onSuccess: (data) => {
+          console.log("success", data);
+          showToast(data.message, { type: "success" });
+          navigate("/");
+        },
+      }
+    );
   };
 
   const validationSchema = Yup.object().shape({
@@ -42,7 +55,29 @@ const OtpVerification = ({
       .length(6, "Must enter all digits"),
   });
 
-  const handleInputChange = (e, index, values, setFieldValue) => {};
+  const handlePaste = (e, setFieldValue) => {
+    e.preventDefault();
+    const pastedData = e.clipboardData
+      .getData("Text")
+      .replace(/\D/g, "")
+      .substring(0, 6);
+    console.log(pastedData);
+
+    if (!pastedData) return;
+
+    const newOtp = Array(6).fill("");
+
+    pastedData.split("").forEach((digit, index) => {
+      newOtp[index] = digit;
+    });
+
+    setFieldValue("otp", newOtp);
+
+    const focusIndex = Math.min(pastedData.length, 5);
+    setTimeout(() => {
+      inputRefs.current[focusIndex]?.focus();
+    }, 0);
+  };
   return (
     <Box
       sx={{
@@ -87,14 +122,7 @@ const OtpVerification = ({
           validationSchema={validationSchema}
           onSubmit={handleSubmit}
         >
-          {({
-            values,
-            handleChange,
-            errors,
-            touched,
-            isSubmitting,
-            setFieldValue,
-          }) => (
+          {({ values, errors, touched, setFieldValue }) => (
             <Form>
               <Stack spacing={3} width={"100%"}>
                 <Stack
@@ -112,16 +140,18 @@ const OtpVerification = ({
                       onChange={(e) => {
                         const { value } = e.target;
 
-                        // Allow only one digit, replacing the old number
-                        if (value && !/^\d?$/.test(value)) return;
+                        const singleDigit =
+                          value.length > 0 ? value.slice(-1) : value;
 
-                        // Update the specific index value with the new digit
-                        const newOtp = [...values.otp];
-                        newOtp[index] = value ? value[0] : ""; // Always take the first digit only
-                        setFieldValue("otp", newOtp);
+                        // Only allow digits
+                        if (!/^\d*$/.test(singleDigit)) return;
 
-                        if (value && index < 5) {
-                          inputRefs.current[index + 1]?.focus();
+                        setFieldValue(`otp[${index}]`, singleDigit);
+
+                        if (singleDigit && index < 5) {
+                          setTimeout(() => {
+                            inputRefs.current[index + 1]?.focus();
+                          }, 0);
                         }
                       }}
                       onKeyDown={(e) => {
@@ -134,9 +164,27 @@ const OtpVerification = ({
                         }
                         if (e.key === "ArrowLeft" && index > 0) {
                           inputRefs.current[index - 1]?.focus();
+                          setTimeout(() => {
+                            const input = inputRefs.current[index - 1];
+                            if (input) {
+                              input.setSelectionRange(
+                                input.value.length,
+                                input.value.length
+                              );
+                            }
+                          }, 0);
                         }
                         if (e.key === "ArrowRight" && index < 5) {
                           inputRefs.current[index + 1]?.focus();
+                          setTimeout(() => {
+                            const input = inputRefs.current[index - 1];
+                            if (input) {
+                              input.setSelectionRange(
+                                input.value.length,
+                                input.value.length
+                              );
+                            }
+                          }, 0);
                         }
                       }}
                       variant="outlined"
@@ -164,10 +212,10 @@ const OtpVerification = ({
                 <Button
                   type="submit"
                   variant="contained"
-                  disabled={isSubmitting || values.otp.some((digit) => !digit)}
+                  disabled={isVerifying || values.otp.some((digit) => !digit)}
                   endIcon={
-                    isSubmitting ? (
-                      <LoaderCircle />
+                    isVerifying ? (
+                      <LoaderCircle className="loader-circle" />
                     ) : values.otp.every((digit) => digit) ? (
                       <BadgeCheck />
                     ) : (
@@ -182,7 +230,7 @@ const OtpVerification = ({
                     textTransform: "none",
                   }}
                 >
-                  {isSubmitting ? "Verifying..." : "Verify Code"}
+                  {isVerifying ? "Verifying..." : "Verify Code"}
                 </Button>
               </Stack>
             </Form>

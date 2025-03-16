@@ -121,15 +121,28 @@ export const validateSignUp = [
 ];
 
 export const validateLogin = [
-  body().custom((value, { req }) => {
-    if (!req.body.email && !req.body.phoneNumber) {
-      throw {
-        path: "emailORphoneNumber",
-        message: "Either email or phone number must be provided",
-      };
-    }
-    return true;
-  }),
+  body("useEmail")
+    .isBoolean()
+    .withMessage("useEmail must be a boolean")
+    .custom((value, { req }) => {
+      console.log(req.body.useEmail);
+    }),
+
+  body("email")
+    .if((value, { req }) => req.body.useEmail === true)
+    .optional()
+    .isEmail()
+    .withMessage({ path: "email", message: "Invalid email address" })
+    .bail()
+    .normalizeEmail(),
+
+  body("phoneNumber")
+    .if((value, { req }) => req.body.useEmail !== true)
+    .notEmpty()
+    .withMessage("Phone number is required")
+    .bail()
+    .isMobilePhone()
+    .withMessage({ path: "phoneNumber", message: "Invalid phone number" }),
 
   body("password")
     .notEmpty()

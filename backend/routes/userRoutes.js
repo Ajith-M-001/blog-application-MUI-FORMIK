@@ -17,7 +17,7 @@ import { verifyAccessToken, verifyRefreshToken } from "../utils/verifyToken.js";
 const router = express.Router();
 
 router.post("/sign-up", validateSignUp, signUpUser);
-router.get("/sign-in", validateLogin, signInUser);
+router.post("/sign-in", validateLogin, signInUser);
 router.get("/check", verifyAccessToken, protectRoute);
 router.post("/sign-out", verifyAccessToken, signOutUser);
 router.post("/refresh", verifyRefreshToken, refreshAccessToken);

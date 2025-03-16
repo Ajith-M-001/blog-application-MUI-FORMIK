@@ -63,6 +63,7 @@ const SignIn = () => {
   const { mutate: signInUser, isPending: isSigningIn } = useSignInUser();
 
   const HandleSubmit = (values, { resetForm }) => {
+    console.log(values);
     signInUser(values, {
       onSuccess: (data) => {
         resetForm();

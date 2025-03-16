@@ -13,7 +13,7 @@ export const usersService = {
   },
 
   signInUser: async (userData) => {
-    const response = await axiosInstance.get(
+    const response = await axiosInstance.post(
       API_ENDPOINTS.users.signIn,
       userData
     );

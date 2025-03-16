@@ -121,6 +121,8 @@ export const signInUser = asyncHandler(async (req, res) => {
     user = await User.findOne({ phoneNumber }).select("+password");
   }
 
+  console.log(user);
+
   if (!user) {
     return res.status(404).json(ApiResponse.notFound("invalid credentials"));
   }
@@ -128,7 +130,9 @@ export const signInUser = asyncHandler(async (req, res) => {
   const isPasswordMAtched = await bcrypt.compare(password, user.password);
 
   if (!isPasswordMAtched) {
-    return res.status(404).json(ApiResponse.notFound("invalid credentials"));
+    return res
+      .status(404)
+      .json(ApiResponse.notFound("invalid credentials 123"));
   }
 
   const tokens = await generateToken(user);
@@ -230,6 +234,8 @@ export const refreshAccessToken = asyncHandler(async (req, res, next) => {
 export const verifyOtp = asyncHandler(async (req, res, next) => {
   const { email, phoneNumber, otp } = req.body;
 
+  console.log(email, phoneNumber, otp);
+
   if (!email && !phoneNumber) {
     return res
       .status(400)
@@ -250,6 +256,8 @@ export const verifyOtp = asyncHandler(async (req, res, next) => {
   const user = await User.findOne({ $or: [query] }).select(
     "+verificationCode +verificationCodeExpires"
   );
+
+  console.log(user);
   if (!user) {
     return res.status(404).json(ApiResponse.notFound("User not found"));
   }

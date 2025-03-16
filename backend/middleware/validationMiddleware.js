@@ -121,29 +121,29 @@ export const validateSignUp = [
 ];
 
 export const validateLogin = [
-  body("useEmail")
-    .isBoolean()
-    .withMessage("useEmail must be a boolean")
-    .custom((value, { req }) => {
-      console.log(req.body.useEmail);
-    }),
+  // Check if `useEmail` is a boolean
+  body("useEmail").isBoolean().withMessage("useEmail must be a boolean"),
 
+  // Validate email if `useEmail` is true
   body("email")
     .if((value, { req }) => req.body.useEmail === true)
-    .optional()
+    .notEmpty()
+    .withMessage({ path: "email", message: "Email is required" })
+    .bail()
     .isEmail()
     .withMessage({ path: "email", message: "Invalid email address" })
-    .bail()
     .normalizeEmail(),
 
+  // Validate phoneNumber if `useEmail` is false
   body("phoneNumber")
-    .if((value, { req }) => req.body.useEmail !== true)
+    .if((value, { req }) => req.body.useEmail === false)
     .notEmpty()
-    .withMessage("Phone number is required")
+    .withMessage({ path: "phoneNumber", message: "Phone number is required" })
     .bail()
     .isMobilePhone()
     .withMessage({ path: "phoneNumber", message: "Invalid phone number" }),
 
+  // Password validation (applies regardless of email or phone)
   body("password")
     .notEmpty()
     .withMessage({ path: "password", message: "Password is required" })
@@ -159,5 +159,6 @@ export const validateLogin = [
       message:
         "Password must be at least 8 characters with 1 uppercase, 1 lowercase, and 1 symbol",
     }),
+
   handleValidation,
 ];

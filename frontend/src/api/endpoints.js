@@ -10,8 +10,9 @@ export const API_ENDPOINTS = {
     signOut: `${USER_URL}/sign-out`,
     refreshToken: `${USER_URL}/refresh`,
     verifyOtp: `${USER_URL}/verify-otp`,
+    resentOtp: `${USER_URL}/resent-otp`,
   },
   countries: {
     all: `${COUNTRY_URL}/all`,
-  }
+  },
 };

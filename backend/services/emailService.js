@@ -4,8 +4,6 @@ import { createVerificationEmailTemplate } from "../templates/emailTemplate.js";
 
 const transporter = nodemailer.createTransport(emailConfig);
 
-console.log(emailConfig);
-
 export const sendOTPViaEmail = async (to, subject, otp) => {
   try {
     const info = await transporter.sendMail({
@@ -14,7 +12,6 @@ export const sendOTPViaEmail = async (to, subject, otp) => {
       subject,
       html: createVerificationEmailTemplate(otp),
     });
-    console.log("Email sent:", info.response);
   } catch (error) {
     console.error("Error sending email:", error);
     throw error;

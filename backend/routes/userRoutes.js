@@ -6,6 +6,7 @@ import {
   signOutUser,
   refreshAccessToken,
   verifyOtp,
+  resendOtp,
 } from "../controllers/userController.js";
 import {
   validateLogin,
@@ -21,4 +22,5 @@ router.get("/check", verifyAccessToken, protectRoute);
 router.post("/sign-out", verifyAccessToken, signOutUser);
 router.post("/refresh", verifyRefreshToken, refreshAccessToken);
 router.put("/verify-otp", verifyOtp);
+router.put("/resent-otp", resendOtp);
 export default router;

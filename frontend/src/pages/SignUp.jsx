@@ -1,22 +1,25 @@
 import {
   Box,
-  Button,
   Grid2,
   Paper,
   Typography,
+  useTheme,
   Link as MuiLink,
+  Button,
+  Divider,
 } from "@mui/material";
-import { AnimatePresence, motion } from "motion/react";
 import { Form, Formik } from "formik";
+import { AnimatePresence, motion } from "motion/react";
 import * as Yup from "yup";
-import { FormField } from "../components/MUI.Components/FormField";
-import { Link, useNavigate } from "react-router";
-import { useSignUpUser } from "../hooks/api/users";
-import { LoaderCircle, BadgeCheck, MoveRight, Phone, Mail } from "lucide-react";
-import { useGetAllCountry } from "../hooks/api/countries";
 import { parsePhoneNumber } from "libphonenumber-js/max";
-import CountryPhoneSelector from "../components/MUI.Components/CountryPhoneSelector";
+import { useSignUpUser } from "../hooks/api/users";
+import { useGetAllCountry } from "../hooks/api/countries";
+import { Link, useNavigate } from "react-router";
 import { showToast } from "../utils/toast";
+import { FormField } from "../components/MUI.Components/FormField";
+import { LoaderCircle, BadgeCheck, MoveRight, Phone, Mail } from "lucide-react";
+import CountryPhoneSelector from "../components/MUI.Components/CountryPhoneSelector";
+import GoogleIcon from "@mui/icons-material/Google";
 
 // Validation schema with conditional validation for email/phone
 const SignUpSchema = Yup.object().shape({
@@ -88,8 +91,7 @@ const SignUp = () => {
   const { mutate: SignUpUser, isPending: signUpPending } = useSignUpUser();
   const { data: allCountries } = useGetAllCountry();
   const navigate = useNavigate();
-
-  // Initial values with default values
+  const theme = useTheme();
   const initialValues = {
     firstName: "",
     lastName: "",
@@ -102,11 +104,8 @@ const SignUp = () => {
   };
 
   const handleSubmit = (values) => {
-    console.log("Submission Data:", values);
-
     SignUpUser(values, {
       onSuccess: (data) => {
-        console.log("data_data", data);
         showToast(data.message, { type: "success" });
         navigate("/otp-verification", {
           state: {
@@ -119,15 +118,14 @@ const SignUp = () => {
       },
     });
   };
-
   return (
     <AnimatePresence>
       <Box
         sx={{
           height: "100%",
           display: "flex",
-          alignItems: "center",
           justifyContent: "center",
+          alignItems: "center",
           padding: { xs: 1, sm: 4 },
         }}
       >
@@ -135,64 +133,51 @@ const SignUp = () => {
           elevation={1}
           sx={{
             width: "100%",
-            height: "100%",
+            height: "auto",
+            overflow: "hidden",
             borderRadius: 2,
-            maxWidth: { xs: "100%", md: "950px" },
+            maxWidth: {
+              xs: "100%",
+              md: "55rem",
+            },
           }}
         >
           <Grid2
             container
             sx={{
-              height: "100%",
               width: "100%",
+              height: "100%",
             }}
           >
             <Grid2
               size={{ xs: 12, md: 6 }}
               sx={{
-                height: "100%",
-                width: "100%",
                 display: "flex",
+                justifyContent: "center",
                 alignItems: "center",
                 p: 2,
-                justifyContent: { xs: "center", md: "flex-start" },
               }}
             >
-              <motion.div
+              <Box
+                component={motion.div}
                 initial={{ opacity: 0, x: -50 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.5 }}
+                sx={{ textAlign: "center" }}
               >
-                <Typography
-                  variant="h2"
-                  color="text.primary"
-                  sx={{
-                    textAlign: { xs: "center", md: "left" },
-                  }}
-                >
+                <Typography variant="h2" color="text.primary">
                   Join NEXUS
                 </Typography>
-                <Typography
-                  color="text.secondary"
-                  sx={{
-                    textAlign: { xs: "center", md: "left" },
-                  }}
-                >
+                <Typography color="text.secondary">
                   Create your account and start your blogging journey
                 </Typography>
-
                 <Formik
                   initialValues={initialValues}
                   validationSchema={SignUpSchema}
                   onSubmit={(values) => handleSubmit(values)}
                 >
                   {({ dirty, isValid, values, setFieldValue, resetForm }) => (
-                    <Form
-                      style={{
-                        width: "100%",
-                        height: "100%",
-                      }}
-                    >
+                    <Form>
                       <Grid2 container spacing={2}>
                         <Grid2 size={{ xs: 12, md: 6 }}>
                           <FormField
@@ -240,7 +225,10 @@ const SignUp = () => {
                                   cursor: "pointer",
                                 }}
                               >
-                                <Phone size={18} /> Use phone number instead
+                                <Phone size={18} />
+                                <Typography>
+                                  Use phone number instead
+                                </Typography>
                               </MuiLink>
                             </Box>
                           </Grid2>
@@ -265,7 +253,8 @@ const SignUp = () => {
                                   cursor: "pointer",
                                 }}
                               >
-                                <Mail size={18} /> Use email instead
+                                <Mail size={18} />
+                                <Typography>Use email instead</Typography>
                               </MuiLink>
                             </Box>
                           </Grid2>
@@ -318,37 +307,56 @@ const SignUp = () => {
                     </Form>
                   )}
                 </Formik>
+                <Box sx={{ mt: 2, display: "flex", alignItems: "center" }}>
+                  <Divider sx={{ flexGrow: 1 }} />
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{
+                      mx: 1.5,
+                    }}
+                  >
+                    OR
+                  </Typography>
+                  <Divider sx={{ flexGrow: 1 }} />
+                </Box>
+                <Button
+                  variant="outlined"
+                  startIcon={<GoogleIcon />}
+                  color="secondary"
+                  sx={{ mt: 2 }}
+                  fullWidth
+                >
+                  Sign in with Google
+                </Button>
                 <Box
                   sx={{
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
                     gap: 1,
+                    mt: 2,
                   }}
                 >
                   <Typography variant="h6" color="text.secondary">
                     Already have an account? <Link to="/sign-in">Sign In</Link>
                   </Typography>
                 </Box>
-              </motion.div>
+              </Box>
             </Grid2>
-            {/* Right side decoration panel - keep as is */}
             <Grid2
               size={{ xs: 12, md: 6 }}
               sx={{
                 display: { xs: "none", md: "block" },
-                bgcolor: "#616161",
-                color: "white",
-                height: "100%",
-                borderTopRightRadius: 16,
-                borderBottomRightRadius: 16,
+                bgcolor: theme.palette.background.secondary,
+                color: theme.palette.text.primary,
               }}
             >
               <Box
                 component={motion.div}
                 initial={{ opacity: 0, x: 50 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.5, delay: 0.2 }}
+                transition={{ duration: 0.5, delay: 0.1 }}
                 sx={{
                   height: "100%",
                   display: "flex",
@@ -393,7 +401,8 @@ const SignUp = () => {
                     borderRadius: "50%",
                   }}
                 />
-                <Typography sx={{ mt: 3 }} variant="subtitle1" color="#D1D5DB">
+
+                <Typography sx={{ mt: 3 }} variant="body1" color="#D1D5DB">
                   The modern platform for bloggers who value elegant design and
                   seamless experiences
                 </Typography>

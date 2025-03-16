@@ -180,6 +180,7 @@ const lightPalette = {
       default: "#fafaf9", // Very light blue tint
       paper: "#ffffff", // Pure white
       card: "#f1f5f9", // Light blue tint
+      secondary: "#616161",
     },
     text: {
       primary: "#1a1a1a",
@@ -221,6 +222,7 @@ const darkPalette = {
       default: "#121212", // Base dark surface
       paper: "#1E1E1E", // Elevated surfaces
       card: "#252525", // For cards and intermediate surfaces
+      secondary: "#757575",
     },
     text: {
       primary: "#f3f4f6", // Very light gray

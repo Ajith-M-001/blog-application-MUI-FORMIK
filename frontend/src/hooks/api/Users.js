@@ -36,3 +36,31 @@ export const useVerifyOtp = () => {
     },
   });
 };
+
+export const useResentOTP = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: usersService.resentOtp,
+    onSuccess: () => {
+      queryClient.invalidateQueries(QUERY_KEYS.USERS);
+    },
+    onError: (error) => {
+      console.log("Error resending otp", error?.response?.data);
+      showToast(error?.response?.data?.message, { type: "error" });
+    },
+  });
+};
+
+export const useSignInUser = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: usersService.signInUser,
+    onSuccess: () => {
+      queryClient.invalidateQueries(QUERY_KEYS.USERS);
+    },
+    onError: (error) => {
+      console.log("Error signing in user", error?.response?.data);
+      showToast(error?.response?.data?.message, { type: "error" });
+    },
+  });
+};

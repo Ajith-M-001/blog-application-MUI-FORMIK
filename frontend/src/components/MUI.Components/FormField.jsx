@@ -2,7 +2,6 @@ import { CustomTextField } from "./CustomTextField";
 import { memo } from "react";
 
 const FormField = memo(({ fieldType, ...props }) => {
-  console.log("checking");
   switch (fieldType) {
     case "autocomplete":
       return <FormAutocomplete {...props} />;

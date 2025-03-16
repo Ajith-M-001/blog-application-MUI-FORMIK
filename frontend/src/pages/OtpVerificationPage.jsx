@@ -2,7 +2,7 @@ import { Box } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router";
 import { OtpVerification } from "../components/otpVerification/OtpVerification";
-import { AnimatePresence } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
 
 const OtpVerificationPage = () => {
   const [mounted, setMounted] = useState(false);
@@ -20,6 +20,11 @@ const OtpVerificationPage = () => {
   return (
     <AnimatePresence>
       <Box
+        component={motion.div}
+        initial={{ opacity: 0, x: 50 }} // Start animation: fade in and slide up
+        animate={{ opacity: 1, x: 0 }} // Animate to: fully visible and positioned
+        exit={{ opacity: 0, y: -50 }} // Exit animation: fade out and slide up
+        transition={{ duration: 0.5 }} // Animation duration
         sx={{
           height: "100%",
           display: "flex",

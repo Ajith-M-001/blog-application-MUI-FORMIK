@@ -1,18 +1,32 @@
 import { Box, Button, Stack, TextField, Typography } from "@mui/material";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Form, Formik } from "formik";
 import * as Yup from "yup";
 import { LoaderCircle, BadgeCheck, MoveRight } from "lucide-react";
-import { useVerifyOtp } from "../../hooks/api/users";
+import { useResentOTP, useVerifyOtp } from "../../hooks/api/users";
 import { useNavigate } from "react-router";
 import { showToast } from "../../utils/toast";
 
 const OtpVerification = ({ contactType, contactValue }) => {
-  const [error, setError] = useState("hello world");
+  const [resendTimer, setResendTimer] = useState(30);
+
   const inputRefs = useRef([]);
   const navigate = useNavigate();
 
+  useEffect(() => {
+    if (resendTimer > 0) {
+      const timer = setTimeout(() => {
+        setResendTimer(resendTimer - 1);
+      }, 1000);
+
+      return () => {
+        clearTimeout(timer);
+      };
+    }
+  }, [resendTimer]);
+
   const { mutate: verifyOTP, isPending: isVerifying } = useVerifyOtp();
+  const { mutate: resendOTP, isPending: isResending } = useResentOTP();
 
   // Mask the contact value (email or phone)
   const maskedContact = () => {
@@ -30,14 +44,25 @@ const OtpVerification = ({ contactType, contactValue }) => {
     }
   };
 
+  const handleResend = () => {
+    if (resendTimer > 0 || isResending) return;
+    resendOTP(
+      { [contactType]: contactValue },
+      {
+        onSuccess: (data) => {
+          console.log("success", data);
+        },
+      }
+    );
+    setResendTimer(30);
+  };
+
   const handleSubmit = (values) => {
     const OTP = values.otp.join("");
-    console.log("contact", contactType, contactValue, OTP);
     verifyOTP(
       { [contactType]: contactValue, otp: OTP },
       {
         onSuccess: (data) => {
-          console.log("success", data);
           showToast(data.message, { type: "success" });
           navigate("/");
         },
@@ -61,7 +86,6 @@ const OtpVerification = ({ contactType, contactValue }) => {
       .getData("Text")
       .replace(/\D/g, "")
       .substring(0, 6);
-    console.log(pastedData);
 
     if (!pastedData) return;
 
@@ -232,6 +256,29 @@ const OtpVerification = ({ contactType, contactValue }) => {
                 >
                   {isVerifying ? "Verifying..." : "Verify Code"}
                 </Button>
+                <Box sx={{ mt: 1, textAlign: "center" }}>
+                  <Typography color="text.secondary">
+                    Didn&apos;t receive the code?
+                    <Typography
+                      component="span"
+                      color="primary.main"
+                      onClick={handleResend}
+                      sx={{
+                        cursor:
+                          resendTimer > 0 || isResending
+                            ? "not-allowed"
+                            : "pointer", // Proper cursor conditional logic
+                        ml: 1,
+                      }}
+                    >
+                      {isResending
+                        ? "sending otp..."
+                        : resendTimer > 0
+                        ? `Resend OTP in ${resendTimer}s`
+                        : " Resend OTP"}
+                    </Typography>
+                  </Typography>
+                </Box>
               </Stack>
             </Form>
           )}

@@ -148,10 +148,6 @@ export const signInUser = asyncHandler(async (req, res) => {
 
   const responseObj = {
     _id: user._id,
-    firstName: user.firstName,
-    lastName: user.lastName,
-    email: user.email,
-    roles: user.roles,
   };
   res.status(200).json(ApiResponse.success("sign in successful", responseObj));
 });
@@ -251,8 +247,6 @@ export const verifyOtp = asyncHandler(async (req, res, next) => {
     query.phoneNumber = phoneNumber;
   }
 
-  console.log(query);
-
   const user = await User.findOne({ $or: [query] }).select(
     "+verificationCode +verificationCodeExpires"
   );
@@ -274,4 +268,47 @@ export const verifyOtp = asyncHandler(async (req, res, next) => {
   user.verificationCodeExpires = undefined;
   await user.save();
   return res.status(200).json(ApiResponse.success("OTP verified successfully"));
+});
+
+export const resendOtp = asyncHandler(async (req, res, next) => {
+  const { email, phoneNumber } = req.body;
+
+  if (!email && !phoneNumber) {
+    return res
+      .status(400)
+      .json(ApiResponse.error("Either Email or phone number is required", 400));
+  }
+
+  const query = {};
+  if (email) {
+    query.email = email.toLowerCase();
+  } else {
+    query.phoneNumber = phoneNumber;
+  }
+
+  const user = await User.findOne({ $or: [query] }).select(
+    "+verificationCode +verificationCodeExpires"
+  );
+  if (!user) {
+    return res.status(404).json(ApiResponse.notFound("User not found"));
+  }
+
+  if (user.verificationCodeExpires > new Date()) {
+    return res
+      .status(400)
+      .json(ApiResponse.error("OTP has already been sent", 400));
+  }
+
+  const otp = generateOTP();
+  user.verificationCode = otp;
+  user.verificationCodeExpires = new Date(Date.now() + 10 * 60 * 1000);
+  await user.save();
+
+  if (email) {
+    await sendOTPViaEmail(user.email, "OTP Verification", otp);
+  } else {
+    await sendOTPViaSMS(user.phoneNumber, otp);
+  }
+
+  return res.status(200).json(ApiResponse.success("OTP sent successfully"));
 });

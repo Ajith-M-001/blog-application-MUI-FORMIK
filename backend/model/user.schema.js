@@ -93,6 +93,16 @@ const userSchema = new mongoose.Schema(
       required: true,
       select: false,
     },
+    avatar: {
+      public_id: {
+        type: String, // Cloudinary's unique identifier for the uploaded image
+        required: false, // Avatar is optional
+      },
+      url: {
+        type: String, // The URL for the avatar image from Cloudinary
+        required: false, // Avatar URL is optional
+      },
+    },
     roles: {
       type: [String],
       enum: Object.values(USER_ROLES),

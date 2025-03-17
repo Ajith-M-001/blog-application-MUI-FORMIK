@@ -7,6 +7,7 @@ import {
   refreshAccessToken,
   verifyOtp,
   resendOtp,
+  getUserDetails,
 } from "../controllers/userController.js";
 import {
   validateLogin,
@@ -21,6 +22,7 @@ router.post("/sign-in", validateLogin, signInUser);
 router.get("/check", verifyAccessToken, protectRoute);
 router.post("/sign-out", verifyAccessToken, signOutUser);
 router.post("/refresh", verifyRefreshToken, refreshAccessToken);
+router.get("/get-user-details", verifyAccessToken, getUserDetails);
 router.put("/verify-otp", verifyOtp);
 router.put("/resent-otp", resendOtp);
 export default router;

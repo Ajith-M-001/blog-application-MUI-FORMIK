@@ -85,12 +85,15 @@ const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeItem, setActiveItem] = useState(null);
 
-  const { isDarkTheme, toggleTheme } = useStore(
+  const { isDarkTheme, toggleTheme, isAuthenticated } = useStore(
     useShallow((state) => ({
       isDarkTheme: state.isDarkTheme,
       toggleTheme: state.toggleTheme,
+      isAuthenticated: state.isAuthenticated,
     }))
   );
+
+  console.log("isAuthenticated", isAuthenticated);
 
   const navItems = [
     // { label: "Blogs", path: "blogs" },
@@ -313,48 +316,55 @@ const Header = () => {
                   >
                     {isDarkTheme ? <Sun /> : <Moon />}
                   </IconButton>
-                  <Link to={"sign-in"}>
-                    <Button
-                      component={motion.button}
-                      whileHover={"hover"}
-                      whileTap={{ scale: 0.9 }}
-                      variant="outlined"
-                      color="secondary"
-                      variants={buttonHoverVariants}
-                      sx={{
-                        [theme.breakpoints.down("laptop")]: {
-                          borderRadius: 35,
-                          textTransform: "none",
-                          fontWeight: 600,
-                          fontSize: "0.9rem",
-                          padding: "6px 12px",
-                        },
-                      }}
-                    >
-                      Sign In
-                    </Button>
-                  </Link>
-                  <Link to={"sign-up"}>
-                    <Button
-                      component={motion.button}
-                      whileHover={"hover"}
-                      whileTap={{ scale: 0.9 }}
-                      variant="contained"
-                      color="primary"
-                      variants={buttonHoverVariants}
-                      sx={{
-                        [theme.breakpoints.down("laptop")]: {
-                          borderRadius: 35,
-                          textTransform: "none",
-                          fontWeight: 600,
-                          fontSize: "0.9rem",
-                          padding: "6px 12px",
-                        },
-                      }}
-                    >
-                      Sign Up
-                    </Button>
-                  </Link>
+                  {isAuthenticated ? (
+                    <>logged in</>
+                  ) : (
+                    <>
+                      {" "}
+                      <Link to={"sign-in"}>
+                        <Button
+                          component={motion.button}
+                          whileHover={"hover"}
+                          whileTap={{ scale: 0.9 }}
+                          variant="outlined"
+                          color="secondary"
+                          variants={buttonHoverVariants}
+                          sx={{
+                            [theme.breakpoints.down("laptop")]: {
+                              borderRadius: 35,
+                              textTransform: "none",
+                              fontWeight: 600,
+                              fontSize: "0.9rem",
+                              padding: "6px 12px",
+                            },
+                          }}
+                        >
+                          Sign In
+                        </Button>
+                      </Link>
+                      <Link to={"sign-up"}>
+                        <Button
+                          component={motion.button}
+                          whileHover={"hover"}
+                          whileTap={{ scale: 0.9 }}
+                          variant="contained"
+                          color="primary"
+                          variants={buttonHoverVariants}
+                          sx={{
+                            [theme.breakpoints.down("laptop")]: {
+                              borderRadius: 35,
+                              textTransform: "none",
+                              fontWeight: 600,
+                              fontSize: "0.9rem",
+                              padding: "6px 12px",
+                            },
+                          }}
+                        >
+                          Sign Up
+                        </Button>
+                      </Link>
+                    </>
+                  )}
                 </Box>
               </>
             )}

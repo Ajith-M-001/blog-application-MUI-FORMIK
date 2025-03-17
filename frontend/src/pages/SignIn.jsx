@@ -27,6 +27,8 @@ import GoogleIcon from "@mui/icons-material/Google";
 import { useSignInUser } from "../hooks/api/users";
 import { showToast } from "../utils/toast";
 import { use } from "react";
+import { useShallow } from "zustand/react/shallow";
+import useStore from "../store/zustand.store";
 
 const SignInSchema = Yup.object().shape({
   email: Yup.string().when("useEmail", {
@@ -62,10 +64,19 @@ const SignIn = () => {
   const navigate = useNavigate();
   const { mutate: signInUser, isPending: isSigningIn } = useSignInUser();
 
+  const { setUser, setIsAuthenticated } = useStore(
+    useShallow((state) => ({
+      setUser: state.setUser,
+      setIsAuthenticated: state.setIsAuthenticated,
+    }))
+  );
+
   const HandleSubmit = (values, { resetForm }) => {
     console.log(values);
     signInUser(values, {
       onSuccess: (data) => {
+        setIsAuthenticated(true);
+        setUser(data.data);
         resetForm();
         showToast(data.message, { type: "success" });
         navigate("/");

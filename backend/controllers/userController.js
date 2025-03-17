@@ -150,10 +150,7 @@ export const signInUser = asyncHandler(async (req, res) => {
   res.cookie("access_token", tokens.accessToken, accessTokenCookieOptions);
   res.cookie("refresh_token", tokens.refreshToken, refreshTokenCookieOptions);
 
-  const responseObj = {
-    _id: user._id,
-  };
-  res.status(200).json(ApiResponse.success("sign in successful", responseObj));
+  return res.status(200).json(ApiResponse.success("sign in successful"));
 });
 
 export const protectRoute = asyncHandler(async (req, res, next) => {
@@ -275,6 +272,7 @@ export const verifyOtp = asyncHandler(async (req, res, next) => {
   user.verificationCode = undefined;
   user.verificationCodeExpires = undefined;
   await user.save();
+
   return res.status(200).json(ApiResponse.success("OTP verified successfully"));
 });
 
@@ -319,4 +317,9 @@ export const resendOtp = asyncHandler(async (req, res, next) => {
   }
 
   return res.status(200).json(ApiResponse.success("OTP sent successfully"));
+});
+
+export const getUserDetails = asyncHandler(async (req, res, next) => {
+  const user = await User.findById(req.user._id);
+  return res.status(200).json(ApiResponse.success("User details", user));
 });

@@ -46,5 +46,10 @@ export const usersService = {
     return response.data;
   },
 
-  
+  getUserDetails: async () => {
+    const response = await axiosInstance.get(
+      API_ENDPOINTS.users.getUserDetails
+    );
+    return response.data;
+  },
 };

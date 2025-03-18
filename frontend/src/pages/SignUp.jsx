@@ -12,7 +12,7 @@ import { Form, Formik } from "formik";
 import { AnimatePresence, motion } from "motion/react";
 import * as Yup from "yup";
 import { parsePhoneNumber } from "libphonenumber-js/max";
-import { useSignUpUser } from "../hooks/api/users";
+import { useSignUpUser } from "../hooks/api/Users";
 import { useGetAllCountry } from "../hooks/api/countries";
 import { Link, useNavigate } from "react-router";
 import { showToast } from "../utils/toast";

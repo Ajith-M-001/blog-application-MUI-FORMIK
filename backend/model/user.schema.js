@@ -97,10 +97,12 @@ const userSchema = new mongoose.Schema(
       public_id: {
         type: String, // Cloudinary's unique identifier for the uploaded image
         required: false, // Avatar is optional
+        default: null,
       },
       url: {
         type: String, // The URL for the avatar image from Cloudinary
         required: false, // Avatar URL is optional
+        default: null,
       },
     },
     roles: {

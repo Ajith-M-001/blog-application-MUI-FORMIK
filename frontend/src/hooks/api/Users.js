@@ -75,3 +75,17 @@ export const useGetUserDetails = () => {
     },
   });
 };
+
+export const useSignOutUser = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: usersService.signOutUser,
+    onSuccess: () => {
+      queryClient.invalidateQueries(QUERY_KEYS.USERS);
+    },
+    onError: (error) => {
+      console.log("Error signing out user", error);
+      showToast(error?.response?.data?.message, { type: "error" });
+    },
+  });
+};

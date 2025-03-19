@@ -1,6 +1,7 @@
 import {
   alpha,
   AppBar,
+  Avatar,
   Backdrop,
   Box,
   Button,
@@ -17,14 +18,29 @@ import {
   Typography,
   useMediaQuery,
   useTheme,
+  Menu,
+  MenuItem,
 } from "@mui/material";
 import { motion } from "motion/react";
-import { Menu, X, Sun, Moon, Search } from "lucide-react";
+import {
+  Menu as MenuIcon,
+  X,
+  Sun,
+  Moon,
+  Search,
+  User,
+  Settings,
+  HelpCircle,
+  LogOut,
+} from "lucide-react";
 import { useState } from "react";
 import useStore from "../store/zustand.store";
 import { useShallow } from "zustand/react/shallow";
 import { buttonHoverVariants } from "../utils/motionVariants";
-import { Link, NavLink } from "react-router";
+import { Link, NavLink, useNavigate } from "react-router";
+import { useGetUserDetails, useSignOutUser } from "../hooks/api/Users";
+import { capitalizeFirstLetter } from "../utils/capitalizeFirstLetter";
+import { showToast } from "../utils/toast";
 
 const SearchContainer = styled("div")(({ theme }) => ({
   position: "relative",
@@ -84,16 +100,48 @@ const Header = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeItem, setActiveItem] = useState(null);
+  const navigate = useNavigate();
+  const { mutate: signOut, isPending: isSignOutPending } = useSignOutUser();
 
-  const { isDarkTheme, toggleTheme, isAuthenticated } = useStore(
-    useShallow((state) => ({
-      isDarkTheme: state.isDarkTheme,
-      toggleTheme: state.toggleTheme,
-      isAuthenticated: state.isAuthenticated,
-    }))
-  );
+  const [anchorEl, setAnchorEl] = useState(null);
+  const open = Boolean(anchorEl);
 
-  console.log("isAuthenticated", isAuthenticated);
+  const handleUserMenuOpen = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleUserMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const menuItems = [
+    { label: "Profile", icon: <User />, path: "/profile" },
+    { label: "Settings", icon: <Settings />, path: "/settings" },
+    { label: "Help", icon: <HelpCircle />, path: "/help" },
+  ];
+
+  const { isDarkTheme, toggleTheme, isAuthenticated, setIsAuthenticated } =
+    useStore(
+      useShallow((state) => ({
+        isDarkTheme: state.isDarkTheme,
+        toggleTheme: state.toggleTheme,
+        isAuthenticated: state.isAuthenticated,
+        setIsAuthenticated: state.setIsAuthenticated,
+      }))
+    );
+
+  const handleSignOut = () => {
+    signOut(undefined, {
+      onSuccess: (data) => {
+        handleUserMenuClose();
+        setIsAuthenticated(false);
+        showToast(data?.message, { type: "success" });
+        navigate("/sign-in");
+      },
+    });
+  };
+
+  const { data: user } = useGetUserDetails();
 
   const navItems = [
     // { label: "Blogs", path: "blogs" },
@@ -211,7 +259,7 @@ const Header = () => {
                   }}
                   onClick={toggleMobileMenu}
                 >
-                  <Menu />
+                  <MenuIcon />
                 </IconButton>
               </Box>
             ) : (
@@ -317,7 +365,141 @@ const Header = () => {
                     {isDarkTheme ? <Sun /> : <Moon />}
                   </IconButton>
                   {isAuthenticated ? (
-                    <>logged in</>
+                    <>
+                      <IconButton
+                        component={motion.button}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={handleUserMenuOpen}
+                        sx={{
+                          p: 0,
+                          border: `1px solid ${alpha(
+                            theme.palette.primary.main,
+                            0.5
+                          )}`,
+                        }}
+                        aria-controls={open ? "user-menu" : undefined}
+                        aria-haspopup="true"
+                        aria-expanded={open ? "true" : undefined}
+                      >
+                        <Avatar
+                          src={user?.data?.avatar?.url}
+                          alt={user?.data?.firstName}
+                          sx={{
+                            height: "2.3rem",
+                            width: "2.3rem",
+                            background: user?.data?.avatar?.url
+                              ? "transparent"
+                              : `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+                          }}
+                        >
+                          {!user?.data?.avatar?.url &&
+                            user?.data?.firstName.charAt(0).toUpperCase()}
+                        </Avatar>
+                      </IconButton>
+                      <Menu
+                        id="user-menu"
+                        anchorEl={anchorEl}
+                        open={open}
+                        onClose={handleUserMenuClose}
+                        onClick={handleUserMenuClose}
+                        slotProps={{
+                          paper: {
+                            elevation: 2,
+                            sx: {
+                              overflow: "visible",
+                              filter:
+                                "drop-shadow(0px 2px 8px rgba(0,0,0,0.1))",
+                              mt: 1.5,
+                              width: "16rem",
+                              borderRadius: 1,
+                              backgroundImage: "none",
+                              backdropFilter: "blur(10px)",
+                              backgroundColor: alpha(
+                                theme.palette.background.paper,
+                                0.95
+                              ),
+                              border: `1px solid ${alpha(
+                                theme.palette.divider,
+                                0.1
+                              )}`,
+                            },
+                          },
+                        }}
+                        transformOrigin={{
+                          horizontal: "right",
+                          vertical: "top",
+                        }}
+                        anchorOrigin={{
+                          horizontal: "right",
+                          vertical: "bottom",
+                        }}
+                      >
+                        {/* Header section */}
+                        <Box sx={{ px: 2, py: 1.5 }}>
+                          <Typography variant="subtitle1" fontWeight={600}>
+                            {capitalizeFirstLetter(user?.data?.firstName)}{" "}
+                            {capitalizeFirstLetter(user?.data?.lastName)}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            premium member
+                          </Typography>
+                          <Divider sx={{ my: 1 }} />
+                        </Box>
+
+                        {/* Menu items */}
+                        {menuItems.map((item) => (
+                          <MenuItem
+                            key={item.label}
+                            onClick={() => handleUserMenuOpen(item.path)}
+                            sx={{
+                              py: 1.5,
+                              px: 2,
+                              gap: 1.5,
+                              display: "flex",
+                              alignItems: "center",
+                              transition: "background-color 0.3s ease", // Smooth transitions
+                              "&:hover": {
+                                backgroundColor: alpha(
+                                  theme.palette.primary.main,
+                                  0.08
+                                ),
+                              },
+                            }}
+                          >
+                            {item.icon}
+                            <Typography variant="body1">
+                              {item.label}
+                            </Typography>
+                          </MenuItem>
+                        ))}
+
+                        <Divider />
+
+                        {/* Sign out button */}
+                        <MenuItem
+                          onClick={handleSignOut}
+                          sx={{
+                            color: theme.palette.error.main,
+                            py: 1.5,
+                            px: 2,
+                            gap: 1.5,
+                            display: "flex",
+                            alignItems: "center",
+                            transition: "background-color 0.3s ease", // Smooth transitions
+                            "&:hover": {
+                              backgroundColor: alpha(
+                                theme.palette.error.main,
+                                0.08
+                              ),
+                            },
+                          }}
+                        >
+                          <LogOut />
+                          <Typography variant="body1">Sign Out</Typography>
+                        </MenuItem>
+                      </Menu>
+                    </>
                   ) : (
                     <>
                       {" "}

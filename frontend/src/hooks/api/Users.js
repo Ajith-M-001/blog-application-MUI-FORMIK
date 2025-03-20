@@ -7,6 +7,8 @@ import { showToast } from "../../utils/toast";
 export const QUERY_KEYS = {
   USERS: ["users"],
   USER: (userId) => ["user", userId],
+  CHECK: ["check"],
+  USER_DETAILS: ["user-details"],
 };
 
 export const useSignUpUser = () => {
@@ -67,7 +69,7 @@ export const useSignInUser = () => {
 
 export const useGetUserDetails = () => {
   return useQuery({
-    queryKey: QUERY_KEYS.USERS,
+    queryKey: QUERY_KEYS.USER_DETAILS,
     queryFn: usersService.getUserDetails,
     onError: (error) => {
       console.log("Error getting user details", error?.response?.data);
@@ -82,9 +84,22 @@ export const useSignOutUser = () => {
     mutationFn: usersService.signOutUser,
     onSuccess: () => {
       queryClient.invalidateQueries(QUERY_KEYS.USERS);
+      queryClient.removeQueries(QUERY_KEYS.USER_DETAILS);
+      queryClient.removeQueries(QUERY_KEYS.CHECK);
     },
     onError: (error) => {
       console.log("Error signing out user", error);
+      showToast(error?.response?.data?.message, { type: "error" });
+    },
+  });
+};
+
+export const useCheck = () => {
+  return useQuery({
+    queryKey: QUERY_KEYS.CHECK,
+    queryFn: usersService.checkUser,
+    onError: (error) => {
+      console.log("Error checking user", error?.response?.data);
       showToast(error?.response?.data?.message, { type: "error" });
     },
   });

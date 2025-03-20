@@ -52,4 +52,9 @@ export const usersService = {
     );
     return response.data;
   },
+
+  checkUser: async () => {
+    const response = await axiosInstance.get(API_ENDPOINTS.users.check);
+    return response.data;
+  },
 };

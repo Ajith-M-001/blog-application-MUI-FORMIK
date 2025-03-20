@@ -1,10 +1,13 @@
 import { Typography, useTheme } from "@mui/material";
-import { useGetUserDetails } from "../hooks/api/Users";
+import { useCheck, useGetUserDetails } from "../hooks/api/Users";
 import useStore from "../store/zustand.store";
 import { useShallow } from "zustand/react/shallow";
 
 const Home = () => {
+  const { data: check } = useCheck();
   const { data: user, isSuccess } = useGetUserDetails();
+
+  console.log("check_value", check);
 
   const { setUser, setIsAuthenticated } = useStore(
     useShallow((state) => ({

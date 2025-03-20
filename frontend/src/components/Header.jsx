@@ -38,7 +38,7 @@ import useStore from "../store/zustand.store";
 import { useShallow } from "zustand/react/shallow";
 import { buttonHoverVariants } from "../utils/motionVariants";
 import { Link, NavLink, useNavigate } from "react-router";
-import { useGetUserDetails, useSignOutUser } from "../hooks/api/Users";
+import { useSignOutUser } from "../hooks/api/Users";
 import { capitalizeFirstLetter } from "../utils/capitalizeFirstLetter";
 import { showToast } from "../utils/toast";
 
@@ -103,7 +103,6 @@ const Header = () => {
   const navigate = useNavigate();
 
   const { mutate: signOut, isPending: isSignOutPending } = useSignOutUser();
-  const { data: user } = useGetUserDetails();
 
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
@@ -122,20 +121,29 @@ const Header = () => {
     { label: "Help", icon: <HelpCircle />, path: "/help" },
   ];
 
-  const { isDarkTheme, toggleTheme, isAuthenticated, setIsAuthenticated } =
-    useStore(
-      useShallow((state) => ({
-        isDarkTheme: state.isDarkTheme,
-        toggleTheme: state.toggleTheme,
-        isAuthenticated: state.isAuthenticated,
-        setIsAuthenticated: state.setIsAuthenticated,
-      }))
-    );
+  const {
+    isDarkTheme,
+    toggleTheme,
+    isAuthenticated,
+    user,
+    clearUser,
+    setIsAuthenticated,
+  } = useStore(
+    useShallow((state) => ({
+      isDarkTheme: state.isDarkTheme,
+      toggleTheme: state.toggleTheme,
+      isAuthenticated: state.isAuthenticated,
+      user: state.user,
+      clearUser: state.clearUser,
+      setIsAuthenticated: state.setIsAuthenticated,
+    }))
+  );
 
   const handleSignOut = () => {
     signOut(undefined, {
       onSuccess: (data) => {
         handleUserMenuClose();
+        clearUser();
         setIsAuthenticated(false);
         showToast(data?.message, { type: "success" });
         navigate("/sign-in");

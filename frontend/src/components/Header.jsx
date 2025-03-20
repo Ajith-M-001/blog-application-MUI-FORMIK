@@ -101,7 +101,9 @@ const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeItem, setActiveItem] = useState(null);
   const navigate = useNavigate();
+
   const { mutate: signOut, isPending: isSignOutPending } = useSignOutUser();
+  const { data: user } = useGetUserDetails();
 
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
@@ -140,8 +142,6 @@ const Header = () => {
       },
     });
   };
-
-  const { data: user } = useGetUserDetails();
 
   const navItems = [
     // { label: "Blogs", path: "blogs" },
@@ -478,6 +478,7 @@ const Header = () => {
 
                         {/* Sign out button */}
                         <MenuItem
+                          disabled={isSignOutPending}
                           onClick={handleSignOut}
                           sx={{
                             color: theme.palette.error.main,
@@ -613,6 +614,43 @@ const Header = () => {
 
           <Divider sx={{ mb: 2 }} />
 
+          {isAuthenticated && (
+            <Box
+              component={motion.div}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              sx={{ mb: 2 }}
+            >
+              <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+                <Avatar
+                  src={user?.data?.avatar?.url}
+                  alt={user?.data?.firstName}
+                  sx={{
+                    height: "3rem",
+                    width: "3rem",
+                    mr: 2,
+                    background: user?.data?.avatar?.url
+                      ? "transparent"
+                      : `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+                  }}
+                >
+                  {!user?.data?.avatar?.url &&
+                    user?.data?.firstName.charAt(0).toUpperCase()}
+                </Avatar>
+                <Box>
+                  <Typography variant="subtitle1" fontWeight={600}>
+                    {capitalizeFirstLetter(user?.data?.firstName)}{" "}
+                    {capitalizeFirstLetter(user?.data?.lastName)}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    premium member
+                  </Typography>
+                </Box>
+              </Box>
+              <Divider sx={{ mb: 2 }} />
+            </Box>
+          )}
+
           {/* Mobile Search */}
           <Box sx={{ my: 2 }}>
             <SearchContainer>
@@ -651,40 +689,95 @@ const Header = () => {
             ))}
           </List>
 
-          <Box
-            component={motion.div}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.7 }}
-            sx={{ mt: 2, display: "flex", flexDirection: "column", gap: 2 }}
-          >
-            <Link to={"sign-in"}>
-              <Button
-                onClick={toggleMobileMenu}
-                variant="outlined"
-                fullWidth
-                component={motion.button}
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.9 }}
-                color="secondary"
+          {isAuthenticated ? (
+            <>
+              <Divider />
+              {menuItems.map((item, index) => (
+                <ListItem
+                  key={item.label}
+                  button
+                  component={motion.li}
+                  initial={{ x: 20, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  transition={{ delay: 0.5 + 0.1 * index }}
+                  onClick={() => {
+                    toggleMobileMenu();
+                    navigate(item.path);
+                  }}
+                  sx={{
+                    borderRadius: "8px",
+                    mb: 1,
+                    "&:hover": {
+                      backgroundColor: alpha(theme.palette.primary.main, 0.1),
+                    },
+                  }}
+                >
+                  <Box sx={{ mr: 2, display: "flex", alignItems: "center" }}>
+                    {item.icon}
+                  </Box>
+                  <ListItemText primary={item.label} />
+                </ListItem>
+              ))}
+
+              <ListItem
+                button
+                component={motion.li}
+                initial={{ x: 20, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ delay: 0.8 }}
+                disabled={isSignOutPending}
+                onClick={handleSignOut}
+                sx={{
+                  borderRadius: "8px",
+                  mb: 1,
+                  color: theme.palette.error.main,
+                  "&:hover": {
+                    backgroundColor: alpha(theme.palette.error.main, 0.08),
+                  },
+                }}
               >
-                Sign In
-              </Button>
-            </Link>
-            <Link to={"sign-up"}>
-              <Button
-                onClick={toggleMobileMenu}
-                variant="contained"
-                fullWidth
-                component={motion.button}
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.9 }}
-                color="primary"
-              >
-                Sign Up
-              </Button>
-            </Link>
-          </Box>
+                <Box sx={{ mr: 2, display: "flex", alignItems: "center" }}>
+                  <LogOut />
+                </Box>
+                <ListItemText primary="Sign Out" />
+              </ListItem>
+            </>
+          ) : (
+            <Box
+              component={motion.div}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.7 }}
+              sx={{ mt: 2, display: "flex", flexDirection: "column", gap: 2 }}
+            >
+              <Link to={"sign-in"}>
+                <Button
+                  onClick={toggleMobileMenu}
+                  variant="outlined"
+                  fullWidth
+                  component={motion.button}
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.9 }}
+                  color="secondary"
+                >
+                  Sign In
+                </Button>
+              </Link>
+              <Link to={"sign-up"}>
+                <Button
+                  onClick={toggleMobileMenu}
+                  variant="contained"
+                  fullWidth
+                  component={motion.button}
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.9 }}
+                  color="primary"
+                >
+                  Sign Up
+                </Button>
+              </Link>
+            </Box>
+          )}
         </Box>
       </Drawer>
     </>

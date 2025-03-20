@@ -76,7 +76,7 @@ export const verifyRefreshToken = async (req, res, next) => {
   try {
     const decoded = jwt.verify(refreshToken, authConfig.JWT_REFRESH_SECRET);
     const user = await User.findById(decoded._id).select(
-      "email firstName lastName roles isActive"
+      "email firstName lastName roles accountStatus"
     );
     if (!user) {
       return res
@@ -88,8 +88,24 @@ export const verifyRefreshToken = async (req, res, next) => {
         );
     }
 
-    if (!user.isActive) {
-      return res.status(403).json(ApiResponse.forbidden("Account is inactive"));
+    if (user.accountStatus !== "active") {
+      if (user.accountStatus === "inactive") {
+        return res
+          .status(403)
+          .json(
+            ApiResponse.forbidden(
+              "Account is inactive, please verify your account"
+            )
+          );
+      } else {
+        return res
+          .status(403)
+          .json(
+            ApiResponse.forbidden(
+              "Account is not active, please contact customer support"
+            )
+          );
+      }
     }
     req.user = user;
     next();

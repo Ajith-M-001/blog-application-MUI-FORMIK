@@ -13,7 +13,7 @@ const accessTokenCookieOptions = {
   httpOnly: true, // Cannot be accessed via client-side JavaScript
   secure: process.env.NODE_ENV === "production", // Send cookie only over HTTPS in production
   sameSite: "strict", // Helps mitigate CSRF attacks
-  maxAge: 1 * 60 * 60 * 1000, // 1 hour in milliseconds
+  maxAge: 30 * 1000, // 30 seconds in milliseconds
 };
 
 // Create cookie options for the refresh token
@@ -21,7 +21,7 @@ const refreshTokenCookieOptions = {
   httpOnly: true,
   secure: process.env.NODE_ENV === "production",
   sameSite: "strict",
-  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
+  maxAge: 1 * 60 * 1000, // 1 minute in milliseconds
 };
 
 export const signUpUser = transactionHandler(

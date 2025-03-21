@@ -34,8 +34,11 @@ const queryClient = new QueryClient({
       refetchOnWindowFocus: false,
       refetchOnMount: true,
       refetchOnReconnect: true,
-      retry: 2,
-      staleTime: 1000 * 60 * 5, // 5 minutes
+      retry: (failureCount, error) => {
+        // Don't retry on 401 - interceptor handles this
+        return error?.response?.status !== 401 && failureCount < 2;
+      },
+      staleTime: 1000 * 10, // 5 minutes
       cacheTime: 1000 * 60 * 10, // 10 minutes
       networkMode: "online",
       // onError: (error) => console.error("Query Error:", error),

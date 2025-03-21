@@ -102,6 +102,8 @@ const Header = () => {
   const [activeItem, setActiveItem] = useState(null);
   const navigate = useNavigate();
 
+  console.log("asfsdfsdf", useStore);
+
   const { mutate: signOut, isPending: isSignOutPending } = useSignOutUser();
 
   const [anchorEl, setAnchorEl] = useState(null);

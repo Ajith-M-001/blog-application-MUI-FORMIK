@@ -1,6 +1,6 @@
-//frontend\src\api\axiosClient.js
-
 import axios from "axios";
+import { API_ENDPOINTS } from "./endpoints";
+import useStore from "../store/zustand.store.js";
 
 const baseURL =
   import.meta.env.MODE === "development"
@@ -14,16 +14,13 @@ const axiosInstance = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
-  // This is crucial for cookies to be sent with requests
   withCredentials: true,
 });
 
 // Request interceptor
 axiosInstance.interceptors.request.use(
   (config) => {
-    // With httpOnly cookies, we don't need to manually add
-    // the token to headers as the browser will automatically
-    // send cookies with the request when withCredentials is true
+    // No need to add token manually as cookies are sent automatically
     return config;
   },
   (error) => {
@@ -31,61 +28,69 @@ axiosInstance.interceptors.request.use(
   }
 );
 
-// Response interceptor for error handling
+let isRefreshing = false;
+let failedRequestsQueue = [];
 
+const processQueue = (error, token = null) => {
+  failedRequestsQueue.forEach((prom) => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token);
+    }
+  });
+
+  failedRequestsQueue = [];
+};
+
+// Response interceptor for error handling
 axiosInstance.interceptors.response.use(
   (response) => response,
   async (error) => {
-    return Promise.reject(error);
+    const originalRequest = error.config;
+    const status = error.response?.status;
+
+    if (status !== 401 || originalRequest._retry) {
+      return Promise.reject(error);
+    }
+
+    if (originalRequest.url === API_ENDPOINTS.users.refreshToken) {
+      return Promise.reject(error);
+    }
+
+    originalRequest._retry = true;
+
+    if (!isRefreshing) {
+      isRefreshing = true;
+      try {
+        await axiosInstance.post(
+          API_ENDPOINTS.users.refreshToken,
+          {},
+          { withCredentials: true }
+        );
+        const retryResponse = await axiosInstance(originalRequest);
+        processQueue(null);
+        return retryResponse;
+      } catch (refreshError) {
+        logoutUser();
+        processQueue(refreshError);
+        return Promise.reject(refreshError);
+      } finally {
+        isRefreshing = false;
+      }
+    } else {
+      return new Promise((resolve, reject) => {
+        failedRequestsQueue.push({ resolve, reject });
+      });
+    }
   }
 );
 
+const logoutUser = () => {
+  const { clearUser, setIsAuthenticated } = useStore.getState();
+  setIsAuthenticated(false);
+  clearUser();
+  window.location.href = "/sign-in";
+};
+
 export { axiosInstance };
-
-// axiosInstance.interceptors.response.use(
-//   (response) => response,
-//   async (error) => {
-//     const originalRequest = error.config;
-
-//     if (error.response.status === 401 && !originalRequest._retry) {
-//       originalRequest._retry = true;
-
-//       try {
-//         const response = await axiosInstance.post(
-//           "/refresh",
-//           {},
-//           { withCredentials: true }
-//         );
-//         const { accessToken } = response.data;
-
-//         axiosInstance.defaults.headers.common[
-//           "Authorization"
-//         ] = `Bearer ${accessToken}`;
-//         originalRequest.headers["Authorization"] = `Bearer ${accessToken}`;
-
-//         return axiosInstance(originalRequest);
-//       } catch (refreshError) {
-//         // Handle refresh token error (e.g., redirect to login)
-//         return Promise.reject(refreshError);
-//       }
-//     }
-
-//     return Promise.reject(error);
-//   }
-// );
-
-// Response interceptor
-// apiClient.interceptors.response.use(
-//   (response) => response.data,
-//   (error) => {
-//     const message = error.response?.data?.message || error.message;
-//     const status = error.response?.status;
-
-//     // Handle specific status codes
-//     if (status === 401) {
-//       // Add logic for token refresh here
-//     }
-
-//     return Promise.reject({ message, status });
-//   }
-// );

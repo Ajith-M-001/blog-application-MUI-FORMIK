@@ -64,6 +64,7 @@ export const verifyAccessToken = async (req, res, next) => {
 
 export const verifyRefreshToken = async (req, res, next) => {
   const refreshToken = req.cookies.refresh_token;
+  console.log("refreshToken", refreshToken);
   if (!refreshToken) {
     return res
       .status(401)

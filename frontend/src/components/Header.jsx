@@ -33,7 +33,7 @@ import {
   HelpCircle,
   LogOut,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, memo } from "react";
 import useStore from "../store/zustand.store";
 import { useShallow } from "zustand/react/shallow";
 import { buttonHoverVariants } from "../utils/motionVariants";
@@ -102,8 +102,6 @@ const Header = () => {
   const [activeItem, setActiveItem] = useState(null);
   const navigate = useNavigate();
 
-  console.log("asfsdfsdf", useStore);
-
   const { mutate: signOut, isPending: isSignOutPending } = useSignOutUser();
 
   const [anchorEl, setAnchorEl] = useState(null);
@@ -144,11 +142,12 @@ const Header = () => {
   const handleSignOut = () => {
     signOut(undefined, {
       onSuccess: (data) => {
-        handleUserMenuClose();
-        clearUser();
-        setIsAuthenticated(false);
-        showToast(data?.message, { type: "success" });
         navigate("/sign-in");
+        setIsAuthenticated(false);
+        clearUser();
+        showToast(data?.message, { type: "success" });
+        handleUserMenuClose();
+        setMobileMenuOpen(false);
       },
     });
   };
@@ -393,18 +392,18 @@ const Header = () => {
                         aria-expanded={open ? "true" : undefined}
                       >
                         <Avatar
-                          src={user?.data?.avatar?.url}
-                          alt={user?.data?.firstName}
+                          src={user?.avatar?.url}
+                          alt={user?.firstName}
                           sx={{
                             height: "2.3rem",
                             width: "2.3rem",
-                            background: user?.data?.avatar?.url
+                            background: user?.avatar?.url
                               ? "transparent"
-                              : `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+                              : `linear-gradient(0deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
                           }}
                         >
-                          {!user?.data?.avatar?.url &&
-                            user?.data?.firstName.charAt(0).toUpperCase()}
+                          {!user?.avatar?.url &&
+                            user?.firstName.charAt(0).toUpperCase()}
                         </Avatar>
                       </IconButton>
                       <Menu
@@ -448,8 +447,8 @@ const Header = () => {
                         {/* Header section */}
                         <Box sx={{ px: 2, py: 1.5 }}>
                           <Typography variant="subtitle1" fontWeight={600}>
-                            {capitalizeFirstLetter(user?.data?.firstName)}{" "}
-                            {capitalizeFirstLetter(user?.data?.lastName)}
+                            {capitalizeFirstLetter(user?.firstName)}{" "}
+                            {capitalizeFirstLetter(user?.lastName)}
                           </Typography>
                           <Typography variant="body2" color="text.secondary">
                             premium member
@@ -633,24 +632,24 @@ const Header = () => {
             >
               <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
                 <Avatar
-                  src={user?.data?.avatar?.url}
-                  alt={user?.data?.firstName}
+                  src={user?.avatar?.url}
+                  alt={user?.firstName}
                   sx={{
                     height: "3rem",
                     width: "3rem",
                     mr: 2,
-                    background: user?.data?.avatar?.url
+                    background: user?.avatar?.url
                       ? "transparent"
-                      : `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+                      : `linear-gradient(35deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
                   }}
                 >
-                  {!user?.data?.avatar?.url &&
-                    user?.data?.firstName.charAt(0).toUpperCase()}
+                  {!user?.avatar?.url &&
+                    user?.firstName.charAt(0).toUpperCase()}
                 </Avatar>
                 <Box>
                   <Typography variant="subtitle1" fontWeight={600}>
-                    {capitalizeFirstLetter(user?.data?.firstName)}{" "}
-                    {capitalizeFirstLetter(user?.data?.lastName)}
+                    {capitalizeFirstLetter(user?.firstName)}{" "}
+                    {capitalizeFirstLetter(user?.lastName)}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
                     premium member
@@ -794,4 +793,5 @@ const Header = () => {
   );
 };
 
-export { Header };
+const MemorizedHeader = memo(Header);
+export { MemorizedHeader as Header };

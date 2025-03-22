@@ -83,9 +83,7 @@ export const useSignOutUser = () => {
   return useMutation({
     mutationFn: usersService.signOutUser,
     onSuccess: () => {
-      queryClient.invalidateQueries(QUERY_KEYS.USERS);
-      queryClient.removeQueries(QUERY_KEYS.USER_DETAILS);
-      queryClient.removeQueries(QUERY_KEYS.CHECK);
+      queryClient.clear();
     },
     onError: (error) => {
       console.log("Error signing out user", error);

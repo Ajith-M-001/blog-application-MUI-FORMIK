@@ -34,8 +34,8 @@ class ApiResponse {
     return this.error(message, 401);
   }
 
-  static forbidden(message = "Forbidden access") {
-    return this.error(message, 403);
+  static forbidden(message = "Forbidden access", data = null) {
+    return this.error(message, 403, data);
   }
 
   static notFound(message = "Resource not found") {

@@ -25,7 +25,7 @@ export const verifyAccessToken = async (req, res, next) => {
   try {
     const decoded = jwt.verify(token, authConfig.JWT_ACCESS_SECRET);
     const user = await User.findById(decoded._id).select(
-      "email firstName lastName roles accountStatus"
+      "email firstName lastName roles accountStatus country phoneNumber"
     );
     if (!user) {
       return res
@@ -39,11 +39,19 @@ export const verifyAccessToken = async (req, res, next) => {
 
     if (user.accountStatus !== "active") {
       if (user.accountStatus === "inactive") {
+        const responseOBJ = {
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          country: user.country,
+          phoneNumber: user.phoneNumber,
+        };
         return res
           .status(403)
           .json(
             ApiResponse.forbidden(
-              "Account is inactive, please verify your account"
+              "Account is inactive, please verify your account",
+              responseOBJ
             )
           );
       }

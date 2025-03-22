@@ -109,10 +109,10 @@ const SignUp = () => {
         showToast(data.message, { type: "success" });
         navigate("/otp-verification", {
           state: {
-            contactType: values.useEmail ? "email" : "phone",
+            contactType: values.useEmail ? "email" : "phoneNumber",
             contactValue: values.useEmail
               ? data?.data?.user?.email
-              : `${data?.data?.user?.country?.dial_code}${data?.data?.user?.phoneNumber}`,
+              : data?.data?.user?.phoneNumber,
           },
         });
       },

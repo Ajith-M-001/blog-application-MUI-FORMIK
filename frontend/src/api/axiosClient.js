@@ -1,6 +1,6 @@
 import axios from "axios";
 import { API_ENDPOINTS } from "./endpoints";
-import useStore from "../store/zustand.store.js";
+import useStore from "../store/zustand.store";
 
 const baseURL =
   import.meta.env.MODE === "development"
@@ -88,8 +88,8 @@ axiosInstance.interceptors.response.use(
 
 const logoutUser = () => {
   const { clearUser, setIsAuthenticated } = useStore.getState();
-  setIsAuthenticated(false);
   clearUser();
+  setIsAuthenticated(false);
   window.location.href = "/sign-in";
 };
 

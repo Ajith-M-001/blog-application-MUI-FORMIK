@@ -45,7 +45,10 @@ const queryClient = new QueryClient({
     },
     mutations: {
       // onError: (error) => console.error("Mutation Error:", error),
-      retry: 1,
+      retry: (failureCount, error) => {
+        // Don't retry on 401 - interceptor handles this
+        return error?.response?.status !== 401 && failureCount < 1;
+      },
     },
   },
 });

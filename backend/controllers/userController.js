@@ -13,7 +13,7 @@ const accessTokenCookieOptions = {
   httpOnly: true, // Cannot be accessed via client-side JavaScript
   secure: process.env.NODE_ENV === "production", // Send cookie only over HTTPS in production
   sameSite: "strict", // Helps mitigate CSRF attacks
-  maxAge: 30 * 1000, // 30 seconds in milliseconds
+  maxAge: 1 * 60 * 60 * 1000,
 };
 
 // Create cookie options for the refresh token
@@ -21,7 +21,7 @@ const refreshTokenCookieOptions = {
   httpOnly: true,
   secure: process.env.NODE_ENV === "production",
   sameSite: "strict",
-  maxAge: 1 * 60 * 1000, // 1 minute in milliseconds
+  maxAge: 7 * 24 * 60 * 60 * 1000,
 };
 
 export const signUpUser = transactionHandler(
@@ -120,8 +120,6 @@ export const signInUser = asyncHandler(async (req, res) => {
   } else {
     user = await User.findOne({ phoneNumber }).select("+password");
   }
-
-  console.log(user);
 
   if (!user) {
     return res.status(404).json(ApiResponse.notFound("invalid credentials"));
@@ -231,8 +229,6 @@ export const refreshAccessToken = asyncHandler(async (req, res, next) => {
 export const verifyOtp = asyncHandler(async (req, res, next) => {
   const { email, phoneNumber, otp } = req.body;
 
-  console.log(email, phoneNumber, otp);
-
   if (!email && !phoneNumber) {
     return res
       .status(400)
@@ -254,7 +250,6 @@ export const verifyOtp = asyncHandler(async (req, res, next) => {
     "+verificationCode +verificationCodeExpires"
   );
 
-  console.log(user);
   if (!user) {
     return res.status(404).json(ApiResponse.notFound("User not found"));
   }
@@ -313,7 +308,7 @@ export const resendOtp = asyncHandler(async (req, res, next) => {
   if (email) {
     await sendOTPViaEmail(user.email, "OTP Verification", otp);
   } else {
-    await sendOTPViaSMS(user.phoneNumber, otp);
+    await sendOTPViaSMS(`${user.country.dial_code}${user.phoneNumber}`, otp);
   }
 
   return res.status(200).json(ApiResponse.success("OTP sent successfully"));

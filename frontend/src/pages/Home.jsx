@@ -1,14 +1,11 @@
 import { Typography, useTheme } from "@mui/material";
-import { useCheck, useGetUserDetails } from "../hooks/api/Users";
+import { useGetUserDetails } from "../hooks/api/Users";
 import useStore from "../store/zustand.store";
 import { useShallow } from "zustand/react/shallow";
+import { useEffect } from "react";
 
 const Home = () => {
-  const { data: check } = useCheck();
-  const { data: user, isSuccess } = useGetUserDetails();
-
-  console.log("check_value", check);
-
+  // Get Zustand store actions
   const { setUser, setIsAuthenticated } = useStore(
     useShallow((state) => ({
       setUser: state.setUser,
@@ -16,17 +13,27 @@ const Home = () => {
     }))
   );
 
-  if (isSuccess) {
-    setUser(user.data);
-    setIsAuthenticated(true);
-  }
-
-  console.log(user);
   const theme = useTheme();
+
+  const { data: user, isSuccess: isUserSuccess } = useGetUserDetails();
+
+  useEffect(() => {
+    if (isUserSuccess && user?.data) {
+      setUser(user?.data);
+      setIsAuthenticated(true);
+    }
+  }, [isUserSuccess, user?.data]);
+
+  console.log("User", user);
+
+  console.log("Component rendered");
+
   return (
-    <Typography sx={{ color: theme.palette.text.primary }}>
-      Home Page
-    </Typography>
+    <div>
+      <Typography sx={{ color: theme.palette.text.primary }}>
+        Home Page
+      </Typography>
+    </div>
   );
 };
 

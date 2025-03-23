@@ -6,6 +6,8 @@ import countryRoute from "./routes/countriesRoute.js";
 import cookieParser from "cookie-parser";
 import { errorHandler, notFound } from "./middleware/errorMiddleware.js";
 import cors from "cors";
+import User from "./model/user.schema.js";
+import cron from "node-cron";
 
 const app = express();
 
@@ -45,6 +47,19 @@ app.use(errorHandler);
 const startServer = async () => {
   try {
     await connectDB();
+    // Start the server
+    cron.schedule("0 0 * * *", async () => {
+      try {
+        const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+        const result = await User.deleteMany({
+          accountStatus: "inactive",
+          createdAt: { $lt: twentyFourHoursAgo },
+        });
+        console.log(`Cleaned up ${result.deletedCount} inactive accounts.`);
+      } catch (error) {
+        console.error("Error cleaning up inactive accounts:", error);
+      }
+    });
     app.listen(PORT, () => {
       console.log(`server is running on the PORT http://localhost:${PORT}`);
     });

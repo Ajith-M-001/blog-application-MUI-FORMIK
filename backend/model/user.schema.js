@@ -5,12 +5,15 @@ import {
   USER_ROLES,
 } from "../../common/constants/constants.js";
 
-// Constants for reusable values
-
-// Session Schema
-const sessionSchema = new mongoose.Schema(
+// refreshToken Schema
+const refreshTokenSchema = new mongoose.Schema(
   {
     sessionId: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+    token: {
       type: String,
       required: true,
       unique: true,
@@ -30,9 +33,9 @@ const sessionSchema = new mongoose.Schema(
       type: Date,
       default: Date.now,
     },
-    isValid: {
-      type: Boolean,
-      default: true,
+    expiresAt: {
+      type: Date,
+      required: true,
     },
   },
   { _id: false }
@@ -115,7 +118,7 @@ const userSchema = new mongoose.Schema(
       enum: Object.values(SESSION_PREFERENCE),
       default: SESSION_PREFERENCE.MULTIPLE,
     },
-    maxSession: { type: Number, default: 5, min: 1, max: 5 },
+    maxSession: { type: Number, default: 5, min: 2, max: 20 },
     accountStatus: {
       type: String,
       enum: ["active", "inactive", "suspended"],
@@ -140,14 +143,11 @@ const userSchema = new mongoose.Schema(
     forgotPasswordCode: { type: String, select: false },
     forgotPasswordExpires: { type: Date, select: false },
     authProviders: { type: [authProviderSchema], select: false },
-    refreshTokens: [
-      {
-        token: String,
-        issueAt: Date,
-        expiresAt: Date,
-      },
-    ],
-    sessions: { type: [sessionSchema], select: false },
+    refreshTokens: {
+      type: [refreshTokenSchema],
+      select: false,
+      default: [],
+    },
   },
   {
     timestamps: true,

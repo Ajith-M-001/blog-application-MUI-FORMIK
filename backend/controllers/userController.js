@@ -7,13 +7,15 @@ import { blacklistedTokens } from "../model/token.blacklist.js";
 import { generateOTP } from "../utils/otpUtils.js";
 import { sendOTPViaEmail } from "../services/emailService.js";
 import { sendOTPViaSMS } from "../services/smsServices.js";
+import { v4 as uuidv4 } from "uuid";
+import { SESSION_PREFERENCE } from "../../common/constants/constants.js";
 
 // Create cookie options for the access token
 const accessTokenCookieOptions = {
   httpOnly: true, // Cannot be accessed via client-side JavaScript
   secure: process.env.NODE_ENV === "production", // Send cookie only over HTTPS in production
   sameSite: "strict", // Helps mitigate CSRF attacks
-  maxAge: 1 * 60 * 60 * 1000,
+  maxAge: 15 * 60 * 1000,
 };
 
 // Create cookie options for the refresh token
@@ -115,15 +117,19 @@ export const signInUser = asyncHandler(async (req, res) => {
   let user;
   if (email) {
     user = await User.findOne({ email: email.toLowerCase() }).select(
-      "+password"
+      "+password +refreshTokens"
     );
   } else {
-    user = await User.findOne({ phoneNumber }).select("+password");
+    user = await User.findOne({ phoneNumber }).select(
+      "+password +refreshTokens"
+    );
   }
 
   if (!user) {
     return res.status(404).json(ApiResponse.notFound("invalid credentials"));
   }
+
+  console.log("fsdfsdfsd", user);
 
   const isPasswordMAtched = await bcrypt.compare(password, user.password);
 
@@ -133,14 +139,41 @@ export const signInUser = asyncHandler(async (req, res) => {
       .json(ApiResponse.notFound("invalid credentials 123"));
   }
 
-  const tokens = await generateToken(user);
+  const sessionId = uuidv4();
+  const tokens = await generateToken(user, sessionId);
   const refreshTokenExpiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
-  user.refreshTokens.push({
-    token: tokens.refreshToken,
-    issueAt: Date.now(),
+  console.log("tokens", tokens);
+  const hashedRefreshToken = await bcrypt.hash(tokens.refreshToken, 10);
+
+  const userAgent = req.headers["user-agent"] || "";
+  const ip = req.ip || req.connection.remoteAddress || "";
+  console.log("check_header", userAgent, ip);
+
+  const newSession = {
+    sessionId,
+    token: hashedRefreshToken,
+    deviceInfo: {
+      os: getUserOS(userAgent),
+      browser: getBrowser(userAgent),
+      ip: ip,
+      userAgent: userAgent,
+      lastLocation: "",
+    },
+    loggedInAt: Date.now(),
+    lastActive: Date.now(),
     expiresAt: refreshTokenExpiry,
-  });
+  };
+
+  if (user.sessionPreference === SESSION_PREFERENCE.SINGLE) {
+    user.refreshTokens = [newSession];
+  } else if (user.sessionPreference === SESSION_PREFERENCE.MULTIPLE) {
+    if (user.refreshTokens.length >= user.maxSession) {
+      user.refreshTokens.sort((a, b) => a.loggedInAt - b.loggedInAt);
+      user.refreshTokens.shift();
+    }
+    user.refreshTokens.push(newSession);
+  }
 
   await user.save();
 
@@ -158,17 +191,22 @@ export const protectRoute = asyncHandler(async (req, res, next) => {
 export const signOutUser = asyncHandler(async (req, res, next) => {
   const refreshToken = req.cookies.refresh_token;
   const accessToken = req.cookies.access_token;
+  const { removeAllSession = false } = req.body;
+
   const userId = req.user._id;
-  const user = await User.findById(userId);
+  const user = await User.findById(userId).select("+refreshTokens");
 
   if (!user) {
     return res.status(404).json(ApiResponse.notFound("User not found"));
   }
 
-  user.refreshTokens = user.refreshTokens.filter(
-    (token) => token.token !== refreshToken
-  );
-
+  if (removeAllSession) {
+    user.refreshTokens = [];
+  } else {
+    user.refreshTokens = user.refreshTokens.filter(
+      (rt) => !bcrypt.compareSync(refreshToken, rt.token)
+    );
+  }
   if (accessToken) {
     await blacklistedTokens.create({
       token: accessToken,
@@ -187,35 +225,64 @@ export const signOutUser = asyncHandler(async (req, res, next) => {
 
 export const refreshAccessToken = asyncHandler(async (req, res, next) => {
   const oldRefreshToken = req.cookies.refresh_token;
+
+  if (!oldRefreshToken)
+    return res
+      .status(401)
+      .json(ApiResponse.unauthorized("Refresh token is missing"));
+
   const userId = req.user._id;
-  const user = await User.findById(userId);
+  const user = await User.findById(userId).select("+refreshTokens");
+
+  if (!user) {
+    return res.status(404).json(ApiResponse.notFound("User not found"));
+  }
 
   // Find the specific token record
-  const tokenRecord = user.refreshTokens.find(
-    (rt) => rt.token === oldRefreshToken
-  );
+  const tokenRecord = user.refreshTokens.find(async (rt) => {
+    return await bcrypt.compare(oldRefreshToken, rt.token);
+  });
+
+  console.log("tokenRecordfsdgfdgsdfg", tokenRecord);
 
   if (!tokenRecord || new Date(tokenRecord.expiresAt) < new Date()) {
-    user.refreshTokens = user.refreshTokens(
-      (rt) => rt.token !== oldRefreshToken
-    );
+    user.refreshTokens = user.refreshTokens.filter(async (rt) => {
+      return !(await bcrypt.compare(oldRefreshToken, rt.token));
+    });
     await user.save();
     return res
       .status(401)
       .json(ApiResponse.error("Refresh token has expired", 401));
   }
   // Generate new tokens
-  const tokens = await generateToken(user);
+  const sessionId = uuidv4();
+  const tokens = await generateToken(user, sessionId);
   const refreshTokenExpiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
   // Replace the old refresh token with the new one
-  user.refreshTokens = user.refreshTokens.filter(
-    (rt) => rt.token !== oldRefreshToken
-  );
+
+  const hashedRefreshToken = await bcrypt.hash(tokens.refreshToken, 10);
+
+  user.refreshTokens = user.refreshTokens.filter(async (rt) => {
+    return !(await bcrypt.compare(oldRefreshToken, rt.token));
+  });
+
+  const userAgent = req.headers["user-agent"] || "";
+  const ip = req.ip || req.connection.remoteAddress || "";
   user.refreshTokens.push({
-    token: tokens.refreshToken,
-    issueAt: Date.now(),
+    sessionId,
+    token: hashedRefreshToken,
+    deviceInfo: {
+      os: getUserOS(userAgent),
+      browser: getBrowser(userAgent),
+      ip: ip,
+      userAgent: userAgent,
+      lastLocation: "",
+    },
+    loggedInAt: Date.now(),
+    lastActive: Date.now(),
     expiresAt: refreshTokenExpiry,
   });
+
   await user.save();
   // Set the new tokens as cookies
   res.cookie("access_token", tokens.accessToken, accessTokenCookieOptions);
@@ -318,3 +385,33 @@ export const getUserDetails = asyncHandler(async (req, res, next) => {
   const user = await User.findById(req.user._id);
   return res.status(200).json(ApiResponse.success("User details", user));
 });
+
+// Helper function to extract OS from user agent
+function getUserOS(userAgent) {
+  if (!userAgent) return "Unknown";
+  if (userAgent.includes("Windows NT")) return "Windows";
+  if (userAgent.includes("Mac")) return "MacOS";
+  if (userAgent.includes("Android")) return "Android";
+  if (
+    userAgent.includes("iOS") ||
+    userAgent.includes("iPhone") ||
+    userAgent.includes("iPad")
+  )
+    return "iOS";
+  if (userAgent.includes("Linux")) return "Linux";
+  return "Unknown";
+}
+
+// Helper function to extract browser from user agent
+function getBrowser(userAgent) {
+  if (!userAgent) return "Unknown";
+  if (userAgent.includes("Chrome") && !userAgent.includes("Edg"))
+    return "Chrome";
+  if (userAgent.includes("Firefox")) return "Firefox";
+  if (userAgent.includes("Safari") && !userAgent.includes("Chrome"))
+    return "Safari";
+  if (userAgent.includes("Edg")) return "Edge";
+  if (userAgent.includes("MSIE") || userAgent.includes("Trident/"))
+    return "Internet Explorer";
+  return "Unknown";
+}

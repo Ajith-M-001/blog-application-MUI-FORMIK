@@ -3,6 +3,7 @@ import { ApiResponse } from "./ApiResponse.js";
 import { authConfig } from "../config/auth.config.js";
 import User from "../model/user.schema.js";
 import { blacklistedTokens } from "../model/token.blacklist.js";
+import bcrypt from "bcrypt";
 
 export const verifyAccessToken = async (req, res, next) => {
   const token = req.cookies.access_token;
@@ -16,14 +17,15 @@ export const verifyAccessToken = async (req, res, next) => {
       );
   }
 
-  const isblackListed = await blacklistedTokens.findOne({ token });
-  if (isblackListed) {
-    return res
-      .status(401)
-      .json(ApiResponse.unauthorized("unauthorized:access token is invalid"));
-  }
   try {
+    const isBlacklisted = await blacklistedTokens.findOne({ token });
+    if (isBlacklisted) {
+      return res
+        .status(401)
+        .json(ApiResponse.unauthorized("unauthorized:access token is invalid"));
+    }
     const decoded = jwt.verify(token, authConfig.JWT_ACCESS_SECRET);
+    console.log("decoded", decoded);
     const user = await User.findById(decoded._id).select(
       "email firstName lastName roles accountStatus country phoneNumber"
     );
@@ -72,7 +74,7 @@ export const verifyAccessToken = async (req, res, next) => {
 
 export const verifyRefreshToken = async (req, res, next) => {
   const refreshToken = req.cookies.refresh_token;
-  console.log("refreshToken", refreshToken);
+  console.log("refreshTokenfsgdfgdg", refreshToken);
   if (!refreshToken) {
     return res
       .status(401)
@@ -85,7 +87,7 @@ export const verifyRefreshToken = async (req, res, next) => {
   try {
     const decoded = jwt.verify(refreshToken, authConfig.JWT_REFRESH_SECRET);
     const user = await User.findById(decoded._id).select(
-      "email firstName lastName roles accountStatus"
+      "email firstName lastName roles accountStatus refreshTokens"
     );
     if (!user) {
       return res
@@ -97,26 +99,19 @@ export const verifyRefreshToken = async (req, res, next) => {
         );
     }
 
-    if (user.accountStatus !== "active") {
-      if (user.accountStatus === "inactive") {
+    if (user.accountStatus === "active") {
+      const isValidRefreshToken = user.refreshTokens.some(async (rt) => {
+        return await bcrypt.compare(refreshToken, rt.token);
+      });
+      if (!isValidRefreshToken) {
         return res
-          .status(403)
+          .status(401)
           .json(
-            ApiResponse.forbidden(
-              "Account is inactive, please verify your account"
-            )
-          );
-      } else {
-        return res
-          .status(403)
-          .json(
-            ApiResponse.forbidden(
-              "Account is not active, please contact customer support"
-            )
+            ApiResponse.unauthorized("unauthorized: Invalid refresh token")
           );
       }
+      req.user = user;
     }
-    req.user = user;
     next();
   } catch (error) {
     next(error);

@@ -2,7 +2,6 @@ import jwt from "jsonwebtoken";
 import { ApiResponse } from "./ApiResponse.js";
 import { authConfig } from "../config/auth.config.js";
 import User from "../model/user.schema.js";
-import { blacklistedTokens } from "../model/token.blacklist.js";
 import bcrypt from "bcrypt";
 
 export const verifyAccessToken = async (req, res, next) => {
@@ -18,16 +17,9 @@ export const verifyAccessToken = async (req, res, next) => {
   }
 
   try {
-    const isBlacklisted = await blacklistedTokens.findOne({ token });
-    if (isBlacklisted) {
-      return res
-        .status(401)
-        .json(ApiResponse.unauthorized("unauthorized:access token is invalid"));
-    }
     const decoded = jwt.verify(token, authConfig.JWT_ACCESS_SECRET);
-    console.log("decoded", decoded);
     const user = await User.findById(decoded._id).select(
-      "email firstName lastName roles accountStatus country phoneNumber"
+      "email firstName lastName roles accountStatus country phoneNumber refreshTokens"
     );
     if (!user) {
       return res
@@ -65,7 +57,21 @@ export const verifyAccessToken = async (req, res, next) => {
           )
         );
     }
-    req.user = user;
+
+    const sessionExists = user.refreshTokens.some(
+      (rt) => rt.sessionId === decoded.sessionId
+    );
+
+    if (!sessionExists) {
+      return res
+        .status(401)
+        .json(
+          ApiResponse.unauthorized(
+            "unauthorized: Session not found. Please log in again."
+          )
+        );
+    }
+    req.user = { ...user.toObject(), sessionId: decoded.sessionId };
     next();
   } catch (error) {
     next(error);
@@ -74,7 +80,6 @@ export const verifyAccessToken = async (req, res, next) => {
 
 export const verifyRefreshToken = async (req, res, next) => {
   const refreshToken = req.cookies.refresh_token;
-  console.log("refreshTokenfsgdfgdg", refreshToken);
   if (!refreshToken) {
     return res
       .status(401)
@@ -100,9 +105,25 @@ export const verifyRefreshToken = async (req, res, next) => {
     }
 
     if (user.accountStatus === "active") {
-      const isValidRefreshToken = user.refreshTokens.some(async (rt) => {
-        return await bcrypt.compare(refreshToken, rt.token);
-      });
+      const sessionToken = user.refreshTokens.find(
+        (rt) => rt.sessionId === decoded.sessionId
+      );
+
+      if (!sessionToken) {
+        return res
+          .status(401)
+          .json(
+            ApiResponse.unauthorized(
+              "unauthorized: Session not found. Please log in again."
+            )
+          );
+      }
+
+      const isValidRefreshToken = await bcrypt.compare(
+        refreshToken,
+        sessionToken.token
+      );
+
       if (!isValidRefreshToken) {
         return res
           .status(401)
@@ -110,7 +131,7 @@ export const verifyRefreshToken = async (req, res, next) => {
             ApiResponse.unauthorized("unauthorized: Invalid refresh token")
           );
       }
-      req.user = user;
+      req.user = { ...user.toObject(), sessionId: decoded.sessionId };
     }
     next();
   } catch (error) {

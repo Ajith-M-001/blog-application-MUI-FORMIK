@@ -3,7 +3,6 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler, transactionHandler } from "../utils/AsyncHandler.js";
 import bcrypt from "bcrypt";
 import { generateToken } from "../utils/generateTokens.js";
-import { blacklistedTokens } from "../model/token.blacklist.js";
 import { generateOTP } from "../utils/otpUtils.js";
 import { sendOTPViaEmail } from "../services/emailService.js";
 import { sendOTPViaSMS } from "../services/smsServices.js";
@@ -143,12 +142,10 @@ export const signInUser = asyncHandler(async (req, res) => {
   const tokens = await generateToken(user, sessionId);
   const refreshTokenExpiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
-  console.log("tokens", tokens);
   const hashedRefreshToken = await bcrypt.hash(tokens.refreshToken, 10);
 
   const userAgent = req.headers["user-agent"] || "";
   const ip = req.ip || req.connection.remoteAddress || "";
-  console.log("check_header", userAgent, ip);
 
   const newSession = {
     sessionId,
@@ -189,9 +186,11 @@ export const protectRoute = asyncHandler(async (req, res, next) => {
 });
 
 export const signOutUser = asyncHandler(async (req, res, next) => {
-  const refreshToken = req.cookies.refresh_token;
-  const accessToken = req.cookies.access_token;
   const { removeAllSession = false } = req.body;
+  const sessionId = req.user.sessionId;
+
+  if (!sessionId)
+    return res.status(401).json(ApiResponse.unauthorized("Unauthorized"));
 
   const userId = req.user._id;
   const user = await User.findById(userId).select("+refreshTokens");
@@ -201,17 +200,13 @@ export const signOutUser = asyncHandler(async (req, res, next) => {
   }
 
   if (removeAllSession) {
-    user.refreshTokens = [];
+    user.refreshTokens = user.refreshTokens.filter(
+      (rt) => rt.sessionId === sessionId
+    );
   } else {
     user.refreshTokens = user.refreshTokens.filter(
-      (rt) => !bcrypt.compareSync(refreshToken, rt.token)
+      (rt) => rt.sessionId !== sessionId
     );
-  }
-  if (accessToken) {
-    await blacklistedTokens.create({
-      token: accessToken,
-      expiresAt: new Date(Date.now() + 15 * 60 * 1000),
-    });
   }
 
   await user.save();
@@ -220,11 +215,16 @@ export const signOutUser = asyncHandler(async (req, res, next) => {
   res.clearCookie("access_token");
   res.clearCookie("refresh_token");
 
-  return res.status(200).json(ApiResponse.success("Signed out successfully"));
+  const message = removeAllSession
+    ? "All other sessions signed out successfully"
+    : "Signed out successfully";
+
+  return res.status(200).json(ApiResponse.success(message));
 });
 
 export const refreshAccessToken = asyncHandler(async (req, res, next) => {
   const oldRefreshToken = req.cookies.refresh_token;
+  const session_Id = req.user.sessionId;
 
   if (!oldRefreshToken)
     return res
@@ -238,51 +238,47 @@ export const refreshAccessToken = asyncHandler(async (req, res, next) => {
     return res.status(404).json(ApiResponse.notFound("User not found"));
   }
 
-  // Find the specific token record
-  const tokenRecord = user.refreshTokens.find(async (rt) => {
-    return await bcrypt.compare(oldRefreshToken, rt.token);
-  });
+  const sessionIndex = user.refreshTokens.findIndex(
+    (rt) => rt.sessionId === session_Id
+  );
+  if (sessionIndex === -1) {
+    return res.status(401).json(ApiResponse.unauthorized("Invalid session"));
+  }
 
-  console.log("tokenRecordfsdgfdgsdfg", tokenRecord);
+  const sessionToken = user.refreshTokens[sessionIndex];
 
-  if (!tokenRecord || new Date(tokenRecord.expiresAt) < new Date()) {
-    user.refreshTokens = user.refreshTokens.filter(async (rt) => {
-      return !(await bcrypt.compare(oldRefreshToken, rt.token));
-    });
+  if (sessionToken.expiresAt < Date.now()) {
+    user.refreshTokens.splice(sessionIndex, 1);
     await user.save();
     return res
       .status(401)
-      .json(ApiResponse.error("Refresh token has expired", 401));
+      .json(ApiResponse.unauthorized("Refresh token expired"));
   }
+
+  const isRefreshTokenMatched = await bcrypt.compare(
+    oldRefreshToken,
+    sessionToken.token
+  );
+
+  if (!isRefreshTokenMatched) {
+    return res
+      .status(401)
+      .json(ApiResponse.unauthorized("Invalid refresh token"));
+  }
+
   // Generate new tokens
-  const sessionId = uuidv4();
   const tokens = await generateToken(user, sessionId);
   const refreshTokenExpiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
   // Replace the old refresh token with the new one
 
   const hashedRefreshToken = await bcrypt.hash(tokens.refreshToken, 10);
 
-  user.refreshTokens = user.refreshTokens.filter(async (rt) => {
-    return !(await bcrypt.compare(oldRefreshToken, rt.token));
-  });
-
-  const userAgent = req.headers["user-agent"] || "";
-  const ip = req.ip || req.connection.remoteAddress || "";
-  user.refreshTokens.push({
-    sessionId,
+  user.refreshTokens[sessionIndex] = {
+    ...sessionToken,
     token: hashedRefreshToken,
-    deviceInfo: {
-      os: getUserOS(userAgent),
-      browser: getBrowser(userAgent),
-      ip: ip,
-      userAgent: userAgent,
-      lastLocation: "",
-    },
-    loggedInAt: Date.now(),
-    lastActive: Date.now(),
     expiresAt: refreshTokenExpiry,
-  });
-
+    lastActive: Date.now(),
+  };
   await user.save();
   // Set the new tokens as cookies
   res.cookie("access_token", tokens.accessToken, accessTokenCookieOptions);

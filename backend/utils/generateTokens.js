@@ -26,6 +26,7 @@ export const generateToken = async (user, sessionId) => {
     );
     return { accessToken, refreshToken };
   } catch (error) {
-    next(error);
+    console.error("Token generation error:", error);
+    throw new Error("Failed to generate tokens", error);
   }
 };

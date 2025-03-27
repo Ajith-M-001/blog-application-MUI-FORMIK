@@ -11,6 +11,8 @@ import cron from "node-cron";
 
 const app = express();
 
+app.disable("x-powered-by");
+
 const PORT = process.env.PORT || 4000;
 
 app.get("/", (req, res) => {

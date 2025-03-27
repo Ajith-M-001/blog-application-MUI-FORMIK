@@ -14,7 +14,7 @@ const accessTokenCookieOptions = {
   httpOnly: true, // Cannot be accessed via client-side JavaScript
   secure: process.env.NODE_ENV === "production", // Send cookie only over HTTPS in production
   sameSite: "strict", // Helps mitigate CSRF attacks
-  maxAge: 15 * 60 * 1000,
+  maxAge: 1 * 60 * 60 * 1000,
 };
 
 // Create cookie options for the refresh token
@@ -207,13 +207,12 @@ export const signOutUser = asyncHandler(async (req, res, next) => {
     user.refreshTokens = user.refreshTokens.filter(
       (rt) => rt.sessionId !== sessionId
     );
+    // Clear cookies
+    res.clearCookie("access_token");
+    res.clearCookie("refresh_token");
   }
 
   await user.save();
-
-  // Clear cookies
-  res.clearCookie("access_token");
-  res.clearCookie("refresh_token");
 
   const message = removeAllSession
     ? "All other sessions signed out successfully"
@@ -247,9 +246,12 @@ export const refreshAccessToken = asyncHandler(async (req, res, next) => {
 
   const sessionToken = user.refreshTokens[sessionIndex];
 
-  if (sessionToken.expiresAt < Date.now()) {
+  const expiresAtTimestamp = new Date(sessionToken.expiresAt).getTime();
+  if (expiresAtTimestamp < Date.now()) {
     user.refreshTokens.splice(sessionIndex, 1);
     await user.save();
+    res.clearCookie("access_token");
+    res.clearCookie("refresh_token");
     return res
       .status(401)
       .json(ApiResponse.unauthorized("Refresh token expired"));
@@ -267,14 +269,14 @@ export const refreshAccessToken = asyncHandler(async (req, res, next) => {
   }
 
   // Generate new tokens
-  const tokens = await generateToken(user, sessionId);
-  const refreshTokenExpiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+  const tokens = await generateToken(user, session_Id);
+  const refreshTokenExpiry = new Date(Date.now() + 30 * 1000); // 7 days
   // Replace the old refresh token with the new one
 
   const hashedRefreshToken = await bcrypt.hash(tokens.refreshToken, 10);
 
   user.refreshTokens[sessionIndex] = {
-    ...sessionToken,
+    ...sessionToken.toObject(),
     token: hashedRefreshToken,
     expiresAt: refreshTokenExpiry,
     lastActive: Date.now(),

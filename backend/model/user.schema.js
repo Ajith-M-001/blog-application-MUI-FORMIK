@@ -118,7 +118,7 @@ const userSchema = new mongoose.Schema(
       enum: Object.values(SESSION_PREFERENCE),
       default: SESSION_PREFERENCE.MULTIPLE,
     },
-    maxSession: { type: Number, default: 5, min: 2, max: 20 },
+    maxSession: { type: Number, default: 5, min: 1, max: 20 },
     accountStatus: {
       type: String,
       enum: ["active", "inactive", "suspended"],

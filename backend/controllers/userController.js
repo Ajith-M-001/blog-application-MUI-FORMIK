@@ -8,13 +8,15 @@ import { sendOTPViaEmail } from "../services/emailService.js";
 import { sendOTPViaSMS } from "../services/smsServices.js";
 import { v4 as uuidv4 } from "uuid";
 import { SESSION_PREFERENCE } from "../../common/constants/constants.js";
+import { authConfig } from "../config/auth.config.js";
+import { getMaxAgeFromExpiresIn } from "../utils/getMaxAgeFromExpiresIn.js";
 
 // Create cookie options for the access token
 const accessTokenCookieOptions = {
   httpOnly: true, // Cannot be accessed via client-side JavaScript
   secure: process.env.NODE_ENV === "production", // Send cookie only over HTTPS in production
   sameSite: "strict", // Helps mitigate CSRF attacks
-  maxAge: 1 * 60 * 60 * 1000,
+  maxAge: getMaxAgeFromExpiresIn(authConfig.JWT_ACCESS_EXPIRES_IN),
 };
 
 // Create cookie options for the refresh token
@@ -22,7 +24,7 @@ const refreshTokenCookieOptions = {
   httpOnly: true,
   secure: process.env.NODE_ENV === "production",
   sameSite: "strict",
-  maxAge: 7 * 24 * 60 * 60 * 1000,
+  maxAge: getMaxAgeFromExpiresIn(authConfig.JWT_REFRESH_EXPIRES_IN),
 };
 
 export const signUpUser = transactionHandler(
@@ -128,8 +130,6 @@ export const signInUser = asyncHandler(async (req, res) => {
     return res.status(404).json(ApiResponse.notFound("invalid credentials"));
   }
 
-  console.log("fsdfsdfsd", user);
-
   const isPasswordMAtched = await bcrypt.compare(password, user.password);
 
   if (!isPasswordMAtched) {
@@ -140,7 +140,9 @@ export const signInUser = asyncHandler(async (req, res) => {
 
   const sessionId = uuidv4();
   const tokens = await generateToken(user, sessionId);
-  const refreshTokenExpiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+  const refreshTokenExpiry = new Date(
+    Date.now() + getMaxAgeFromExpiresIn(authConfig.JWT_REFRESH_EXPIRES_IN)
+  );
 
   const hashedRefreshToken = await bcrypt.hash(tokens.refreshToken, 10);
 
@@ -270,8 +272,9 @@ export const refreshAccessToken = asyncHandler(async (req, res, next) => {
 
   // Generate new tokens
   const tokens = await generateToken(user, session_Id);
-  const refreshTokenExpiry = new Date(Date.now() + 30 * 1000); // 7 days
-  // Replace the old refresh token with the new one
+  const refreshTokenExpiry = new Date(
+    Date.now() + getMaxAgeFromExpiresIn(authConfig.JWT_REFRESH_EXPIRES_IN)
+  ); // 7 days
 
   const hashedRefreshToken = await bcrypt.hash(tokens.refreshToken, 10);
 
@@ -382,6 +385,78 @@ export const resendOtp = asyncHandler(async (req, res, next) => {
 export const getUserDetails = asyncHandler(async (req, res, next) => {
   const user = await User.findById(req.user._id);
   return res.status(200).json(ApiResponse.success("User details", user));
+});
+
+export const updateSessionPreference = asyncHandler(async (req, res, next) => {
+  const { newPreference, maxSessions = 5 } = req.body;
+  const currentSessionId = req.user.sessionId;
+
+  if (
+    !newPreference ||
+    !Object.values(SESSION_PREFERENCE).includes(newPreference)
+  ) {
+    return res
+      .status(400)
+      .json(
+        ApiResponse.error(
+          "Invalid session preference. Use 'single' or 'multiple'"
+        )
+      );
+  }
+  const user = await User.findById(req.user._id).select("+refreshTokens");
+  if (!user) {
+    return res.status(404).json(ApiResponse.notFound("User not found"));
+  }
+
+  const oldPreference = user.sessionPreference;
+
+  if (newPreference === oldPreference) {
+    return res.status(200).json(
+      ApiResponse.success(
+        "Session preference is already set to the requested value",
+        {
+          sessionPreference: newPreference,
+          maxSessions: user.maxSession,
+          activeSessions: user.refreshTokens.length,
+        }
+      )
+    );
+  }
+
+  user.sessionPreference = newPreference;
+
+  if (newPreference === SESSION_PREFERENCE.MULTIPLE) {
+    if (maxSessions < 1 || maxSessions > 20) {
+      return res
+        .status(400)
+        .json(
+          ApiResponse.error(
+            "Maximum number of sessions should be between 1 and 20"
+          )
+        );
+    }
+    user.maxSession = maxSessions;
+  }
+
+  if (
+    newPreference === SESSION_PREFERENCE.SINGLE &&
+    oldPreference === SESSION_PREFERENCE.MULTIPLE
+  ) {
+    user.maxSession = 1;
+    // keep only the current session
+    user.refreshTokens = user.refreshTokens.filter(
+      (token) => token.sessionId === currentSessionId
+    );
+  }
+
+  await user.save();
+  return res.status(200).json(
+    ApiResponse.success(`Session preference updated to ${newPreference}`, {
+      sessionPreference: newPreference,
+      maxSessions: user.maxSession,
+      activeSessions: user.refreshTokens.length,
+    })
+  );
 });
 
 // Helper function to extract OS from user agent

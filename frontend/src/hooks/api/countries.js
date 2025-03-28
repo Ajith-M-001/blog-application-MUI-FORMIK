@@ -10,6 +10,6 @@ export const QUERY_KEYS = {
 export const useGetAllCountry = () => {
   return useQuery({
     queryKey: QUERY_KEYS.COUNTRIES,
-    queryFn: countryServices.getAllCountry,
+    queryFn: ({ signal }) => countryServices.getAllCountry({ signal }),
   });
 };

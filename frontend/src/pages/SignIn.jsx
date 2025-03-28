@@ -1,33 +1,31 @@
+import GoogleIcon from "@mui/icons-material/Google";
 import {
   Box,
+  Button,
+  Divider,
   Grid2,
+  Link as MuiLink,
   Paper,
   Typography,
   useTheme,
-  Link as MuiLink,
-  FormControlLabel,
-  Checkbox,
-  Button,
-  Divider,
 } from "@mui/material";
 import { Form, Formik } from "formik";
-import { AnimatePresence, motion } from "motion/react";
-import * as Yup from "yup";
-import { FormField } from "../components/MUI.Components/FormField";
 import {
-  Phone,
-  Mail,
   ArrowRight,
-  TriangleAlert,
-  LogIn,
   LoaderCircle,
+  LogIn,
+  Mail,
+  Phone,
+  TriangleAlert,
 } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
 import { Link, useNavigate } from "react-router";
-import GoogleIcon from "@mui/icons-material/Google";
-import { useSignInUser } from "../hooks/api/Users";
-import { showToast } from "../utils/toast";
+import * as Yup from "yup";
 import { useShallow } from "zustand/react/shallow";
+import { FormField } from "../components/MUI.Components/FormField";
+import { useSignInUser } from "../hooks/api/Users";
 import useStore from "../store/zustand.store";
+import { showToast } from "../utils/toast";
 
 const SignInSchema = Yup.object().shape({
   email: Yup.string().when("useEmail", {
@@ -55,7 +53,6 @@ const SignInSchema = Yup.object().shape({
       "Password must include uppercase, lowercase, number, and special character"
     ),
   useEmail: Yup.boolean(),
-  rememberMe: Yup.boolean(),
 });
 
 const SignIn = () => {
@@ -88,7 +85,6 @@ const SignIn = () => {
     password: "",
     useEmail: true,
     phoneNumber: "",
-    rememberMe: false,
   };
   return (
     <AnimatePresence>
@@ -349,18 +345,10 @@ const SignIn = () => {
                         sx={{
                           mt: 1,
                           display: "flex",
-                          gap: 2,
-                          justifyContent: "space-between",
+                          justifyContent: "flex-end",
                           alignItems: "center",
                         }}
                       >
-                        <FormControlLabel
-                          control={
-                            <Checkbox name="rememberMe" color="primary" />
-                          }
-                          label="Remember me"
-                          sx={{ "& .MuiSvgIcon-root": { fontSize: 20 } }}
-                        />
                         <MuiLink
                           component={Link}
                           to="/forgot-password"

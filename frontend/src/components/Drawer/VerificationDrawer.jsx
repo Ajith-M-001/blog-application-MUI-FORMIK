@@ -14,7 +14,6 @@ import { Form, Formik } from "formik";
 import { X } from "lucide-react";
 import { useNavigate } from "react-router";
 import * as Yup from "yup";
-import { useGetAllCountry } from "../../hooks/api/countries";
 import { useResentOTP } from "../../hooks/api/Users";
 import { showToast } from "../../utils/toast";
 import CountryPhoneSelector from "../MUI.Components/CountryPhoneSelector";
@@ -48,7 +47,6 @@ const getValidateSchema = Yup.object().shape({
 });
 
 const VerificationDrawer = ({ onClose, openDrawer, userData }) => {
-  const { data: allCountries } = useGetAllCountry();
   const { mutate: resendOTP, isPending: isResending } = useResentOTP();
 
   const navigate = useNavigate();
@@ -203,7 +201,6 @@ const VerificationDrawer = ({ onClose, openDrawer, userData }) => {
                     }}
                   >
                     <CountryPhoneSelector
-                      countries={allCountries}
                       disabled={!values.isEditing}
                       hide={true}
                     />

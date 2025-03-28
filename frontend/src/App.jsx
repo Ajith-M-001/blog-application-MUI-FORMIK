@@ -2,8 +2,10 @@ import { BrowserRouter, Route, Routes } from "react-router";
 import { Suspense, lazy } from "react";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { FallBackLoader } from "./components/Loaders/FallBackLoader";
+import ProtectedOtpRoute from "./components/routes/ProtectedOtpRoute";
 
-// Lazy load components
+// Lazy load
+
 const AppLayout = lazy(() => import("./layout/AppLayout"));
 const Home = lazy(() => import("./pages/Home"));
 const About = lazy(() => import("./pages/About"));
@@ -25,10 +27,9 @@ const App = () => {
               <Route path="contact" element={<Contact />} />
               <Route path="sign-in" element={<SignIn />} />
               <Route path="sign-up" element={<SignUp />} />
-              <Route
-                path="otp-verification"
-                element={<OtpVerificationPage />}
-              />
+              <Route path="otp-verification" element={<ProtectedOtpRoute />}>
+                <Route index element={<OtpVerificationPage />} />
+              </Route>
               <Route path="*" element={<NotFound />} />
             </Route>
           </Routes>

@@ -31,7 +31,11 @@ export const verifyAccessToken = async (req, res, next) => {
         );
     }
 
-    if (user.accountStatus !== "active") {
+    const isSignOutRoute = req.path.includes("/sign-out");
+    console.log("isSignOutRoute", isSignOutRoute);
+    console.log("req.path", req.path);
+
+    if (user.accountStatus !== "active" && !isSignOutRoute) {
       if (user.accountStatus === "inactive") {
         const responseOBJ = {
           email: user.email,

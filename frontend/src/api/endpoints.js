@@ -11,6 +11,7 @@ export const API_ENDPOINTS = {
     refreshToken: `${USER_URL}/refresh`,
     verifyOtp: `${USER_URL}/verify-otp`,
     resentOtp: `${USER_URL}/resent-otp`,
+    forgotPassword: `${USER_URL}/forgot-password`,
     getUserDetails: `${USER_URL}/get-user-details`,
   },
   countries: {

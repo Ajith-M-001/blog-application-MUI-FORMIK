@@ -9,6 +9,7 @@ const OtpVerificationPage = () => {
   const location = useLocation();
 
   const contactType = location.state?.contactType || "email";
+  const reset = location.state?.reset || false;
   const contactValue =
     location.state?.contactValue ||
     (contactType === "email" ? "user456@example.com" : "+1234567890");
@@ -16,6 +17,8 @@ const OtpVerificationPage = () => {
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  console.log("mounted", location);
 
   return (
     <AnimatePresence>
@@ -37,6 +40,7 @@ const OtpVerificationPage = () => {
           <OtpVerification
             contactType={contactType}
             contactValue={contactValue}
+            reset={reset}
           />
         )}
       </Box>

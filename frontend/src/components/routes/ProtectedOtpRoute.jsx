@@ -8,6 +8,8 @@ const ProtectedOtpRoute = () => {
       needsOtpVerification: state.needsOtpVerification,
     }))
   );
+
+  console.log("needsOtpVerification", needsOtpVerification);
   return needsOtpVerification ? <Outlet /> : <Navigate to="/" />;
 };
 

@@ -9,6 +9,7 @@ import {
   resendOtp,
   getUserDetails,
   updateSessionPreference,
+  forgotPassword,
 } from "../controllers/userController.js";
 import {
   validateLogin,
@@ -27,4 +28,5 @@ router.get("/get-user-details", verifyAccessToken, getUserDetails);
 router.put("/session-preference", verifyAccessToken, updateSessionPreference);
 router.put("/verify-otp", verifyOtp);
 router.put("/resent-otp", resendOtp);
+router.put("/forgot-password", forgotPassword);
 export default router;

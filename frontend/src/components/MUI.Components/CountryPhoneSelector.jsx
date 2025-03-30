@@ -3,7 +3,7 @@ import { Box, Autocomplete, TextField, InputAdornment } from "@mui/material";
 import { useField, useFormikContext } from "formik";
 import PropTypes from "prop-types";
 
-const CountryPhoneSelector = ({ countries, disabled, hide }) => {
+const CountryPhoneSelector = ({ countries, hide, disabled = true }) => {
   const { values, setFieldValue, setFieldTouched } = useFormikContext();
   const [countryField, countryMeta] = useField("country");
   const [phoneField, phoneMeta] = useField("phoneNumber");
@@ -72,7 +72,6 @@ const CountryPhoneSelector = ({ countries, disabled, hide }) => {
         <Autocomplete
           id="country-select"
           options={filteredCountries}
-          disabled={disabled}
           autoHighlight
           getOptionLabel={(option) => option.name}
           value={countryField.value}
@@ -100,7 +99,7 @@ const CountryPhoneSelector = ({ countries, disabled, hide }) => {
       <TextField
         label="Phone Number"
         name={phoneField.name}
-        disabled={!values.country || disabled}
+        disabled={!disabled ? false : !values.country}
         value={phoneField.value}
         onChange={handlePhoneNumberChange}
         onBlur={phoneField.onBlur}

@@ -3,12 +3,19 @@ import { useEffect, useRef, useState } from "react";
 import { Form, Formik } from "formik";
 import * as Yup from "yup";
 import { LoaderCircle, BadgeCheck, MoveRight } from "lucide-react";
-import { useResentOTP, useVerifyOtp } from "../../hooks/api/users";
+import { useResentOTP, useVerifyOtp } from "../../hooks/api/Users";
 import { useNavigate } from "react-router";
 import { showToast } from "../../utils/toast";
+import useStore from "../../store/zustand.store";
+import { useShallow } from "zustand/react/shallow";
 
-const OtpVerification = ({ contactType, contactValue }) => {
+const OtpVerification = ({ contactType, contactValue, reset }) => {
   const [resendTimer, setResendTimer] = useState(30);
+  const { setNeedsOtpVerification } = useStore(
+    useShallow((state) => ({
+      setNeedsOtpVerification: state.setNeedsOtpVerification,
+    }))
+  );
 
   const inputRefs = useRef([]);
   const navigate = useNavigate();
@@ -47,7 +54,7 @@ const OtpVerification = ({ contactType, contactValue }) => {
   const handleResend = () => {
     if (resendTimer > 0 || isResending) return;
     resendOTP(
-      { [contactType]: contactValue },
+      { [contactType]: contactValue, reset },
       {
         onSuccess: (data) => {
           console.log("success", data);
@@ -60,11 +67,13 @@ const OtpVerification = ({ contactType, contactValue }) => {
   const handleSubmit = (values) => {
     const OTP = values.otp.join("");
     verifyOTP(
-      { [contactType]: contactValue, otp: OTP },
+      { [contactType]: contactValue, otp: OTP, reset },
       {
         onSuccess: (data) => {
+          setNeedsOtpVerification(false);
           showToast(data.message, { type: "success" });
-          navigate("/");
+          const NavigateTo = reset ? "/reset-password" : "/";
+          navigate(NavigateTo);
         },
       }
     );

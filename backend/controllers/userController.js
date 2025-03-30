@@ -295,7 +295,7 @@ export const refreshAccessToken = asyncHandler(async (req, res, next) => {
 });
 
 export const verifyOtp = asyncHandler(async (req, res, next) => {
-  const { email, phoneNumber, otp } = req.body;
+  const { email, phoneNumber, otp, reset = false } = req.body;
 
   if (!email && !phoneNumber) {
     return res
@@ -315,26 +315,40 @@ export const verifyOtp = asyncHandler(async (req, res, next) => {
   }
 
   const user = await User.findOne({ $or: [query] }).select(
-    "+verificationCode +verificationCodeExpires"
+    "+verificationCode +verificationCodeExpires +forgotPasswordCode +forgotPasswordExpires"
   );
 
   if (!user) {
     return res.status(404).json(ApiResponse.notFound("User not found"));
   }
 
-  if (user.verificationCode !== otp) {
-    return res.status(400).json(ApiResponse.error("Invalid OTP", 400));
-  }
+  if (reset) {
+    if (user.forgotPasswordCode !== otp) {
+      return res.status(400).json(ApiResponse.error("Invalid OTP", 400));
+    }
 
-  if (user.verificationCodeExpires < new Date()) {
-    return res.status(400).json(ApiResponse.error("OTP has expired", 400));
-  }
+    if (user.forgotPasswordExpires < new Date()) {
+      return res.status(400).json(ApiResponse.error("OTP has expired", 400));
+    }
 
-  user.accountStatus = "active";
-  email ? (user.isEmailVerified = true) : (user.isPhoneVerified = true);
-  user.verificationCode = undefined;
-  user.verificationCodeExpires = undefined;
-  await user.save();
+    user.forgotPasswordCode = undefined;
+    user.forgotPasswordExpires = undefined;
+    await user.save();
+  } else {
+    if (user.verificationCode !== otp) {
+      return res.status(400).json(ApiResponse.error("Invalid OTP", 400));
+    }
+
+    if (user.verificationCodeExpires < new Date()) {
+      return res.status(400).json(ApiResponse.error("OTP has expired", 400));
+    }
+
+    user.accountStatus = "active";
+    email ? (user.isEmailVerified = true) : (user.isPhoneVerified = true);
+    user.verificationCode = undefined;
+    user.verificationCodeExpires = undefined;
+    await user.save();
+  }
 
   return res.status(200).json(ApiResponse.success("OTP verified successfully"));
 });
@@ -457,6 +471,53 @@ export const updateSessionPreference = asyncHandler(async (req, res, next) => {
       activeSessions: user.refreshTokens.length,
     })
   );
+});
+
+export const forgotPassword = transactionHandler(async (req, res, next) => {
+  const { email, phoneNumber } = req.body;
+  if (!email && !phoneNumber) {
+    return res
+      .status(400)
+      .json(ApiResponse.error("Either Email or phone number is required", 400));
+  }
+
+  const query = {};
+  if (email) {
+    query.email = email.toLowerCase();
+  } else {
+    query.phoneNumber = phoneNumber;
+  }
+
+  const user = await User.findOne({ $or: [query] }).select(
+    "+forgotPasswordCode +forgotPasswordExpires"
+  );
+
+  console.log("user", user.forgotPasswordExpires, new Date());
+  if (!user) {
+    return res.status(404).json(ApiResponse.notFound("User not found"));
+  }
+
+  if (user.forgotPasswordExpires > new Date()) {
+    return res
+      .status(400)
+      .json(ApiResponse.error("OTP has already been sent", 400));
+  }
+
+  const otp = generateOTP();
+  const forgotOTPExpiry = new Date(Date.now() + 10 * 60 * 1000);
+
+  user.forgotPasswordCode = otp;
+  user.forgotPasswordExpires = forgotOTPExpiry;
+
+  await user.save();
+
+  if (email) {
+    await sendOTPViaEmail(email, "Your Verification OTP", otp, true);
+  } else if (phoneNumber) {
+    await sendOTPViaSMS(`${user.country?.dial_code}${phoneNumber}`, otp, true);
+  }
+
+  return res.status(200).json(ApiResponse.success("OTP sent successfully"));
 });
 
 // Helper function to extract OS from user agent

@@ -38,6 +38,14 @@ export const usersService = {
     return response.data;
   },
 
+  forgotPassword: async (contact) => {
+    const response = await axiosInstance.put(
+      API_ENDPOINTS.users.forgotPassword,
+      contact
+    );
+    return response.data;
+  },
+
   resentOtp: async (contact) => {
     const response = await axiosInstance.put(
       API_ENDPOINTS.users.resentOtp,

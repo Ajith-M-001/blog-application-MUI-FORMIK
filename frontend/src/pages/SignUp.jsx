@@ -12,7 +12,6 @@ import { Form, Formik } from "formik";
 import { AnimatePresence, motion } from "motion/react";
 import * as Yup from "yup";
 import { parsePhoneNumber } from "libphonenumber-js/max";
-import { useSignUpUser } from "../hooks/api/Users";
 import { useGetAllCountry } from "../hooks/api/countries";
 import { Link, useNavigate } from "react-router";
 import { showToast } from "../utils/toast";
@@ -22,6 +21,7 @@ import CountryPhoneSelector from "../components/MUI.Components/CountryPhoneSelec
 import GoogleIcon from "@mui/icons-material/Google";
 import useStore from "../store/zustand.store";
 import { useShallow } from "zustand/react/shallow";
+import { useSignUpUser } from "../hooks/api/Users";
 
 // Validation schema with conditional validation for email/phone
 const SignUpSchema = Yup.object().shape({

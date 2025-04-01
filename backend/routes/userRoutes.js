@@ -10,6 +10,7 @@ import {
   getUserDetails,
   updateSessionPreference,
   forgotPassword,
+  ResetPassword,
 } from "../controllers/userController.js";
 import {
   validateLogin,
@@ -26,6 +27,7 @@ router.post("/sign-out", verifyAccessToken, signOutUser);
 router.post("/refresh", verifyRefreshToken, refreshAccessToken);
 router.get("/get-user-details", verifyAccessToken, getUserDetails);
 router.put("/session-preference", verifyAccessToken, updateSessionPreference);
+router.put("/reset-password", verifyAccessToken, ResetPassword);
 router.put("/verify-otp", verifyOtp);
 router.put("/resent-otp", resendOtp);
 router.put("/forgot-password", forgotPassword);

@@ -314,28 +314,39 @@ export const verifyOtp = asyncHandler(async (req, res, next) => {
     query.phoneNumber = phoneNumber;
   }
 
-  const user = await User.findOne({ $or: [query] }).select(
-    "+verificationCode +verificationCodeExpires +forgotPasswordCode +forgotPasswordExpires"
-  );
+  const requiredFields = reset
+    ? "+forgotPasswordCode +forgotPasswordExpires"
+    : "+verificationCode +verificationCodeExpires";
+
+  const user = await User.findOne({ $or: [query] }).select(requiredFields);
 
   if (!user) {
     return res.status(404).json(ApiResponse.notFound("User not found"));
   }
 
   if (reset) {
-    if (user.forgotPasswordCode !== otp) {
-      return res.status(400).json(ApiResponse.error("Invalid OTP", 400));
+    const storedOtp = String(user.forgotPasswordCode).trim();
+    const providedOtp = String(otp).trim();
+
+    if (storedOtp !== providedOtp) {
+      return res.status(400).json(ApiResponse.error("Invalid OTP true", 400));
     }
 
     if (user.forgotPasswordExpires < new Date()) {
       return res.status(400).json(ApiResponse.error("OTP has expired", 400));
     }
 
-    user.forgotPasswordCode = undefined;
-    user.forgotPasswordExpires = undefined;
-    await user.save();
+    console.log("check", user.forgotPasswordCode, otp);
+
+    if (storedOtp === providedOtp) {
+      user.forgotPasswordCode = undefined;
+      user.forgotPasswordExpires = undefined;
+      await user.save();
+    }
   } else {
-    if (user.verificationCode !== otp) {
+    const storedOtp = String(user.verificationCode).trim();
+    const providedOtp = String(otp).trim();
+    if (storedOtp !== providedOtp) {
       return res.status(400).json(ApiResponse.error("Invalid OTP", 400));
     }
 
@@ -343,11 +354,13 @@ export const verifyOtp = asyncHandler(async (req, res, next) => {
       return res.status(400).json(ApiResponse.error("OTP has expired", 400));
     }
 
-    user.accountStatus = "active";
-    email ? (user.isEmailVerified = true) : (user.isPhoneVerified = true);
-    user.verificationCode = undefined;
-    user.verificationCodeExpires = undefined;
-    await user.save();
+    if (storedOtp === providedOtp) {
+      user.accountStatus = "active";
+      email ? (user.isEmailVerified = true) : (user.isPhoneVerified = true);
+      user.verificationCode = undefined;
+      user.verificationCodeExpires = undefined;
+      await user.save();
+    }
   }
 
   return res.status(200).json(ApiResponse.success("OTP verified successfully"));
@@ -519,6 +532,74 @@ export const forgotPassword = transactionHandler(async (req, res, next) => {
 
   return res.status(200).json(ApiResponse.success("OTP sent successfully"));
 });
+
+export const ResetPassword = transactionHandler(
+  async (req, res, next, session) => {
+    const { password, currentPassword, confirmPassword, fromOTPVerification } =
+      req.body;
+
+    if (
+      !password ||
+      !confirmPassword ||
+      (fromOTPVerification === false && !currentPassword)
+    ) {
+      return res
+        .status(400)
+        .json(ApiResponse.error("All required fields must be provided.", 400));
+    }
+
+    // Check if the new password and confirmPassword match
+    if (password !== confirmPassword) {
+      return res
+        .status(400)
+        .json(ApiResponse.error("Passwords do not match.", 400));
+    }
+
+    if (password.length < 8) {
+      return res
+        .status(400)
+        .json(
+          ApiResponse.error("Password must be at least 8 characters long", 400)
+        );
+    }
+
+    const user = await User.findById(req.user._id)
+      .select("+password")
+      .session(session);
+    if (!user) {
+      return res.status(404).json(ApiResponse.notFound("User not found"));
+    }
+
+    if (!fromOTPVerification) {
+      const isPasswordValid = await bcrypt.compare(
+        currentPassword,
+        user.password
+      );
+      if (!isPasswordValid) {
+        return res
+          .status(400)
+          .json(ApiResponse.error("Current password is incorrect.", 400));
+      }
+    }
+
+    user.refreshTokens = [];
+    user.password = password;
+    res.clearCookie("access_token", accessTokenCookieOptions);
+    res.clearCookie("refresh_token", refreshTokenCookieOptions);
+
+    await user.save({ session });
+
+    return res
+      .status(200)
+      .json(
+        ApiResponse.success(
+          fromOTPVerification
+            ? "Password has been reset successfully. Please log in with your new password."
+            : "Password has been changed successfully."
+        )
+      );
+  }
+);
 
 // Helper function to extract OS from user agent
 function getUserOS(userAgent) {

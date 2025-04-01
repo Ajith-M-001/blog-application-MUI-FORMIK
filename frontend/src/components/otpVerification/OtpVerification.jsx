@@ -6,16 +6,17 @@ import { LoaderCircle, BadgeCheck, MoveRight } from "lucide-react";
 import { useResentOTP, useVerifyOtp } from "../../hooks/api/Users";
 import { useNavigate } from "react-router";
 import { showToast } from "../../utils/toast";
-import useStore from "../../store/zustand.store";
-import { useShallow } from "zustand/react/shallow";
+// import useStore from "../../store/zustand.store";
+// import { useShallow } from "zustand/react/shallow";
+import PropTypes from "prop-types";
 
 const OtpVerification = ({ contactType, contactValue, reset }) => {
   const [resendTimer, setResendTimer] = useState(30);
-  const { setNeedsOtpVerification } = useStore(
-    useShallow((state) => ({
-      setNeedsOtpVerification: state.setNeedsOtpVerification,
-    }))
-  );
+  // const { setNeedsOtpVerification } = useStore(
+  //   useShallow((state) => ({
+  //     setNeedsOtpVerification: state.setNeedsOtpVerification,
+  //   }))
+  // );
 
   const inputRefs = useRef([]);
   const navigate = useNavigate();
@@ -70,10 +71,19 @@ const OtpVerification = ({ contactType, contactValue, reset }) => {
       { [contactType]: contactValue, otp: OTP, reset },
       {
         onSuccess: (data) => {
-          setNeedsOtpVerification(false);
           showToast(data.message, { type: "success" });
-          const NavigateTo = reset ? "/reset-password" : "/";
-          navigate(NavigateTo);
+
+          const navigateTo = reset ? "/reset-password" : "/";
+          const navigateOptions = reset
+            ? {
+                state: {
+                  reset: true,
+                  contactType: contactType,
+                  contactValue: contactValue,
+                },
+              }
+            : {};
+          navigate(navigateTo, navigateOptions);
         },
       }
     );
@@ -295,6 +305,16 @@ const OtpVerification = ({ contactType, contactValue, reset }) => {
       </Stack>
     </Box>
   );
+};
+
+OtpVerification.propTypes = {
+  contactType: PropTypes.oneOf(["email", "phoneNumber"]).isRequired,
+  contactValue: PropTypes.string.isRequired,
+  reset: PropTypes.bool,
+};
+
+OtpVerification.defaultProps = {
+  reset: false,
 };
 
 export { OtpVerification };

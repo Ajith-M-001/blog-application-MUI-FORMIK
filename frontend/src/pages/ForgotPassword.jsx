@@ -71,18 +71,31 @@ const ForgotPassword = () => {
           state: {
             reset: true,
             contactType: values.useEmail ? "email" : "phoneNumber",
-            contactValue: values.useEmail
-              ? values.email
-              : values.phoneNumber,
+            contactValue: values.useEmail ? values.email : values.phoneNumber,
           },
         });
       },
     });
   };
+
+  const formVariant = {
+    hidden: { opacity: 0, y: 50 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.5, ease: "easeOut" },
+    },
+  };
+
+  
   return (
     <AnimatePresence>
       <Box
         component={motion.div}
+        initial="hidden"
+        animate="visible"
+        exit="hidden"
+        variants={formVariant}
         sx={{
           height: "100%",
           display: "flex",
@@ -92,7 +105,7 @@ const ForgotPassword = () => {
       >
         <Stack
           sx={{
-            maxWidth: { xs: "100%", sm: "40rem" },
+            maxWidth: { xs: "100%", sm: "30rem" },
             width: "100%",
             mx: "auto",
             p: { xs: 2, sm: 3 },

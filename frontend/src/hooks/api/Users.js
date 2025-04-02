@@ -116,3 +116,31 @@ export const useCheck = () => {
     },
   });
 };
+
+export const useResetPassword = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: usersService.resetPassword,
+    onSuccess: () => {
+      queryClient.invalidateQueries(QUERY_KEYS.USERS);
+    },
+    onError: (error) => {
+      console.log("Error resetting password", error?.response?.data);
+      showToast(error?.response?.data?.message, { type: "error" });
+    },
+  });
+};
+
+export const useResetPasswordWithOTP = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: usersService.resetPasswordWithOTP,
+    onSuccess: () => {
+      queryClient.invalidateQueries(QUERY_KEYS.USERS);
+    },
+    onError: (error) => {
+      console.log("Error resetting password", error?.response?.data);
+      showToast(error?.response?.data?.message, { type: "error" });
+    },
+  });
+};

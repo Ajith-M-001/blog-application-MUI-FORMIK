@@ -13,6 +13,8 @@ export const API_ENDPOINTS = {
     resentOtp: `${USER_URL}/resent-otp`,
     forgotPassword: `${USER_URL}/forgot-password`,
     getUserDetails: `${USER_URL}/get-user-details`,
+    resetPassword: `${USER_URL}/reset-password`,
+    resetPasswordWithOTP: `${USER_URL}/reset-password-with-otp`,
   },
   countries: {
     all: `${COUNTRY_URL}/all`,

@@ -11,6 +11,7 @@ import {
   updateSessionPreference,
   forgotPassword,
   ResetPassword,
+  resetPasswordWithOTP,
 } from "../controllers/userController.js";
 import {
   validateLogin,
@@ -31,4 +32,6 @@ router.put("/reset-password", verifyAccessToken, ResetPassword);
 router.put("/verify-otp", verifyOtp);
 router.put("/resent-otp", resendOtp);
 router.put("/forgot-password", forgotPassword);
+router.put("/reset-password-with-otp", resetPasswordWithOTP);
+
 export default router;

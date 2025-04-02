@@ -65,4 +65,20 @@ export const usersService = {
     const response = await axiosInstance.get(API_ENDPOINTS.users.check);
     return response.data;
   },
+
+  resetPassword: async (resetData) => {
+    const response = await axiosInstance.put(
+      API_ENDPOINTS.users.resetPassword,
+      resetData
+    );
+    return response.data;
+  },
+
+  resetPasswordWithOTP: async (resetData) => {
+    const response = await axiosInstance.put(
+      API_ENDPOINTS.users.resetPasswordWithOTP,
+      resetData
+    );
+    return response.data;
+  },
 };

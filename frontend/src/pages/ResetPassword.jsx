@@ -2,9 +2,11 @@ import { Box, Button, Grid2, Stack, Typography, useTheme } from "@mui/material";
 import { Form, Formik } from "formik";
 import { KeyRound } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
-import { useLocation } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 import * as Yup from "yup";
 import { FormField } from "../components/MUI.Components/FormField";
+import { useResetPassword, useResetPasswordWithOTP } from "../hooks/api/Users";
+import { showToast } from "../utils/toast";
 
 const resetPasswordSchema = Yup.object().shape({
   password: Yup.string()
@@ -24,6 +26,13 @@ const ResetPassword = () => {
   const location = useLocation();
   const isFromOTPVerification = location.state?.reset || false;
   const theme = useTheme();
+  const navigate = useNavigate();
+  const { mutate: resetPassword, isPending: resetPasswordPending } =
+    useResetPassword();
+  const {
+    mutate: resetPasswordWithOTP,
+    isPending: resetPasswordWithOTPPending,
+  } = useResetPasswordWithOTP();
 
   console.log("location", location);
   console.log("location", isFromOTPVerification);
@@ -46,6 +55,24 @@ const ResetPassword = () => {
 
   const handleSubmit = (values) => {
     console.log("values", values);
+    const payload = !isFromOTPVerification
+      ? values
+      : { ...values, ...location.state };
+    console.log("payload", payload);
+
+    isFromOTPVerification
+      ? resetPasswordWithOTP(payload, {
+          onSuccess: (data) => {
+            showToast(data.message, { type: "success" });
+            navigate("/sign-in");
+          },
+        })
+      : resetPassword(values, {
+          onSuccess: (data) => {
+            showToast(data.message, { type: "success" });
+            navigate("/sign-in");
+          },
+        });
   };
 
   return (
@@ -142,13 +169,18 @@ const ResetPassword = () => {
                   </Grid2>
                   <Button
                     type="submit"
-                    disabled={!dirty || !isValid}
+                    disabled={
+                      !(dirty && isValid) ||
+                      resetPasswordPending ||
+                      resetPasswordWithOTPPending
+                    }
                     variant="contained"
-                    sx={{
-                      my: 2,
-                    }}
+                    sx={{ my: 2 }}
+                    fullWidth
                   >
-                    {isFromOTPVerification
+                    {resetPasswordPending || resetPasswordWithOTPPending
+                      ? "Processing..."
+                      : isFromOTPVerification
                       ? "Set New Password"
                       : "Reset Password"}
                   </Button>

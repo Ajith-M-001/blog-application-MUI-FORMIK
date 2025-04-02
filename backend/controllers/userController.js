@@ -133,9 +133,7 @@ export const signInUser = asyncHandler(async (req, res) => {
   const isPasswordMAtched = await bcrypt.compare(password, user.password);
 
   if (!isPasswordMAtched) {
-    return res
-      .status(404)
-      .json(ApiResponse.notFound("invalid credentials 123"));
+    return res.status(404).json(ApiResponse.notFound("invalid credentials"));
   }
 
   const sessionId = uuidv4();
@@ -570,6 +568,15 @@ export const ResetPassword = transactionHandler(
       return res.status(404).json(ApiResponse.notFound("User not found"));
     }
 
+    const checkPassword = await bcrypt.compare(password, user.password);
+    if (checkPassword) {
+      return res
+        .status(400)
+        .json(
+          ApiResponse.error("New password cannot be same as old password", 400)
+        );
+    }
+
     if (!fromOTPVerification) {
       const isPasswordValid = await bcrypt.compare(
         currentPassword,
@@ -600,6 +607,84 @@ export const ResetPassword = transactionHandler(
       );
   }
 );
+
+export const resetPasswordWithOTP = asyncHandler(async (req, res, next) => {
+  const {
+    password,
+    confirmPassword,
+    fromOTPVerification,
+    contactType,
+    contactValue,
+  } = req.body;
+
+  if (
+    !password ||
+    !confirmPassword ||
+    !contactType ||
+    !contactValue ||
+    !fromOTPVerification
+  ) {
+    return res
+      .status(400)
+      .json(ApiResponse.error("All required fields must be provided.", 400));
+  }
+
+  // Check if the new password and confirmPassword match
+  if (password !== confirmPassword) {
+    return res
+      .status(400)
+      .json(ApiResponse.error("Passwords do not match.", 400));
+  }
+
+  if (password.length < 8) {
+    return res
+      .status(400)
+      .json(
+        ApiResponse.error("Password must be at least 8 characters long", 400)
+      );
+  }
+
+  const query = {};
+
+  if (contactType === "email") {
+    query.email = contactValue.toLowerCase();
+  } else if (contactType === "phoneNumber") {
+    query.phoneNumber = contactValue;
+  } else {
+    return res
+      .status(400)
+      .json(ApiResponse.error("Invalid contact type.", 400));
+  }
+
+  const user = await User.findOne({ $or: [query] }).select("+password");
+  if (!user) {
+    return res.status(404).json(ApiResponse.notFound("User not found"));
+  }
+
+  const checkPassword = await bcrypt.compare(password, user.password);
+  if (checkPassword) {
+    return res
+      .status(400)
+      .json(
+        ApiResponse.error("New password cannot be same as old password", 400)
+      );
+  }
+
+  if (fromOTPVerification) {
+    user.refreshTokens = [];
+    user.password = password;
+    res.clearCookie("access_token", accessTokenCookieOptions);
+    res.clearCookie("refresh_token", refreshTokenCookieOptions);
+
+    await user.save();
+
+    return res
+      .status(200)
+      .json(ApiResponse.success("Password has been changed successfully."));
+  }
+
+  return res.status(400).json(ApiResponse.error("something went wrong", 400));
+});
 
 // Helper function to extract OS from user agent
 function getUserOS(userAgent) {

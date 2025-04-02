@@ -2,7 +2,6 @@ import { BrowserRouter, Route, Routes } from "react-router";
 import { Suspense, lazy } from "react";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { FallBackLoader } from "./components/Loaders/FallBackLoader";
-import ProtectedOtpRoute from "./components/routes/ProtectedOtpRoute";
 
 // Lazy load
 

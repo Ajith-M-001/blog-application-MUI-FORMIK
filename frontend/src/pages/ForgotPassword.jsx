@@ -51,8 +51,8 @@ const ForgotPassword = () => {
 
   const handleSubmit = (values) => {
     let payload = values.useEmail
-      ? { email: values.email }
-      : { phoneNumber: values.phoneNumber };
+      ? { email: values.email, reset: true }
+      : { phoneNumber: values.phoneNumber, reset: true };
 
     forgotPassword(payload, {
       onSuccess: (data) => {

@@ -365,7 +365,7 @@ export const verifyOtp = asyncHandler(async (req, res, next) => {
 });
 
 export const resendOtp = asyncHandler(async (req, res, next) => {
-  const { email, phoneNumber } = req.body;
+  const { email, phoneNumber, reset = false } = req.body;
 
   if (!email && !phoneNumber) {
     return res
@@ -380,28 +380,49 @@ export const resendOtp = asyncHandler(async (req, res, next) => {
     query.phoneNumber = phoneNumber;
   }
 
-  const user = await User.findOne({ $or: [query] }).select(
-    "+verificationCode +verificationCodeExpires"
-  );
+  const requiredFields = reset
+    ? "+forgotPasswordCode +forgotPasswordExpires"
+    : "+verificationCode +verificationCodeExpires";
+
+  const user = await User.findOne({ $or: [query] }).select(requiredFields);
   if (!user) {
     return res.status(404).json(ApiResponse.notFound("User not found"));
   }
 
-  if (user.verificationCodeExpires > new Date()) {
-    return res
-      .status(400)
-      .json(ApiResponse.error("OTP has already been sent", 400));
+  if (reset) {
+    if (user.forgotPasswordExpires > new Date()) {
+      return res
+        .status(400)
+        .json(ApiResponse.error("OTP has already been sent", 400));
+    }
+  } else {
+    if (user.verificationCodeExpires > new Date()) {
+      return res
+        .status(400)
+        .json(ApiResponse.error("OTP has already been sent", 400));
+    }
+  }
+  const otp = generateOTP();
+  const otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
+
+  if (reset) {
+    user.forgotPasswordCode = otp;
+    user.forgotPasswordExpires = otpExpiry;
+  } else {
+    user.verificationCode = otp;
+    user.verificationCodeExpires = otpExpiry;
   }
 
-  const otp = generateOTP();
-  user.verificationCode = otp;
-  user.verificationCodeExpires = new Date(Date.now() + 10 * 60 * 1000);
   await user.save();
 
   if (email) {
-    await sendOTPViaEmail(user.email, "OTP Verification", otp);
+    await sendOTPViaEmail(user.email, "OTP Verification", otp, reset);
   } else {
-    await sendOTPViaSMS(`${user.country.dial_code}${user.phoneNumber}`, otp);
+    await sendOTPViaSMS(
+      `${user.country.dial_code}${user.phoneNumber}`,
+      otp,
+      reset
+    );
   }
 
   return res.status(200).json(ApiResponse.success("OTP sent successfully"));

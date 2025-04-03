@@ -591,8 +591,8 @@ export const ResetPassword = transactionHandler(
 
     user.refreshTokens = [];
     user.password = password;
-    res.clearCookie("access_token", accessTokenCookieOptions);
-    res.clearCookie("refresh_token", refreshTokenCookieOptions);
+    res.clearCookie("access_token");
+    res.clearCookie("refresh_token");
 
     await user.save({ session });
 

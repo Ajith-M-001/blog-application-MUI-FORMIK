@@ -11,8 +11,9 @@ const VerificationDrawer = lazy(() =>
 const Home = () => {
   const [openDrawer, setOpenDrawer] = useState(false);
   // Get Zustand store actions
-  const { setUser, setIsAuthenticated } = useStore(
+  const { isAuthenticated, setUser, setIsAuthenticated } = useStore(
     useShallow((state) => ({
+      isAuthenticated: state.isAuthenticated,
       setUser: state.setUser,
       setIsAuthenticated: state.setIsAuthenticated,
     }))
@@ -24,7 +25,12 @@ const Home = () => {
     data: user,
     isSuccess: isUserSuccess,
     error: userError,
-  } = useGetUserDetails();
+  } = useGetUserDetails({
+    enabled: isAuthenticated,
+    staleTime: 1 * 60 * 60 * 1000,
+    cacheTime: 1 * 70 * 60 * 1000,
+    gcTime: 1 * 70 * 60 * 1000,
+  });
 
   useEffect(() => {
     if (isUserSuccess && user?.data) {

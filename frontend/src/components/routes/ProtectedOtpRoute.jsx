@@ -1,16 +1,19 @@
-import { useShallow } from "zustand/react/shallow";
-import useStore from "../../store/zustand.store";
-import { Navigate, Outlet } from "react-router";
+import PropTypes from "prop-types";
+import { useLocation, Navigate } from "react-router";
 
-const ProtectedOtpRoute = () => {
-  const { needsOtpVerification } = useStore(
-    useShallow((state) => ({
-      needsOtpVerification: state.needsOtpVerification,
-    }))
+const ProtectedRoute = ({ children, requiredState }) => {
+  const location = useLocation();
+
+  const isRouteProtected = requiredState.every(
+    (state) => location.state?.[state]
   );
 
-  console.log("needsOtpVerification", needsOtpVerification);
-  return needsOtpVerification ? <Outlet /> : <Navigate to="/" />;
+  return isRouteProtected ? children : <Navigate to="/about" replace />;
 };
 
-export default ProtectedOtpRoute;
+ProtectedRoute.propTypes = {
+  children: PropTypes.node.isRequired,
+  requiredState: PropTypes.arrayOf(PropTypes.string).isRequired,
+};
+
+export { ProtectedRoute };

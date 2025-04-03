@@ -6,17 +6,11 @@ import { LoaderCircle, BadgeCheck, MoveRight } from "lucide-react";
 import { useResentOTP, useVerifyOtp } from "../../hooks/api/Users";
 import { useNavigate } from "react-router";
 import { showToast } from "../../utils/toast";
-// import useStore from "../../store/zustand.store";
-// import { useShallow } from "zustand/react/shallow";
 import PropTypes from "prop-types";
 
 const OtpVerification = ({ contactType, contactValue, reset }) => {
   const [resendTimer, setResendTimer] = useState(30);
-  // const { setNeedsOtpVerification } = useStore(
-  //   useShallow((state) => ({
-  //     setNeedsOtpVerification: state.setNeedsOtpVerification,
-  //   }))
-  // );
+
 
   const inputRefs = useRef([]);
   const navigate = useNavigate();

@@ -22,8 +22,6 @@ import {
 import { Link, useNavigate } from "react-router";
 import { useForgotPassword } from "../hooks/api/Users";
 import { showToast } from "../utils/toast";
-import useStore from "../store/zustand.store";
-import { useShallow } from "zustand/react/shallow";
 
 const resetSchema = Yup.object().shape({
   useEmail: Yup.boolean(),
@@ -51,12 +49,6 @@ const ForgotPassword = () => {
 
   const navigate = useNavigate();
 
-  const { setNeedsOtpVerification } = useStore(
-    useShallow((state) => ({
-      setNeedsOtpVerification: state.setNeedsOtpVerification,
-    }))
-  );
-
   const handleSubmit = (values) => {
     let payload = values.useEmail
       ? { email: values.email }
@@ -65,7 +57,6 @@ const ForgotPassword = () => {
     forgotPassword(payload, {
       onSuccess: (data) => {
         showToast(data.message, { type: "success" });
-        setNeedsOtpVerification(true);
         console.log("FASDFASDF", data);
         navigate("/otp-verification", {
           state: {
@@ -87,7 +78,6 @@ const ForgotPassword = () => {
     },
   };
 
-  
   return (
     <AnimatePresence>
       <Box

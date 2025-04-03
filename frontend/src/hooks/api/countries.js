@@ -7,9 +7,10 @@ export const QUERY_KEYS = {
   COUNTRIES: ["countries"],
   COUNTRY: (countryId) => ["country", countryId],
 };
-export const useGetAllCountry = () => {
+export const useGetAllCountry = (options = {}) => {
   return useQuery({
     queryKey: QUERY_KEYS.COUNTRIES,
     queryFn: ({ signal }) => countryServices.getAllCountry({ signal }),
+    ...options,
   });
 };

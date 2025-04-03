@@ -19,8 +19,6 @@ import { FormField } from "../components/MUI.Components/FormField";
 import { LoaderCircle, BadgeCheck, MoveRight, Phone, Mail } from "lucide-react";
 import CountryPhoneSelector from "../components/MUI.Components/CountryPhoneSelector";
 import GoogleIcon from "@mui/icons-material/Google";
-import useStore from "../store/zustand.store";
-import { useShallow } from "zustand/react/shallow";
 import { useSignUpUser } from "../hooks/api/Users";
 
 // Validation schema with conditional validation for email/phone
@@ -91,12 +89,12 @@ const SignUpSchema = Yup.object().shape({
 
 const SignUp = () => {
   const { mutate: SignUpUser, isPending: signUpPending } = useSignUpUser();
-  const { data: allCountries } = useGetAllCountry();
-  const { setNeedsOtpVerification } = useStore(
-    useShallow((state) => ({
-      setNeedsOtpVerification: state.setNeedsOtpVerification,
-    }))
-  );
+  const { data: allCountries } = useGetAllCountry({
+    staleTime: 1 * 60 * 60 * 1000, // 1 hour
+    cacheTime: 1 * 60 * 60 * 1000, // 1 hour
+    gcTime: 70 * 60 * 1000, // 1 hour and 10 minutes
+  });
+
   const navigate = useNavigate();
   const theme = useTheme();
   const initialValues = {
@@ -114,7 +112,6 @@ const SignUp = () => {
     SignUpUser(values, {
       onSuccess: (data) => {
         showToast(data.message, { type: "success" });
-        setNeedsOtpVerification(true);
         navigate("/otp-verification", {
           state: {
             contactType: values.useEmail ? "email" : "phoneNumber",

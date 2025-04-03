@@ -11,10 +11,11 @@ export const QUERY_KEYS = {
   USER_DETAILS: ["user-details"],
 };
 
-export const useSignUpUser = () => {
+export const useSignUpUser = (options = {}) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: usersService.signUpUser,
+    ...options,
     onSuccess: () => {
       queryClient.invalidateQueries(QUERY_KEYS.USERS);
     },
@@ -25,10 +26,11 @@ export const useSignUpUser = () => {
   });
 };
 
-export const useVerifyOtp = () => {
+export const useVerifyOtp = (options = {}) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: usersService.verifyOtp,
+    ...options,
     onSuccess: () => {
       queryClient.invalidateQueries(QUERY_KEYS.USERS);
     },
@@ -39,10 +41,11 @@ export const useVerifyOtp = () => {
   });
 };
 
-export const useResentOTP = () => {
+export const useResentOTP = (options = {}) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: usersService.resentOtp,
+    ...options,
     onSuccess: () => {
       queryClient.invalidateQueries(QUERY_KEYS.USERS);
     },
@@ -53,10 +56,11 @@ export const useResentOTP = () => {
   });
 };
 
-export const useSignInUser = () => {
+export const useSignInUser = (options = {}) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: usersService.signInUser,
+    ...options,
     onSuccess: () => {
       queryClient.invalidateQueries(QUERY_KEYS.USERS);
     },
@@ -67,10 +71,11 @@ export const useSignInUser = () => {
   });
 };
 
-export const useGetUserDetails = () => {
+export const useGetUserDetails = (options = {}) => {
   return useQuery({
     queryKey: QUERY_KEYS.USER_DETAILS,
     queryFn: usersService.getUserDetails,
+    ...options,
     onError: (error) => {
       console.log("Error getting user details", error?.response?.data);
       showToast(error?.response?.data?.message, { type: "error" });
@@ -78,10 +83,11 @@ export const useGetUserDetails = () => {
   });
 };
 
-export const useSignOutUser = () => {
+export const useSignOutUser = (options = {}) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: usersService.signOutUser,
+    ...options,
     onSuccess: () => {
       queryClient.clear();
     },
@@ -92,10 +98,11 @@ export const useSignOutUser = () => {
   });
 };
 
-export const useForgotPassword = () => {
+export const useForgotPassword = (options = {}) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: usersService.forgotPassword,
+    ...options,
     onSuccess: () => {
       queryClient.invalidateQueries(QUERY_KEYS.USERS);
     },
@@ -106,10 +113,11 @@ export const useForgotPassword = () => {
   });
 };
 
-export const useCheck = () => {
+export const useCheck = (options = {}) => {
   return useQuery({
     queryKey: QUERY_KEYS.CHECK,
     queryFn: usersService.checkUser,
+    ...options,
     onError: (error) => {
       console.log("Error checking user", error?.response?.data);
       showToast(error?.response?.data?.message, { type: "error" });
@@ -117,10 +125,11 @@ export const useCheck = () => {
   });
 };
 
-export const useResetPassword = () => {
+export const useResetPassword = (options = {}) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: usersService.resetPassword,
+    ...options,
     onSuccess: () => {
       queryClient.invalidateQueries(QUERY_KEYS.USERS);
     },
@@ -131,10 +140,11 @@ export const useResetPassword = () => {
   });
 };
 
-export const useResetPasswordWithOTP = () => {
+export const useResetPasswordWithOTP = (options = {}) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: usersService.resetPasswordWithOTP,
+    ...options,
     onSuccess: () => {
       queryClient.invalidateQueries(QUERY_KEYS.USERS);
     },

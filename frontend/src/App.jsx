@@ -2,6 +2,8 @@ import { BrowserRouter, Route, Routes } from "react-router";
 import { Suspense, lazy } from "react";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { FallBackLoader } from "./components/Loaders/FallBackLoader";
+import { ProtectedRoute } from "./components/routes/ProtectedOtpRoute";
+import { NoAuthRoute } from "./components/routes/NoAuthRoute";
 
 // Lazy load
 
@@ -26,13 +28,30 @@ const App = () => {
               <Route index element={<Home />} />
               <Route path="about" element={<About />} />
               <Route path="contact" element={<Contact />} />
-              <Route path="sign-in" element={<SignIn />} />
-              <Route path="sign-up" element={<SignUp />} />
+              <Route element={<NoAuthRoute />}>
+                <Route path="sign-in" element={<SignIn />} />
+                <Route path="sign-up" element={<SignUp />} />
+              </Route>
               <Route path="forgot-password" element={<ForgotPassword />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route
+                path="reset-password"
+                element={
+                  <ProtectedRoute
+                    requiredState={["reset", "contactType", "contactValue"]}
+                  >
+                    <ResetPassword />
+                  </ProtectedRoute>
+                }
+              />
               <Route
                 path="otp-verification"
-                element={<OtpVerificationPage />}
+                element={
+                  <ProtectedRoute
+                    requiredState={["contactType", "contactValue"]}
+                  >
+                    <OtpVerificationPage />
+                  </ProtectedRoute>
+                }
               />
               <Route path="*" element={<NotFound />} />
             </Route>

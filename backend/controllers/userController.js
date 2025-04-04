@@ -327,15 +327,12 @@ export const verifyOtp = asyncHandler(async (req, res, next) => {
     const providedOtp = String(otp).trim();
 
     if (storedOtp !== providedOtp) {
-      return res.status(400).json(ApiResponse.error("Invalid OTP true", 400));
+      return res.status(400).json(ApiResponse.error("Invalid OTP", 400));
     }
 
     if (user.forgotPasswordExpires < new Date()) {
       return res.status(400).json(ApiResponse.error("OTP has expired", 400));
     }
-
-    console.log("check", user.forgotPasswordCode, otp);
-
     if (storedOtp === providedOtp) {
       user.forgotPasswordCode = undefined;
       user.forgotPasswordExpires = undefined;
@@ -694,8 +691,8 @@ export const resetPasswordWithOTP = asyncHandler(async (req, res, next) => {
   if (fromOTPVerification) {
     user.refreshTokens = [];
     user.password = password;
-    res.clearCookie("access_token", accessTokenCookieOptions);
-    res.clearCookie("refresh_token", refreshTokenCookieOptions);
+    res.clearCookie("access_token");
+    res.clearCookie("refresh_token");
 
     await user.save();
 

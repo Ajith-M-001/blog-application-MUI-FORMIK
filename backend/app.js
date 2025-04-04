@@ -50,7 +50,7 @@ const startServer = async () => {
   try {
     await connectDB();
     // Start the server
-    cron.schedule("0 0 * * *", async () => {
+    cron.schedule("0 6 * * *", async () => {
       try {
         const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
         const result = await User.deleteMany({

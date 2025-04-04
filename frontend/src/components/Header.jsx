@@ -293,7 +293,10 @@ const Header = () => {
                       onMouseEnter={() => setActiveItem(index)}
                       onMouseLeave={() => setActiveItem(null)}
                     >
-                      <NavLink to={item.path}>
+                      <NavLink
+                        to={item.path}
+                        style={{ textDecoration: "none" }}
+                      >
                         <Typography
                           component={motion.p}
                           initial="initial"

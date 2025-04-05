@@ -49,9 +49,6 @@ const authProviderSchema = new mongoose.Schema(
       type: String,
       enum: ["google", "facebook", "apple"],
     },
-    accessToken: String,
-    refreshToken: String,
-    expiresAt: Date,
   },
   { _id: false }
 );
@@ -93,7 +90,10 @@ const userSchema = new mongoose.Schema(
     },
     password: {
       type: String,
-      required: true,
+      required: function () {
+        // Only require password if no auth providers
+        return this.authProviders.length === 0;
+      },
       select: false,
     },
     avatar: {

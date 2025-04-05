@@ -3,6 +3,8 @@ import { useGetUserDetails } from "../hooks/api/Users";
 import useStore from "../store/zustand.store";
 import { useShallow } from "zustand/react/shallow";
 import { lazy, Suspense, useEffect, useState } from "react";
+import { useSearchParams } from "react-router";
+import { showToast } from "../utils/toast";
 
 const VerificationDrawer = lazy(() =>
   import("../components/Drawer/VerificationDrawer")
@@ -18,6 +20,19 @@ const Home = () => {
       setIsAuthenticated: state.setIsAuthenticated,
     }))
   );
+
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const authStatus = searchParams.get("auth");
+    if (authStatus === "success") {
+      showToast("signed in successfully", { type: "success" });
+      setIsAuthenticated(true);
+    } else if (authStatus === "failed") {
+      showToast("sign in failed", { type: "error" });
+    }
+
+    console.log("URL Params", authStatus);
+  }, [setIsAuthenticated]);
 
   const theme = useTheme();
 

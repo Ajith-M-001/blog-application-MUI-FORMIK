@@ -704,6 +704,81 @@ export const resetPasswordWithOTP = asyncHandler(async (req, res, next) => {
   return res.status(400).json(ApiResponse.error("something went wrong", 400));
 });
 
+export const googleAuthCallback = asyncHandler(async (req, res, next) => {
+  try {
+    const user = req.user;
+
+    if (!user) {
+      return res.redirect(`${authConfig.CLIENT_ERROR_REDIRECT}?auth=failed`);
+    }
+
+    // Get fresh user data with refreshTokens
+    const existingUser = await User.findById(user._id).select("+refreshTokens");
+
+    if (!existingUser) {
+      return res.redirect(
+        `${authConfig.CLIENT_ERROR_REDIRECT}?auth=user_not_found`
+      );
+    }
+
+    const sessionId = uuidv4();
+    const tokens = await generateToken(existingUser, sessionId);
+    const refreshTokenExpiry = new Date(
+      Date.now() + getMaxAgeFromExpiresIn(authConfig.JWT_REFRESH_EXPIRES_IN)
+    );
+
+    const hashedRefreshToken = await bcrypt.hash(tokens.refreshToken, 10);
+    const userAgent = req.headers["user-agent"] || "";
+    const ip = req.ip || req.connection.remoteAddress || "";
+
+    const newSession = {
+      sessionId,
+      token: hashedRefreshToken,
+      deviceInfo: {
+        os: getUserOS(userAgent),
+        browser: getBrowser(userAgent),
+        ip,
+        userAgent,
+        lastLocation: "",
+      },
+      loggedInAt: new Date(),
+      lastActive: new Date(),
+      expiresAt: refreshTokenExpiry,
+    };
+
+    // Atomic update using MongoDB operators
+    const updateOperation = {
+      $push: {
+        refreshTokens: {
+          $each: [newSession],
+          $sort: { loggedInAt: 1 },
+          $slice:
+            existingUser.sessionPreference === SESSION_PREFERENCE.SINGLE
+              ? 1
+              : existingUser.maxSession,
+        },
+      },
+    };
+
+    await User.findByIdAndUpdate(existingUser._id, updateOperation, {
+      new: true,
+      runValidators: true,
+    });
+
+    // Set cookies
+    res.cookie("access_token", tokens.accessToken, accessTokenCookieOptions);
+    res.cookie("refresh_token", tokens.refreshToken, refreshTokenCookieOptions);
+
+    // Redirect to client-side success URL
+    return res.redirect(`${authConfig.GOOGLE_SUCCESS_REDIRECT}?auth=success`);
+  } catch (error) {
+    console.error("Google auth callback error:", error);
+    return res.redirect(
+      `${authConfig.GOOGLE_FAILURE_REDIRECT}?error=server_error`
+    );
+  }
+});
+
 // Helper function to extract OS from user agent
 function getUserOS(userAgent) {
   if (!userAgent) return "Unknown";

@@ -87,6 +87,13 @@ const SignUpSchema = Yup.object().shape({
   useEmail: Yup.boolean(),
 });
 
+const handleGoogleSignIn = () => {
+  console.log("Google Sign In clicked");
+  // Implement Google Sign-In logic here
+  const backendURL = "http://localhost:3000/api/v1/users";
+  window.location.href = `${backendURL}/auth/google`;
+};
+
 const SignUp = () => {
   const { mutate: SignUpUser, isPending: signUpPending } = useSignUpUser();
   const { data: allCountries } = useGetAllCountry({
@@ -326,6 +333,7 @@ const SignUp = () => {
                   <Divider sx={{ flexGrow: 1 }} />
                 </Box>
                 <Button
+                  onClick={handleGoogleSignIn}
                   variant="outlined"
                   startIcon={<GoogleIcon />}
                   color="secondary"

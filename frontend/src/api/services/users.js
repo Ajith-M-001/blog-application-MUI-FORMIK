@@ -81,4 +81,11 @@ export const usersService = {
     );
     return response.data;
   },
+
+  openGoogleAuth: async () => {
+    const response = await axiosInstance.get(
+      API_ENDPOINTS.users.openGoogleAuth
+    );
+    return response.data;
+  },
 };

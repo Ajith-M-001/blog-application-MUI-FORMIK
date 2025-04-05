@@ -15,6 +15,7 @@ export const API_ENDPOINTS = {
     getUserDetails: `${USER_URL}/get-user-details`,
     resetPassword: `${USER_URL}/reset-password`,
     resetPasswordWithOTP: `${USER_URL}/reset-password-with-otp`,
+    openGoogleAuth: `${USER_URL}/auth/google`,
   },
   countries: {
     all: `${COUNTRY_URL}/all`,

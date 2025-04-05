@@ -139,6 +139,7 @@ const Header = () => {
     }))
   );
 
+  console.log("user?.avatar?.url", user?.avatar?.url);
   const handleSignOut = () => {
     signOut(undefined, {
       onSuccess: (data) => {
@@ -400,9 +401,6 @@ const Header = () => {
                           sx={{
                             height: "2.3rem",
                             width: "2.3rem",
-                            background: user?.avatar?.url
-                              ? "transparent"
-                              : `linear-gradient(0deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
                           }}
                         >
                           {!user?.avatar?.url &&

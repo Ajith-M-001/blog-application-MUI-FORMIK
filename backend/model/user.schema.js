@@ -4,18 +4,19 @@ import {
   SESSION_PREFERENCE,
   USER_ROLES,
 } from "../../common/constants/constants.js";
-import { v4 as uuidv4 } from "uuid";
 
-// Constants for reusable values
-
-// Session Schema
-const sessionSchema = new mongoose.Schema(
+// refreshToken Schema
+const refreshTokenSchema = new mongoose.Schema(
   {
     sessionId: {
       type: String,
       required: true,
       unique: true,
-      default: () => uuidv4(),
+    },
+    token: {
+      type: String,
+      required: true,
+      unique: true,
     },
     deviceInfo: {
       os: String,
@@ -32,9 +33,9 @@ const sessionSchema = new mongoose.Schema(
       type: Date,
       default: Date.now,
     },
-    isValid: {
-      type: Boolean,
-      default: true,
+    expiresAt: {
+      type: Date,
+      required: true,
     },
   },
   { _id: false }
@@ -48,9 +49,15 @@ const authProviderSchema = new mongoose.Schema(
       type: String,
       enum: ["google", "facebook", "apple"],
     },
-    accessToken: String,
-    refreshToken: String,
-    expiresAt: Date,
+  },
+  { _id: false }
+);
+
+const countrySchema = new mongoose.Schema(
+  {
+    name: String,
+    code: String,
+    dial_code: String,
   },
   { _id: false }
 );
@@ -75,9 +82,7 @@ const userSchema = new mongoose.Schema(
       trim: true,
       lowercase: true,
     },
-    countryCode: {
-      type: String,
-    },
+    country: countrySchema,
     phoneNumber: {
       type: String,
       unique: true,
@@ -85,8 +90,23 @@ const userSchema = new mongoose.Schema(
     },
     password: {
       type: String,
-      required: true,
+      required: function () {
+        // Require password only if no social login provider is connected
+        return !(this.authProviders && this.authProviders.length > 0);
+      },
       select: false,
+    },
+    avatar: {
+      public_id: {
+        type: String, // Cloudinary's unique identifier for the uploaded image
+        required: false, // Avatar is optional
+        default: null,
+      },
+      url: {
+        type: String, // The URL for the avatar image from Cloudinary
+        required: false, // Avatar URL is optional
+        default: null,
+      },
     },
     roles: {
       type: [String],
@@ -98,10 +118,11 @@ const userSchema = new mongoose.Schema(
       enum: Object.values(SESSION_PREFERENCE),
       default: SESSION_PREFERENCE.MULTIPLE,
     },
-    maxSession: { type: Number, default: 5, min: 1, max: 5 },
-    isActive: {
-      type: Boolean,
-      default: false,
+    maxSession: { type: Number, default: 5, min: 1, max: 20 },
+    accountStatus: {
+      type: String,
+      enum: ["active", "inactive", "suspended"],
+      default: "inactive",
     },
     isEmailVerified: {
       type: Boolean,
@@ -122,14 +143,11 @@ const userSchema = new mongoose.Schema(
     forgotPasswordCode: { type: String, select: false },
     forgotPasswordExpires: { type: Date, select: false },
     authProviders: { type: [authProviderSchema], select: false },
-    refreshTokens: [
-      {
-        token: String,
-        issueAt: Date,
-        expiresAt: Date,
-      },
-    ],
-    sessions: { type: [sessionSchema], select: false },
+    refreshTokens: {
+      type: [refreshTokenSchema],
+      select: false,
+      default: [],
+    },
   },
   {
     timestamps: true,

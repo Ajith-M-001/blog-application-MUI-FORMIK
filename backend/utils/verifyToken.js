@@ -2,7 +2,7 @@ import jwt from "jsonwebtoken";
 import { ApiResponse } from "./ApiResponse.js";
 import { authConfig } from "../config/auth.config.js";
 import User from "../model/user.schema.js";
-import { blacklistedTokens } from "../model/token.blacklist.js";
+import bcrypt from "bcrypt";
 
 export const verifyAccessToken = async (req, res, next) => {
   const token = req.cookies.access_token;
@@ -16,16 +16,10 @@ export const verifyAccessToken = async (req, res, next) => {
       );
   }
 
-  const isblackListed = await blacklistedTokens.findOne({ token });
-  if (isblackListed) {
-    return res
-      .status(401)
-      .json(ApiResponse.unauthorized("unauthorized:access token is invalid"));
-  }
   try {
     const decoded = jwt.verify(token, authConfig.JWT_ACCESS_SECRET);
     const user = await User.findById(decoded._id).select(
-      "email firstName lastName roles isActive"
+      "email firstName lastName roles accountStatus country phoneNumber refreshTokens"
     );
     if (!user) {
       return res
@@ -37,10 +31,51 @@ export const verifyAccessToken = async (req, res, next) => {
         );
     }
 
-    if (!user.isActive) {
-      return res.status(403).json(ApiResponse.forbidden("Account is inactive"));
+    const isSignOutRoute = req.path.includes("/sign-out");
+    console.log("isSignOutRoute", isSignOutRoute);
+    console.log("req.path", req.path);
+
+    if (user.accountStatus !== "active" && !isSignOutRoute) {
+      if (user.accountStatus === "inactive") {
+        const responseOBJ = {
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          country: user.country,
+          phoneNumber: user.phoneNumber,
+        };
+        return res
+          .status(403)
+          .json(
+            ApiResponse.forbidden(
+              "Account is inactive, please verify your account",
+              responseOBJ
+            )
+          );
+      }
+      return res
+        .status(403)
+        .json(
+          ApiResponse.forbidden(
+            "Account is not active, please contact customer support"
+          )
+        );
     }
-    req.user = user;
+
+    const sessionExists = user.refreshTokens.some(
+      (rt) => rt.sessionId === decoded.sessionId
+    );
+
+    if (!sessionExists) {
+      return res
+        .status(401)
+        .json(
+          ApiResponse.unauthorized(
+            "unauthorized: Session not found. Please log in again."
+          )
+        );
+    }
+    req.user = { ...user.toObject(), sessionId: decoded.sessionId };
     next();
   } catch (error) {
     next(error);
@@ -61,7 +96,7 @@ export const verifyRefreshToken = async (req, res, next) => {
   try {
     const decoded = jwt.verify(refreshToken, authConfig.JWT_REFRESH_SECRET);
     const user = await User.findById(decoded._id).select(
-      "email firstName lastName roles isActive"
+      "email firstName lastName roles accountStatus refreshTokens"
     );
     if (!user) {
       return res
@@ -73,10 +108,35 @@ export const verifyRefreshToken = async (req, res, next) => {
         );
     }
 
-    if (!user.isActive) {
-      return res.status(403).json(ApiResponse.forbidden("Account is inactive"));
+    if (user.accountStatus === "active") {
+      const sessionToken = user.refreshTokens.find(
+        (rt) => rt.sessionId === decoded.sessionId
+      );
+
+      if (!sessionToken) {
+        return res
+          .status(401)
+          .json(
+            ApiResponse.unauthorized(
+              "unauthorized: Session not found. Please log in again."
+            )
+          );
+      }
+
+      const isValidRefreshToken = await bcrypt.compare(
+        refreshToken,
+        sessionToken.token
+      );
+
+      if (!isValidRefreshToken) {
+        return res
+          .status(401)
+          .json(
+            ApiResponse.unauthorized("unauthorized: Invalid refresh token")
+          );
+      }
+      req.user = { ...user.toObject(), sessionId: decoded.sessionId };
     }
-    req.user = user;
     next();
   } catch (error) {
     next(error);

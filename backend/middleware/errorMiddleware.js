@@ -32,10 +32,22 @@ const errorHandler = (err, req, res, next) => {
     }
   }
 
+  if (err.code === 21211) {
+    statusCode = 400;
+    message =
+      "Invalid phone number format. Please provide a valid phone number.";
+  }
+
   // Handle Mongoose CastError (invalid ObjectId)
   if (err.name === "CastError") {
     statusCode = 400;
     message = `Invalid ${err.path}: ${err.value}`;
+  }
+
+  if (err.code === 21608) {
+    statusCode = 400; // HTTP 400 Bad Request
+    message =
+      "The number is unverified. Trial accounts cannot send messages to unverified numbers.";
   }
 
   // Handle JWT errors

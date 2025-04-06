@@ -1,0 +1,24 @@
+// src/components/Toaster.jsx
+import { Toaster } from "sonner";
+import useStore from "../store/zustand.store";
+
+export const NotificationToaster = () => {
+  const { isDarkTheme } = useStore();
+  return (
+    <Toaster
+      theme={isDarkTheme ? "dark" : "light"}
+      position="top-right"
+      richColors
+      visibleToasts={3}
+      expand={false}
+      closeButton
+      offset="16px"
+      toastOptions={{
+        classNames: {
+          toast: "!font-poppins !shadow-lg !rounded-lg",
+          title: "!text-base",
+        },
+      }}
+    />
+  );
+};

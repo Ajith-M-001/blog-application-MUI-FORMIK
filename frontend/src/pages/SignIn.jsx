@@ -67,6 +67,10 @@ const SignIn = () => {
     }))
   );
 
+  const handleGoogleSignIn = () => {
+    window.location.href = `http://localhost:3000/api/v1/users/auth/google`;
+  };
+
   const HandleSubmit = (values, { resetForm }) => {
     console.log(values);
     signInUser(values, {
@@ -401,6 +405,7 @@ const SignIn = () => {
                   <Divider sx={{ flexGrow: 1 }} />
                 </Box>
                 <Button
+                  onClick={handleGoogleSignIn}
                   variant="outlined"
                   startIcon={<GoogleIcon />}
                   color="secondary"

@@ -1,4 +1,5 @@
 import express from "express";
+import passport from "passport";
 import {
   signInUser,
   signUpUser,
@@ -12,6 +13,7 @@ import {
   forgotPassword,
   ResetPassword,
   resetPasswordWithOTP,
+  handleGoogleAuthCallback,
 } from "../controllers/userController.js";
 import {
   validateLogin,
@@ -33,5 +35,21 @@ router.put("/verify-otp", verifyOtp);
 router.put("/resent-otp", resendOtp);
 router.put("/forgot-password", forgotPassword);
 router.put("/reset-password-with-otp", resetPasswordWithOTP);
+router.get(
+  "/auth/google",
+  passport.authenticate("google", {
+    session: false,
+    prompt: "select_account",
+  })
+);
+
+router.get(
+  "/auth/google/callback",
+  passport.authenticate("google", {
+    session: false,
+    failureRedirect: "/sign-in?auth=google_auth_failed",
+  }),
+  handleGoogleAuthCallback
+);
 
 export default router;

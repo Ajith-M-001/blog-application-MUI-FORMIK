@@ -400,9 +400,6 @@ const Header = () => {
                           sx={{
                             height: "2.3rem",
                             width: "2.3rem",
-                            background: user?.avatar?.url
-                              ? "transparent"
-                              : `linear-gradient(0deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
                           }}
                         >
                           {!user?.avatar?.url &&
@@ -641,9 +638,6 @@ const Header = () => {
                     height: "3rem",
                     width: "3rem",
                     mr: 2,
-                    background: user?.avatar?.url
-                      ? "transparent"
-                      : `linear-gradient(35deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
                   }}
                 >
                   {!user?.avatar?.url &&

@@ -8,6 +8,7 @@ import { errorHandler, notFound } from "./middleware/errorMiddleware.js";
 import cors from "cors";
 import User from "./model/user.schema.js";
 import cron from "node-cron";
+import { configurePassport } from "./config/passport.js";
 
 const app = express();
 
@@ -35,6 +36,8 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 app.use(cookieParser());
+
+configurePassport(app);
 
 // Mount user routes
 app.use("/api/v1/users", userRoutes);

@@ -108,6 +108,10 @@ const SignUp = () => {
     useEmail: true, // Default to email input
   };
 
+  const handleGoogleSignIn = () => {
+    window.location.href = `http://localhost:3000/api/v1/users/auth/google`;
+  };
+
   const handleSubmit = (values) => {
     SignUpUser(values, {
       onSuccess: (data) => {
@@ -326,6 +330,7 @@ const SignUp = () => {
                   <Divider sx={{ flexGrow: 1 }} />
                 </Box>
                 <Button
+                  onClick={handleGoogleSignIn}
                   variant="outlined"
                   startIcon={<GoogleIcon />}
                   color="secondary"

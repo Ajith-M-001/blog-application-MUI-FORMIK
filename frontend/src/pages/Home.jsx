@@ -10,6 +10,10 @@ const VerificationDrawer = lazy(() =>
 
 const Home = () => {
   const [openDrawer, setOpenDrawer] = useState(false);
+  const urlParams = new URLSearchParams(window.location.search);
+  const authMessage = urlParams.get("auth");
+
+  console.log("Auth message", authMessage);
   // Get Zustand store actions
   const { isAuthenticated, setUser, setIsAuthenticated } = useStore(
     useShallow((state) => ({
@@ -31,6 +35,14 @@ const Home = () => {
     cacheTime: 1 * 70 * 60 * 1000,
     gcTime: 1 * 70 * 60 * 1000,
   });
+
+  useEffect(() => {
+    if (authMessage === "google_auth_success") {
+      setIsAuthenticated(true);
+      // Optionally remove the parameter from URL for cleaner UX
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, [authMessage, setIsAuthenticated]);
 
   useEffect(() => {
     if (isUserSuccess && user?.data) {

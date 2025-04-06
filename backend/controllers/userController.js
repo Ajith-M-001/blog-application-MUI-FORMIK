@@ -704,6 +704,50 @@ export const resetPasswordWithOTP = asyncHandler(async (req, res, next) => {
   return res.status(400).json(ApiResponse.error("something went wrong", 400));
 });
 
+export const handleGoogleAuthCallback = asyncHandler(async (req, res, next) => {
+  const user = req.user;
+  const sessionId = uuidv4();
+  const tokens = await generateToken(user, sessionId);
+  const refreshTokenExpiry = new Date(
+    Date.now() + getMaxAgeFromExpiresIn(authConfig.JWT_REFRESH_EXPIRES_IN)
+  );
+
+  const hashedRefreshToken = await bcrypt.hash(tokens.refreshToken, 10);
+
+  const userAgent = req.headers["user-agent"] || "";
+  const ip = req.ip || req.connection.remoteAddress || "";
+
+  const newSession = {
+    sessionId,
+    token: hashedRefreshToken,
+    deviceInfo: {
+      os: getUserOS(userAgent),
+      browser: getBrowser(userAgent),
+      ip: ip,
+      userAgent: userAgent,
+      lastLocation: "",
+    },
+    loggedInAt: Date.now(),
+    lastActive: Date.now(),
+    expiresAt: refreshTokenExpiry,
+  };
+  if (user.sessionPreference === SESSION_PREFERENCE.SINGLE) {
+    user.refreshTokens = [newSession];
+  } else if (user.sessionPreference === SESSION_PREFERENCE.MULTIPLE) {
+    if (user.refreshTokens.length >= user.maxSession) {
+      user.refreshTokens.sort((a, b) => a.loggedInAt - b.loggedInAt);
+      user.refreshTokens.shift();
+    }
+    user.refreshTokens.push(newSession);
+  }
+
+  await user.save();
+  res.cookie("access_token", tokens.accessToken, accessTokenCookieOptions);
+  res.cookie("refresh_token", tokens.refreshToken, refreshTokenCookieOptions);
+
+  res.redirect("http://localhost:5173/?auth=google_auth_success");
+});
+
 // Helper function to extract OS from user agent
 function getUserOS(userAgent) {
   if (!userAgent) return "Unknown";

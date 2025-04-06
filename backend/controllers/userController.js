@@ -10,6 +10,8 @@ import { v4 as uuidv4 } from "uuid";
 import { SESSION_PREFERENCE } from "../../common/constants/constants.js";
 import { authConfig } from "../config/auth.config.js";
 import { getMaxAgeFromExpiresIn } from "../utils/getMaxAgeFromExpiresIn.js";
+import { redisService } from "../services/redis/cacheService.js";
+import { generateUniqueUsername } from "../utils/generateUniqueUsername.js";
 
 // Create cookie options for the access token
 const accessTokenCookieOptions = {
@@ -65,6 +67,8 @@ export const signUpUser = transactionHandler(
         .json(ApiResponse.error(conflictMessages.join(" and "), 409));
     }
 
+    const username = await generateUniqueUsername(firstName, session);
+
     const otp = generateOTP();
     const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes validity
 
@@ -72,6 +76,7 @@ export const signUpUser = transactionHandler(
     const newUser = new User({
       firstName,
       lastName,
+      username,
       email: email ? email.toLowerCase() : undefined,
       phoneNumber: phoneNumber || undefined,
       country: country || undefined,
@@ -426,7 +431,17 @@ export const resendOtp = asyncHandler(async (req, res, next) => {
 });
 
 export const getUserDetails = asyncHandler(async (req, res, next) => {
+  const userId = req.user._id.toString();
+  const cacheKey = `user:${userId}`;
+  const cachedUser = await redisService.get(cacheKey);
+
+  if (cachedUser) {
+    return res
+      .status(200)
+      .json(ApiResponse.success("User details (cached)", cachedUser));
+  }
   const user = await User.findById(req.user._id);
+  await redisService.set(cacheKey, user, 600);
   return res.status(200).json(ApiResponse.success("User details", user));
 });
 

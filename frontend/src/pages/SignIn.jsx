@@ -26,6 +26,7 @@ import { FormField } from "../components/MUI.Components/FormField";
 import { useSignInUser } from "../hooks/api/Users";
 import useStore from "../store/zustand.store";
 import { showToast } from "../utils/toast";
+import { useEffect } from "react";
 
 const SignInSchema = Yup.object().shape({
   email: Yup.string().when("useEmail", {
@@ -59,6 +60,8 @@ const SignIn = () => {
   const theme = useTheme();
   const navigate = useNavigate();
   const { mutate: signInUser, isPending: isSigningIn } = useSignInUser();
+  const urlParams = new URLSearchParams(window.location.search);
+  const authMessage = urlParams.get("auth");
 
   const { setUser, setIsAuthenticated } = useStore(
     useShallow((state) => ({
@@ -66,6 +69,15 @@ const SignIn = () => {
       setIsAuthenticated: state.setIsAuthenticated,
     }))
   );
+
+  useEffect(() => {
+    if (authMessage === "google_auth_failed") {
+      setIsAuthenticated(false);
+      showToast("google authentication failed", { type: "error" });
+      // Optionally remove the parameter from URL for cleaner UX
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, [authMessage, setIsAuthenticated]);
 
   const handleGoogleSignIn = () => {
     window.location.href = `http://localhost:3000/api/v1/users/auth/google`;

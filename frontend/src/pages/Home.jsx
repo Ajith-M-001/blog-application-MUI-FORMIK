@@ -3,6 +3,7 @@ import { useGetUserDetails } from "../hooks/api/Users";
 import useStore from "../store/zustand.store";
 import { useShallow } from "zustand/react/shallow";
 import { lazy, Suspense, useEffect, useState } from "react";
+import { showToast } from "../utils/toast";
 
 const VerificationDrawer = lazy(() =>
   import("../components/Drawer/VerificationDrawer")
@@ -39,6 +40,7 @@ const Home = () => {
   useEffect(() => {
     if (authMessage === "google_auth_success") {
       setIsAuthenticated(true);
+      showToast("google authentication successful", { type: "success" });
       // Optionally remove the parameter from URL for cleaner UX
       window.history.replaceState({}, document.title, window.location.pathname);
     }

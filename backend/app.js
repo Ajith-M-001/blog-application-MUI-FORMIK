@@ -4,6 +4,8 @@ import connectDB from "./config/database.js";
 import userRoutes from "./routes/userRoutes.js";
 import countryRoute from "./routes/countriesRoute.js";
 import cookieParser from "cookie-parser";
+import helmet from "helmet";
+import cors from "cors";
 import { errorHandler, notFound } from "./middleware/errorMiddleware.js";
 import cors from "cors";
 import User from "./model/user.schema.js";
@@ -15,6 +17,9 @@ const app = express();
 app.disable("x-powered-by");
 
 const PORT = process.env.PORT || 4000;
+
+// Disables the X-Powered-By header to hide the fact that the server is using Express
+// app.disable('x-powered-by');
 
 app.get("/", (req, res) => {
   res.send("Welcome to BLOG Application - build by Ajith");

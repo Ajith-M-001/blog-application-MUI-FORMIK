@@ -27,16 +27,6 @@ const tagSchema = new mongoose.Schema(
   }
 );
 
-// Indexing for performance
-tagSchema.index({ slug: 1 });
-
-// Pre-save middleware to generate slug
-tagSchema.pre("save", function (next) {
-  if (!this.isModified("name")) return next();
-  this.slug = generateSlug(this.name);
-  next();
-});
-
 const Tag = mongoose.model("Tag", tagSchema);
 
 export default Tag;

@@ -27,16 +27,6 @@ const categorySchema = new mongoose.Schema(
   }
 );
 
-// Indexing the slug field for performance
-categorySchema.index({ slug: 1 });
-
-// Pre-save middleware to generate slug from name
-categorySchema.pre("save", function (next) {
-  if (!this.isModified("name")) return next();
-  this.slug = generateSlug(this.name);
-  next();
-});
-
 const Category = mongoose.model("Category", categorySchema);
 
 export default Category;

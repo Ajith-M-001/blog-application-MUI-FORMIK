@@ -15,7 +15,6 @@ const blogSchema = new mongoose.Schema(
       type: String,
       unique: true,
       lowercase: true,
-      index: true,
     },
     content: {
       type: mongoose.Schema.Types.Mixed,
@@ -45,11 +44,10 @@ const blogSchema = new mongoose.Schema(
       index: true,
     },
     category: {
-      // type: mongoose.Schema.Types.ObjectId,
-      type: String,
+      type: mongoose.Schema.Types.ObjectId,
       ref: "Category",
-      // required: true,
-      // index: true,
+      required: true,
+      index: true,
     },
     tags: [
       {
@@ -131,7 +129,6 @@ const blogSchema = new mongoose.Schema(
 );
 
 blogSchema.index({ title: "text", description: "text" });
-blogSchema.index({ createdAt: -1 });
 blogSchema.index({ status: 1, createdAt: -1 });
 
 const Blog = mongoose.model("Blog", blogSchema);

@@ -53,7 +53,7 @@ const commentSchema = new mongoose.Schema(
 );
 
 // Indexing the blog and parent fields for faster lookups
-commentSchema.index({ blog: 1, parent: 1 });
+commentSchema.index({ parent: 1 });
 
 const Comment = mongoose.model("Comment", commentSchema);
 

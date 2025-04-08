@@ -9,7 +9,9 @@ async function generateUniqueUsername(firstName, session) {
 
   while (!isUnique) {
     // Check if username exists
-    const existingUser = await userModel.findOne({ username }).session(session);
+    const existingUser = session
+      ? await userModel.findOne({ username }).session(session)
+      : await userModel.findOne({ username });
 
     if (!existingUser) {
       isUnique = true;

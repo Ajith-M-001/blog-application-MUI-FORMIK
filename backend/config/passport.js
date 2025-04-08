@@ -2,6 +2,7 @@
 import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import userModel from "../model/user.schema.js";
+import { generateUniqueUsername } from "../utils/generateUniqueUsername.js";
 
 const configurePassport = (app) => {
   passport.use(
@@ -57,6 +58,12 @@ const configurePassport = (app) => {
                   providerId: profile.id,
                   providerType: "google",
                 });
+                if (!user.username) {
+                  user.username = await generateUniqueUsername(
+                    profile.name.givenName || "",
+                    null
+                  );
+                }
                 user.avatar = {
                   url: profile.photos[0].value,
                   publicId: null,
@@ -67,9 +74,15 @@ const configurePassport = (app) => {
                 return done(null, user);
               }
             } else {
+              const username = await generateUniqueUsername(
+                profile.name.givenName || "",
+                null
+              );
+
               const newUser = new userModel({
                 firstName: profile.name.givenName || "",
                 lastName: profile.name.familyName || "",
+                username,
                 email,
                 avatar: {
                   url: profile.photos?.[0]?.value || null,

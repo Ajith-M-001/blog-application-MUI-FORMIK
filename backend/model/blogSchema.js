@@ -1,6 +1,5 @@
 import mongoose from "mongoose";
 import { BLOG_STATUS } from "../../common/constants/constants.js";
-import { generateSlug } from "../utils/generateSlug.js";
 
 const blogSchema = new mongoose.Schema(
   {
@@ -84,6 +83,7 @@ const blogSchema = new mongoose.Schema(
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
+        default: [],
       },
     ],
     bookmarks: [
@@ -101,6 +101,7 @@ const blogSchema = new mongoose.Schema(
         type: Number,
         default: 0,
       },
+      total_unique_views: { type: Number, default: 0 },
       total_likes: {
         type: Number,
         default: 0,

@@ -1,6 +1,7 @@
 import { BLOG_STATUS } from "../../common/constants/constants.js";
 import Blog from "../model/blogSchema.js";
 import userModel from "../model/user.schema.js";
+import { redisService } from "../services/redis/cacheService.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler, transactionHandler } from "../utils/AsyncHandler.js";
 import { generateSlug } from "../utils/generateSlug.js";
@@ -56,6 +57,10 @@ export const publishBlog = transactionHandler(
         );
     }
 
+    if (tags && !Array.isArray(tags)) {
+      return res.status(400).json(ApiResponse.error("Tags must be an array"));
+    }
+
     let blogSlugBase = generateSlug(title);
     let finalSlug = blogSlugBase;
     let slugExists = await Blog.findOne({ slug: finalSlug });
@@ -98,3 +103,22 @@ export const publishBlog = transactionHandler(
     res.status(201).json(ApiResponse.created(blog, message, 201));
   }
 );
+
+export const getAllBlog = asyncHandler(async (req, res) => {
+  const cacheKey = "allBlogs";
+  const cachedBlogs = await redisService.get(cacheKey);
+  if (cachedBlogs) {
+    return res
+      .status(200)
+      .json(ApiResponse.success("All Blogs (cached)", cachedBlogs));
+  }
+  const blogs = await Blog.find()
+    .select("title description author createdAt")
+    .sort({ createdAt: -1 })
+    .populate("author", "username profile_image")
+    .populate("category", "name")
+    .limit(10)
+    .lean();
+  await redisService.set(cacheKey, blogs, 600);
+  res.status(200).json(ApiResponse.success("All Blogs", blogs));
+});

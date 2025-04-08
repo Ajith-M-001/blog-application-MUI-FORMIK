@@ -3,23 +3,21 @@ import "dotenv/config";
 import connectDB from "./config/database.js";
 import userRoutes from "./routes/userRoutes.js";
 import countryRoute from "./routes/countriesRoute.js";
+import blogRoutes from "./routes/blogRoute.js";
+import CategoryRoutes from "./routes/categoryRoutes.js";
 import cookieParser from "cookie-parser";
-import helmet from "helmet";
 import cors from "cors";
 import { errorHandler, notFound } from "./middleware/errorMiddleware.js";
-import cors from "cors";
 import User from "./model/user.schema.js";
 import cron from "node-cron";
 import { configurePassport } from "./config/passport.js";
+import ConfigRedisClient from "./config/redis.config.js";
 
 const app = express();
 
 app.disable("x-powered-by");
 
 const PORT = process.env.PORT || 4000;
-
-// Disables the X-Powered-By header to hide the fact that the server is using Express
-// app.disable('x-powered-by');
 
 app.get("/", (req, res) => {
   res.send("Welcome to BLOG Application - build by Ajith");
@@ -47,6 +45,8 @@ configurePassport(app);
 // Mount user routes
 app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/countries", countryRoute);
+app.use("/api/v1/blogs", blogRoutes);
+app.use("/api/v1/categories", CategoryRoutes);
 
 // Handle 404 errors for non-existent routes
 app.use(notFound);
@@ -66,6 +66,10 @@ const startServer = async () => {
           createdAt: { $lt: twentyFourHoursAgo },
         });
         console.log(`Cleaned up ${result.deletedCount} inactive accounts.`);
+
+        if (!ConfigRedisClient.isReady) {
+          throw new Error("Redis client is not ready. Exiting...");
+        }
       } catch (error) {
         console.error("Error cleaning up inactive accounts:", error);
       }

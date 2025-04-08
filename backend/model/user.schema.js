@@ -88,6 +88,7 @@ const userSchema = new mongoose.Schema(
       unique: true,
       sparse: true,
     },
+    bio: { type: String },
     password: {
       type: String,
       required: function () {
@@ -95,6 +96,12 @@ const userSchema = new mongoose.Schema(
         return !(this.authProviders && this.authProviders.length > 0);
       },
       select: false,
+    },
+    username: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
     },
     avatar: {
       public_id: {
@@ -108,6 +115,49 @@ const userSchema = new mongoose.Schema(
         default: null,
       },
     },
+    following: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+    followers: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+    bookmarks: [{ type: mongoose.Schema.Types.ObjectId, ref: "Blog" }],
+    followingCategories: [
+      { type: mongoose.Schema.Types.ObjectId, ref: "Category" },
+    ],
+    followingTags: [{ type: mongoose.Schema.Types.ObjectId, ref: "Tag" }],
+    social_links: {
+      youtube: {
+        type: String,
+        default: "",
+      },
+      instagram: {
+        type: String,
+        default: "",
+      },
+      facebook: {
+        type: String,
+        default: "",
+      },
+      twitter: {
+        type: String,
+        default: "",
+      },
+      github: {
+        type: String,
+        default: "",
+      },
+      website: {
+        type: String,
+        default: "",
+      },
+    },
+    account_info: {
+      total_posts: { type: Number, default: 0 },
+      total_reads: { type: Number, default: 0 },
+      total_likes: { type: Number, default: 0 },
+      total_comments: { type: Number, default: 0 },
+      post_engagement_rate: { type: Number, default: 0 },
+      views_this_month: { type: Number, default: 0 },
+      last_post_date: { type: Date },
+    },
+    likedBlogs: [{ type: mongoose.Schema.Types.ObjectId, ref: "Blog" }],
     roles: {
       type: [String],
       enum: Object.values(USER_ROLES),

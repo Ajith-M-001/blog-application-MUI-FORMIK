@@ -10,3 +10,9 @@ export const USER_ROLES = {
   READER: "Reader",
   SUBSCRIBER: "Subscriber",
 };
+
+export const BLOG_STATUS = {
+  DRAFT: "draft",
+  PUBLISHED: "published",
+  SCHEDULED: "scheduled",
+};

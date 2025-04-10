@@ -1,5 +1,5 @@
 import express from "express";
-import "dotenv/config";
+import dotenv from "dotenv";
 import connectDB from "./config/database.js";
 import userRoutes from "./routes/userRoutes.js";
 import countryRoute from "./routes/countriesRoute.js";
@@ -12,6 +12,7 @@ import User from "./model/user.schema.js";
 import cron from "node-cron";
 import { configurePassport } from "./config/passport.js";
 import ConfigRedisClient from "./config/redis.config.js";
+dotenv.config();
 
 const app = express();
 

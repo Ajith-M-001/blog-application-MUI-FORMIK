@@ -11,12 +11,10 @@ const refreshTokenSchema = new mongoose.Schema(
     sessionId: {
       type: String,
       required: true,
-      unique: true,
     },
     token: {
       type: String,
       required: true,
-      unique: true,
     },
     deviceInfo: {
       os: String,

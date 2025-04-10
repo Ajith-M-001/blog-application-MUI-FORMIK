@@ -720,6 +720,7 @@ export const resetPasswordWithOTP = asyncHandler(async (req, res, next) => {
 });
 
 export const handleGoogleAuthCallback = asyncHandler(async (req, res, next) => {
+  console.log("working");
   const user = req.user;
   const sessionId = uuidv4();
   const tokens = await generateToken(user, sessionId);
@@ -746,6 +747,7 @@ export const handleGoogleAuthCallback = asyncHandler(async (req, res, next) => {
     lastActive: Date.now(),
     expiresAt: refreshTokenExpiry,
   };
+  console.log("newSession", newSession);
   if (user.sessionPreference === SESSION_PREFERENCE.SINGLE) {
     user.refreshTokens = [newSession];
   } else if (user.sessionPreference === SESSION_PREFERENCE.MULTIPLE) {

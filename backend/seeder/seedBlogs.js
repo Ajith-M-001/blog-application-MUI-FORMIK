@@ -10,9 +10,9 @@ dotenv.config({
   path: "../.env",
 });
 
-const NUM_BLOGS = 200;
+const NUM_BLOGS = 1;
 
-const CATEGORIES = ["67f33e3d5f86d1ad63887b55"];
+const CATEGORIES = ["67f731a26526a5fca2f4d5a8"];
 
 const generateBlog = async (userId) => {
   const title = faker.lorem.sentence();

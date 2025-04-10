@@ -86,6 +86,7 @@ export const publishBlog = transactionHandler(
       publishedAt: status === BLOG_STATUS.PUBLISHED ? new Date() : null,
     });
 
+    await redisService.clearCacheByPattern("blogs:*");
     await blog.save({ session });
 
     await userModel.findByIdAndUpdate(
@@ -105,20 +106,77 @@ export const publishBlog = transactionHandler(
 );
 
 export const getAllBlog = asyncHandler(async (req, res) => {
-  const cacheKey = "allBlogs";
+  const { cursor = null, limit = 10 } = req.query;
+
+  console.log("cursor", cursor, limit);
+  let query = {};
+
+  // Handle cursor-based pagination
+  if (cursor) {
+    let [timestamp, id] = cursor.split("_");
+    query = {
+      $or: [
+        { createdAt: { $lt: new Date(parseInt(timestamp)) } },
+        {
+          createdAt: new Date(parseInt(timestamp)),
+          _id: { $lt: id },
+        },
+      ],
+    };
+  }
+
+  console.log("query", query);
+
+  const cacheKey = `blogs:cursor=${cursor || "first"}:limit=${limit}`;
   const cachedBlogs = await redisService.get(cacheKey);
+
+  console.log("cacheKey", cacheKey);
+  console.log("cachedBlogs", cachedBlogs);
+
   if (cachedBlogs) {
     return res
       .status(200)
-      .json(ApiResponse.success("All Blogs (cached)", cachedBlogs));
+      .json(ApiResponse.success("Blogs (cached)", JSON.parse(cachedBlogs)));
   }
-  const blogs = await Blog.find()
-    .select("title description author createdAt")
-    .sort({ createdAt: -1 })
+
+  // Use 'let' for blogs to allow modifications below
+  let blogs = await Blog.find(query)
+    .select("title description author createdAt category coverImage slug")
+    .sort({ createdAt: -1, _id: -1 }) // Compound sort is great for pagination
     .populate("author", "username profile_image")
     .populate("category", "name")
-    .limit(10)
+    .limit(Number(limit) + 1) // Request one extra document to check for next page
     .lean();
-  await redisService.set(cacheKey, blogs, 600);
-  res.status(200).json(ApiResponse.success("All Blogs", blogs));
+
+  console.log("blogs", blogs);
+
+  const totalBlogs = await Blog.countDocuments();
+
+  const hasNextPage = blogs.length > Number(limit);
+
+  // If there's an extra document, remove it to maintain the limit
+  if (hasNextPage) {
+    blogs = blogs.slice(0, Number(limit));
+  }
+
+  console.log("Processed blogs", blogs);
+
+  // Compute next cursor only if there's a next page
+  const nextCursor = hasNextPage
+    ? `${blogs[blogs.length - 1].createdAt.getTime()}_${
+        blogs[blogs.length - 1]._id
+      }`
+    : null;
+
+  const responsePayload = {
+    blogs,
+    nextCursor,
+    totalBlogs,
+  };
+
+  await redisService.set(cacheKey, JSON.stringify(responsePayload), 600); // Cache the full response
+
+  return res
+    .status(200)
+    .json(ApiResponse.success("All Blogs", responsePayload));
 });

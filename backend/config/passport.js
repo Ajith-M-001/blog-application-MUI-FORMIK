@@ -16,6 +16,7 @@ const configurePassport = (app) => {
       },
       async (req, accessToken, refreshToken, profile, done) => {
         try {
+          console.log("profile working", profile);
           // Check if the user already exists in the database
           const email =
             profile.emails && profile.emails[0]
@@ -34,6 +35,8 @@ const configurePassport = (app) => {
               "authProviders.providerType": "google",
             })
             .select("+refreshTokens +authProviders");
+
+          console.log("check user", user);
 
           if (!user) {
             user = await userModel
@@ -56,7 +59,7 @@ const configurePassport = (app) => {
               if (!user.isEmailVerified) {
                 user.authProviders.push({
                   providerId: profile.id,
-                  providerType: "google",
+                  providerType: profile.provider,
                 });
                 if (!user.username) {
                   user.username = await generateUniqueUsername(
@@ -74,10 +77,12 @@ const configurePassport = (app) => {
                 return done(null, user);
               }
             } else {
+              console.log("this should be working");
               const username = await generateUniqueUsername(
                 profile.name.givenName || "",
                 null
               );
+              console.log("usernameis working", username);
 
               const newUser = new userModel({
                 firstName: profile.name.givenName || "",
@@ -91,12 +96,14 @@ const configurePassport = (app) => {
                 authProviders: [
                   {
                     providerId: profile.id,
-                    providerType: "google",
+                    providerType: profile.provider,
                   },
                 ],
                 isEmailVerified: true,
                 accountStatus: "active",
               });
+
+              console.log("new user check", newUser);
               await newUser.save();
               user = await userModel
                 .findById(newUser._id)
@@ -106,6 +113,8 @@ const configurePassport = (app) => {
                   message: "User not found after creation",
                 });
               }
+
+              console.log("user from data", user);
             }
           }
           return done(null, user, { req });

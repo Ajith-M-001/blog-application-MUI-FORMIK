@@ -5,6 +5,7 @@ import userRoutes from "./routes/userRoutes.js";
 import countryRoute from "./routes/countriesRoute.js";
 import blogRoutes from "./routes/blogRoute.js";
 import CategoryRoutes from "./routes/categoryRoutes.js";
+import TagRoutes from "./routes/tagRoutes.js";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import { errorHandler, notFound } from "./middleware/errorMiddleware.js";
@@ -48,6 +49,7 @@ app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/countries", countryRoute);
 app.use("/api/v1/blogs", blogRoutes);
 app.use("/api/v1/categories", CategoryRoutes);
+app.use("/api/v1/tags", TagRoutes);
 
 // Handle 404 errors for non-existent routes
 app.use(notFound);

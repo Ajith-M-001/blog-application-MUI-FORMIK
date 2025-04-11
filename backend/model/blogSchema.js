@@ -101,7 +101,6 @@ const blogSchema = new mongoose.Schema(
         type: Number,
         default: 0,
       },
-      total_unique_views: { type: Number, default: 0 },
       total_likes: {
         type: Number,
         default: 0,

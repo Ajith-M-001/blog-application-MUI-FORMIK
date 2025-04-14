@@ -44,3 +44,10 @@ export const addTag = asyncHandler(async (req, res, next) => {
     .status(201)
     .json(ApiResponse.created("Tag created successfully.", tags));
 });
+
+export const getAllTags = asyncHandler(async (req, res, next) => {
+  const tags = await Tag.find().select("name");
+  return res
+    .status(200)
+    .json(ApiResponse.success("Tags found successfully.", tags, 200));
+});

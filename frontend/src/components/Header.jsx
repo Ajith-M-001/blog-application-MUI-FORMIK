@@ -41,6 +41,7 @@ import { Link, NavLink, useNavigate } from "react-router";
 import { useSignOutUser } from "../hooks/api/Users";
 import { capitalizeFirstLetter } from "../utils/capitalizeFirstLetter";
 import { showToast } from "../utils/toast";
+import NoteAddIcon from "@mui/icons-material/NoteAdd";
 
 const SearchContainer = styled("div")(({ theme }) => ({
   position: "relative",
@@ -359,7 +360,7 @@ const Header = () => {
                   display="flex"
                   alignItems="center"
                   justifyContent="space-between"
-                  gap={3}
+                  gap={2}
                 >
                   <IconButton
                     component={motion.button}
@@ -378,6 +379,19 @@ const Header = () => {
                   </IconButton>
                   {isAuthenticated ? (
                     <>
+                      <Link to="/create-blog">
+                        <IconButton
+                          component={motion.button}
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                          transition={{ duration: 0.3 }}
+                          sx={{
+                            color: theme.palette.text.secondary,
+                          }}
+                        >
+                          <NoteAddIcon />
+                        </IconButton>
+                      </Link>
                       <IconButton
                         component={motion.button}
                         whileHover={{ scale: 1.05 }}

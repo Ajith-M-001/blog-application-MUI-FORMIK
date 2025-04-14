@@ -4,6 +4,7 @@ import { ErrorBoundary } from "./components/ErrorBoundary";
 import { FallBackLoader } from "./components/Loaders/FallBackLoader";
 import { ProtectedRoute } from "./components/routes/ProtectedOtpRoute";
 import { NoAuthRoute } from "./components/routes/NoAuthRoute";
+import { AuthProtectedRoute } from "./components/routes/AuthProtectedRoute";
 
 // Lazy load
 
@@ -17,6 +18,7 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const OtpVerificationPage = lazy(() => import("./pages/OtpVerificationPage"));
 const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
+const CreateBlog = lazy(() => import("./pages/CreateBlog"));
 
 const App = () => {
   return (
@@ -25,13 +27,23 @@ const App = () => {
         <Suspense fallback={<FallBackLoader />}>
           <Routes>
             <Route path="/" element={<AppLayout />}>
+              {/* Public Routes */}
               <Route index element={<Home />} />
               <Route path="about" element={<About />} />
               <Route path="contact" element={<Contact />} />
+
+              {/* Authenticated User Protected Routes */}
+              <Route element={<AuthProtectedRoute />}>
+                <Route path="create-blog" element={<CreateBlog />} />
+              </Route>
+
+              {/* Authentication Protected Routes */}
               <Route element={<NoAuthRoute />}>
                 <Route path="sign-in" element={<SignIn />} />
                 <Route path="sign-up" element={<SignUp />} />
               </Route>
+
+              {/* Other Routes */}
               <Route path="forgot-password" element={<ForgotPassword />} />
               <Route
                 path="reset-password"

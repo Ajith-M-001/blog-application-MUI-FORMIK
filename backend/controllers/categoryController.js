@@ -42,3 +42,12 @@ export const addCategory = asyncHandler(async (req, res, next) => {
     .status(201)
     .json(ApiResponse.created("Category created successfully.", category));
 });
+
+export const getAllCategories = asyncHandler(async (req, res, next) => {
+  const categories = await Category.find().select("name");
+  return res
+    .status(200)
+    .json(
+      ApiResponse.success("Categories found successfully.", categories, 200)
+    );
+});

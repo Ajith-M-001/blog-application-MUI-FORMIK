@@ -3,6 +3,7 @@ import { immer } from "zustand/middleware/immer";
 import { devtools, persist } from "zustand/middleware";
 import { createThemeSlice } from "./slice/themeSlice";
 import { createUserSlice } from "./slice/userSlice";
+import { createBlogSlice } from "./slice/blogSlice";
 
 const useStore = create(
   devtools(
@@ -10,6 +11,7 @@ const useStore = create(
       immer((...a) => ({
         ...createThemeSlice(...a),
         ...createUserSlice(...a),
+        ...createBlogSlice(...a),
       })),
       {
         name: "Nexus-store",

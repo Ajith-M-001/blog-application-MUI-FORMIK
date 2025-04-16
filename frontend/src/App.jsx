@@ -18,7 +18,8 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const OtpVerificationPage = lazy(() => import("./pages/OtpVerificationPage"));
 const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
-const CreateBlog = lazy(() => import("./pages/CreateBlog"));
+const PreviewBlog = lazy(() => import("./pages/Blog/PreviewBlog"));
+const CreateBlog = lazy(() => import("./pages/Blog/CreateBlog"));
 
 const App = () => {
   return (
@@ -31,11 +32,6 @@ const App = () => {
               <Route index element={<Home />} />
               <Route path="about" element={<About />} />
               <Route path="contact" element={<Contact />} />
-
-              {/* Authenticated User Protected Routes */}
-              <Route element={<AuthProtectedRoute />}>
-                <Route path="create-blog" element={<CreateBlog />} />
-              </Route>
 
               {/* Authentication Protected Routes */}
               <Route element={<NoAuthRoute />}>
@@ -66,6 +62,11 @@ const App = () => {
                 }
               />
               <Route path="*" element={<NotFound />} />
+            </Route>
+            {/* Authenticated User Protected Routes */}
+            <Route element={<AuthProtectedRoute />}>
+              <Route path="create-blog" element={<CreateBlog />} />
+              <Route path="preview-blog" element={<PreviewBlog />} />
             </Route>
           </Routes>
         </Suspense>

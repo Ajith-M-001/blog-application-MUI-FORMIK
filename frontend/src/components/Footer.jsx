@@ -1,4 +1,4 @@
-import { Box, Typography, useTheme } from "@mui/material";
+import { alpha, Box, Typography, useTheme } from "@mui/material";
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -10,7 +10,9 @@ const Footer = () => {
         height: "60px",
         py: 2,
         textAlign: "center",
-        backgroundColor: theme.palette.background.paper,
+        backdropFilter: "blur(10px)",
+        borderTop: `1px solid ${alpha(theme.palette.divider, 0.6)}`,
+        backgroundColor: alpha(theme.palette.background.paper, 0.95),
       }}
     >
       <Typography variant="body2" color="text.secondary">

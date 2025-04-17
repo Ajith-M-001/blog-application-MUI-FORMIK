@@ -1,286 +1,124 @@
-import useStore from "../../store/zustand.store";
+import { AnimatePresence, motion } from "motion/react";
 import { useShallow } from "zustand/react/shallow";
-import { motion, AnimatePresence } from "motion/react";
-import {
-  alpha,
-  Avatar,
-  Box,
-  Button,
-  Divider,
-  IconButton,
-  Menu,
-  MenuItem,
-  Stack,
-  Typography,
-  useTheme,
-} from "@mui/material";
+import useStore from "../../store/zustand.store";
+import BlogHeader from "./components/BlogHeader";
 import { Footer } from "../../components/Footer";
-import { Link, useNavigate } from "react-router";
-import { useState } from "react";
-import { useSignOutUser } from "../../hooks/api/Users";
-import { capitalizeFirstLetter } from "../../utils/capitalizeFirstLetter";
-import { Eye, HelpCircle, LogOut, Settings, User } from "lucide-react";
-import { showToast } from "../../utils/toast";
+import { Box, Input, Stack, Typography, useTheme } from "@mui/material";
+import { ImageUp } from "lucide-react";
+import { useRef } from "react";
 
 const CreateBlog = () => {
+  const inputRef = useRef(null);
   const theme = useTheme();
-  const navigate = useNavigate();
+  const error = false;
 
-  const { mutate: signOut, isPending: isSignOutPending } = useSignOutUser();
-
-  const [anchorEl, setAnchorEl] = useState(null);
-  const open = Boolean(anchorEl);
-
-  const handleUserMenuOpen = (event) => {
-    setAnchorEl(event.currentTarget);
+  const handleClick = () => {
+    inputRef.current?.click();
   };
 
-  const handleUserMenuClose = () => {
-    setAnchorEl(null);
-  };
-
-  const menuItems = [
-    { label: "Profile", icon: <User />, path: "/profile" },
-    { label: "Settings", icon: <Settings />, path: "/settings" },
-    { label: "Help", icon: <HelpCircle />, path: "/help" },
-  ];
-
-  const {
-    blog,
-    setBlogData,
-    clearBlogData,
-    clearUser,
-    user,
-    setIsAuthenticated,
-  } = useStore(
+  const { blog, setBlogData, clearBlogData } = useStore(
     useShallow((state) => ({
       blog: state.blog,
       setBlogData: state.setBlogData,
       clearBlogData: state.clearBlogData,
-      clearUser: state.clearUser,
-      user: state.user,
-      setIsAuthenticated: state.setIsAuthenticated,
     }))
   );
-
-  // Now you can use the blog data and actions in your component
-  console.log(
-    "Current blog title:",
-    blog,
-    setBlogData,
-    clearBlogData,
-    clearUser,
-    user
-  );
-
-  // Example function to update blog data
-
-  const handleSignOut = () => {
-    signOut(undefined, {
-      onSuccess: (data) => {
-        navigate("/sign-in");
-        setIsAuthenticated(false);
-        clearUser();
-        showToast(data?.message, { type: "success" });
-        handleUserMenuClose();
-      },
-    });
-  };
 
   return (
     <AnimatePresence>
       <motion.div
         key="create-blog"
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -20 }}
         transition={{ duration: 0.3 }}
       >
         <Box
           sx={{
-            backdropFilter: "blur(10px)",
-            borderBottom: `1px solid ${alpha(theme.palette.divider, 0.6)}`,
-            backgroundColor: alpha(theme.palette.background.paper, 0.95),
+            display: "flex",
+            flexDirection: "column",
+            minHeight: "100vh",
           }}
         >
-          <Stack
+          <BlogHeader />
+
+          <Box
             sx={{
-              maxWidth: "1100px",
+              flex: 1,
+              p: 2,
               width: "100%",
-              height: "80px",
-              margin: "0 auto",
-              display: "flex",
-              alignItems: "center",
-              flexDirection: "row",
-              justifyContent: "space-between",
+              maxWidth: "1100px",
+              mx: "auto",
               px: 2,
             }}
           >
-            <Link to="/">
-              <Typography
-                component={motion.p}
-                variant="h3"
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                sx={{
-                  mr: 3,
-                  background: `linear-gradient(180deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-                  WebkitBackgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
+            <Box
+              onClick={handleClick}
+              sx={{
+                border: "2px dashed",
+                borderColor: error
+                  ? theme.palette.error.main
+                  : theme.palette.divider,
+                borderRadius: 1,
+                width: "100%",
+                aspectRatio: "16/9",
+                p: 4,
+                textAlign: "center",
+                overflow: "hidden",
+                backgroundColor: theme.palette.background.paper,
+                transition: "border-color 0.3s",
+                height: "auto",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexDirection: "column",
+                maxHeight: "420px",
+                cursor: "pointer",
+                "&:hover": {
+                  borderColor: theme.palette.text.primary,
+                },
+              }}
+            >
+              <ImageUp
+                size={80}
+                color={theme.palette.text.secondary}
+                style={{
+                  margin: "10 auto",
                 }}
-              >
-                NEXUS
+              />
+
+              <Typography variant="subtitle1" sx={{ fontWeight: 500 }}>
+                Click to upload or drag & drop
               </Typography>
-            </Link>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-              <Button
-                variant="outlined"
-                onClick={() => navigate("/preview-blog")}
-                startIcon={<Eye />}
-                sx={{ textTransform: "capitalize" }}
-                size="small"
-                color="primary"
-                disableElevation
-              >
-                Preview
-              </Button>
-              <IconButton
-                component={motion.button}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={handleUserMenuOpen}
-                sx={{
-                  p: 0,
-                  border: `1px solid ${alpha(theme.palette.primary.main, 0.5)}`,
-                }}
-                aria-controls={open ? "user-menu" : undefined}
-                aria-haspopup="true"
-                aria-expanded={open ? "true" : undefined}
-              >
-                <Avatar
-                  src={user?.avatar?.url}
-                  alt={user?.firstName}
-                  sx={{
-                    height: "2.3rem",
-                    width: "2.3rem",
-                  }}
-                >
-                  {!user?.avatar?.url &&
-                    user?.firstName.charAt(0).toUpperCase()}
-                </Avatar>
-              </IconButton>
-              <Menu
-                id="user-menu"
-                anchorEl={anchorEl}
-                open={open}
-                onClose={handleUserMenuClose}
-                onClick={handleUserMenuClose}
-                slotProps={{
-                  paper: {
-                    elevation: 2,
-                    sx: {
-                      overflow: "visible",
-                      filter: "drop-shadow(0px 2px 8px rgba(0,0,0,0.1))",
-                      mt: 1.5,
-                      width: "16rem",
-                      borderRadius: 1,
-                      backgroundImage: "none",
-                      backdropFilter: "blur(10px)",
-                      backgroundColor: alpha(
-                        theme.palette.background.paper,
-                        0.95
-                      ),
-                      border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-                    },
-                  },
-                }}
-                transformOrigin={{
-                  horizontal: "right",
-                  vertical: "top",
-                }}
-                anchorOrigin={{
-                  horizontal: "right",
-                  vertical: "bottom",
-                }}
-              >
-                {/* Header section */}
-                <Box sx={{ px: 2, py: 1.5 }}>
-                  <Typography variant="subtitle1" fontWeight={600}>
-                    {capitalizeFirstLetter(user?.firstName)}{" "}
-                    {capitalizeFirstLetter(user?.lastName)}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    premium member
-                  </Typography>
-                  <Divider sx={{ my: 1 }} />
-                </Box>
 
-                {/* Menu items */}
-                {menuItems.map((item) => (
-                  <MenuItem
-                    key={item.label}
-                    onClick={() => handleUserMenuOpen(item.path)}
-                    sx={{
-                      py: 1.5,
-                      px: 2,
-                      gap: 1.5,
-                      display: "flex",
-                      alignItems: "center",
-                      transition: "background-color 0.3s ease", // Smooth transitions
-                      "&:hover": {
-                        backgroundColor: alpha(
-                          theme.palette.primary.main,
-                          0.08
-                        ),
-                      },
-                    }}
-                  >
-                    {item.icon}
-                    <Typography variant="body1">{item.label}</Typography>
-                  </MenuItem>
-                ))}
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ mt: 0.5 }}
+              >
+                PNG, JPG , GIF , AVIF , JPEG or WEBP — max 10MB
+              </Typography>
 
-                <Divider />
+              <Box sx={{ flexGrow: 1 }} />
 
-                {/* Sign out button */}
-                <MenuItem
-                  disabled={isSignOutPending}
-                  onClick={handleSignOut}
-                  sx={{
-                    color: theme.palette.error.main,
-                    py: 1.5,
-                    px: 2,
-                    gap: 1.5,
-                    display: "flex",
-                    alignItems: "center",
-                    transition: "background-color 0.3s ease", // Smooth transitions
-                    "&:hover": {
-                      backgroundColor: alpha(theme.palette.error.main, 0.08),
-                    },
-                  }}
-                >
-                  <LogOut />
-                  <Typography variant="body1">Sign Out</Typography>
-                </MenuItem>
-              </Menu>
+              <Typography variant="caption" color="text.disabled">
+                Recommended size: 1280×720 (16:9)
+              </Typography>
+
+              <Input
+                type="file"
+                inputRef={inputRef}
+                accept="image/*"
+                // onChange={handleFileChange}
+                // disabled={isUploading}
+                sx={{ display: "none" }}
+                id="cover-image-upload"
+              />
             </Box>
-          </Stack>
-        </Box>
+          </Box>
 
-        <Box
-          sx={{
-            maxWidth: "1100px",
-            width: "100%",
-            margin: "0 auto",
-            height: `calc(100vh - (80px + 61px))`,
-            px: 2,
-          }}
-        >
-          <h1>Create Blog</h1>
-          <p>Current title: {blog?.title}</p>
+          <Footer />
         </Box>
-        <Footer />
       </motion.div>
     </AnimatePresence>
   );

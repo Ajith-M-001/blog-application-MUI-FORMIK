@@ -2,14 +2,14 @@ import { BLOG_STATUS } from "../../../../common/constants/constants";
 
 const initialBlogData = {
   blog: {
-    title: "dafsdfds",
+    title: "",
     coverImage: {},
     content: {},
-    category: "sadfdsaf",
+    category: "",
     tags: [],
-    shortDescription: "asdfdsaf",
+    shortDescription: "",
     status: BLOG_STATUS.DRAFT,
-    scheduleDate: "asdfdsfd",
+    scheduleDate: "",
   },
 };
 

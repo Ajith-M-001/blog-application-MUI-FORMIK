@@ -7,7 +7,6 @@ export const config = {
     MAX_SIZE: 10 * 1024 * 1024, // 10MB per file
     MAX_FILES: 10,
     FIELD_NAME: "images",
-    DIMENSIONS: { width: 1280, height: 720 },
   },
 };
 
@@ -60,23 +59,24 @@ const validateImageDimensions = async (req, res, next) => {
       });
     }
 
+    const expectedRatio = 16 / 9;
+    const tolerance = 0.03;
+
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
       const metadata = await sharp(file.buffer).metadata();
+      const actualRatio = metadata.width / metadata.height;
 
-      if (
-        metadata.width !== config.IMAGE.DIMENSIONS.width ||
-        metadata.height !== config.IMAGE.DIMENSIONS.height
-      ) {
+      if (Math.abs(actualRatio - expectedRatio) > tolerance) {
         return res
           .status(400)
           .json(
             ApiResponse.error(
-              `Image ${files.length > 1 ? `#${i + 1} ` : ""}must be ${
-                config.IMAGE.DIMENSIONS.width
-              }x${config.IMAGE.DIMENSIONS.height} pixels. Received: ${
-                metadata.width
-              }x${metadata.height} pixels.`,
+              `Image ${
+                files.length > 1 ? `#${i + 1} ` : ""
+              }must have a 16:9 aspect ratio. Received: ${metadata.width}x${
+                metadata.height
+              } (≈ ${actualRatio.toFixed(2)}:1)`,
               400
             )
           );

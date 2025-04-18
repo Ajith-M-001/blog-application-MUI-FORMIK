@@ -19,4 +19,8 @@ export const API_ENDPOINTS = {
   countries: {
     all: `${COUNTRY_URL}/all`,
   },
+  upload: {
+    uploadImages: `/upload-images`,
+    deleteImage: `/delete-image`,
+  },
 };

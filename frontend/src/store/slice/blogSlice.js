@@ -3,7 +3,10 @@ import { BLOG_STATUS } from "../../../../common/constants/constants";
 const initialBlogData = {
   blog: {
     title: "",
-    coverImage: {},
+    coverImage: {
+      url: "",
+      public_id: "",
+    },
     content: {},
     category: "",
     tags: [],

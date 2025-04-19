@@ -7,6 +7,7 @@ export const uploadService = {
       API_ENDPOINTS.upload.uploadImages,
       formData,
       {
+        timeout: 150000, // 2.5 minutes in milliseconds
         headers: {
           "Content-Type": "multipart/form-data",
         },

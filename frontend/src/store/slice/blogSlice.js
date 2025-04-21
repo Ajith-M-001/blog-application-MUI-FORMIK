@@ -1,33 +1,30 @@
 import { BLOG_STATUS } from "../../../../common/constants/constants";
 
-const initialBlogData = {
-  blog: {
-    title: "",
-    coverImage: {
-      url: "",
-      public_id: "",
-    },
-    content: {},
-    category: "",
-    tags: [],
-    shortDescription: "",
-    status: BLOG_STATUS.DRAFT,
-    scheduleDate: "",
+const initialBlogState = {
+  title: "",
+  coverImage: {
+    url: "",
+    public_id: "",
   },
+  content: {},
+  category: "",
+  tags: [],
+  shortDescription: "",
+  status: BLOG_STATUS.DRAFT,
+  scheduleDate: "",
 };
 
 export const createBlogSlice = (set) => ({
-  ...initialBlogData,
+  blog: initialBlogState,
   setBlogData: (data) =>
     set(
-      (state) => ({
-        ...state,
-        ...data,
-      }),
+      (state) => {
+        Object.assign(state.blog, data);
+      },
       false,
       "blog/setBlogData"
     ),
 
   clearBlogData: () =>
-    set(() => ({ ...initialBlogData }), false, "blog/clearBlogData"),
+    set(() => ({ blog: initialBlogState }), false, "blog/clearBlogData"),
 });

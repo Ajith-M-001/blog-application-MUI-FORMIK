@@ -9,15 +9,25 @@ export const QUERY_KEYS = {
 export const useUploadImage = (options = {}) => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ formData, onUploadProgress }) =>
-      uploadService.uploadImages(formData, onUploadProgress),
+    mutationFn: async ({ formData, onUploadProgress, signal }) => {
+      return await uploadService.uploadImages(
+        formData,
+        onUploadProgress,
+        signal
+      );
+    },
     ...options,
     onSuccess: () => {
       queryClient.invalidateQueries(QUERY_KEYS.UPLOADS);
     },
     onError: (error) => {
+      console.log("Error uploading image", error);
       console.log("Error uploading image", error?.response?.data);
-      showToast(error?.response?.data?.message, { type: "error" });
+
+      const errorMessage =
+        error?.response?.data?.message || error.message || "Upload failed";
+
+      showToast(errorMessage, { type: "error" });
     },
   });
 };

@@ -1,104 +1,55 @@
-// components/RichTextEditor.jsx
-import { useEditor, EditorContent, BubbleMenu } from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit";
-import Image from "@tiptap/extension-image";
-import { Box, IconButton, Stack } from "@mui/material";
 import {
-  FormatBold,
-  FormatItalic,
-  FormatListBulleted,
-  FormatListNumbered,
-  InsertPhoto,
-  Title,
-} from "@mui/icons-material";
+  // BubbleMenu,
+  EditorContent,
+  // FloatingMenu,
+  useEditor,
+} from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import Underline from "@tiptap/extension-underline";
+import Highlight from "@tiptap/extension-highlight";
+import { Box, Divider, useTheme } from "@mui/material";
+import { MenuBar } from "./MenuBar";
 
-const TiptapEditor = ({
-  initialContent = "",
-  onContentChange,
-  minimal = false,
-}) => {
+const extensions = [
+  StarterKit,
+  Underline,
+  Highlight.configure({
+    multicolor: true,
+  }),
+];
+
+const content = "<p>Hello World!</p>";
+
+const TiptapEditor = () => {
+  const theme = useTheme();
   const editor = useEditor({
-    extensions: [StarterKit, Image.configure({ inline: true })],
-    content: initialContent,
-    onUpdate: ({ editor }) => {
-      onContentChange && onContentChange(editor.getHTML());
+    extensions,
+    content,
+    editorProps: {
+      attributes: {
+        style: "min-height: 150px; padding: 16px; outline: none;",
+      },
     },
   });
 
   if (!editor) return null;
 
   return (
-    <Box sx={{ border: 1, borderColor: "divider", borderRadius: 1, p: 2 }}>
-      {!minimal && (
-        <Stack direction="row" gap={1} sx={{ mb: 2 }}>
-          <IconButton
-            onClick={() =>
-              editor.chain().focus().toggleHeading({ level: 1 }).run()
-            }
-            color={
-              editor.isActive("heading", { level: 1 }) ? "primary" : "default"
-            }
-          >
-            <Title />
-          </IconButton>
-          <IconButton
-            onClick={() => editor.chain().focus().toggleBold().run()}
-            color={editor.isActive("bold") ? "primary" : "default"}
-          >
-            <FormatBold />
-          </IconButton>
-          <IconButton
-            onClick={() => editor.chain().focus().toggleItalic().run()}
-            color={editor.isActive("italic") ? "primary" : "default"}
-          >
-            <FormatItalic />
-          </IconButton>
-          <IconButton
-            onClick={() => editor.chain().focus().toggleBulletList().run()}
-            color={editor.isActive("bulletList") ? "primary" : "default"}
-          >
-            <FormatListBulleted />
-          </IconButton>
-          <IconButton
-            onClick={() => editor.chain().focus().toggleOrderedList().run()}
-            color={editor.isActive("orderedList") ? "primary" : "default"}
-          >
-            <FormatListNumbered />
-          </IconButton>
-          <IconButton
-            onClick={() => {
-              const url = prompt("Enter image URL");
-              if (url) editor.chain().focus().setImage({ src: url }).run();
-            }}
-          >
-            <InsertPhoto />
-          </IconButton>
-        </Stack>
-      )}
-
-      {editor && (
-        <BubbleMenu editor={editor}>
-          <Stack
-            direction="row"
-            sx={{ bgcolor: "background.paper", p: 1, boxShadow: 1 }}
-          >
-            <IconButton
-              onClick={() => editor.chain().focus().toggleBold().run()}
-              color={editor.isActive("bold") ? "primary" : "default"}
-            >
-              <FormatBold />
-            </IconButton>
-            <IconButton
-              onClick={() => editor.chain().focus().toggleItalic().run()}
-              color={editor.isActive("italic") ? "primary" : "default"}
-            >
-              <FormatItalic />
-            </IconButton>
-          </Stack>
-        </BubbleMenu>
-      )}
+    <Box
+      sx={{
+        border: `1px solid ${theme.palette.divider}`,
+        borderRadius: 0.5,
+        padding: 0,
+        overflow: "hidden",
+      }}
+    >
+      <MenuBar editor={editor} />
+      <Divider />
 
       <EditorContent editor={editor} />
+      <Divider />
+      {/* <FloatingMenu editor={editor}>This is the floating menu</FloatingMenu> */}
+      {/* <BubbleMenu editor={editor}>This is the bubble menu</BubbleMenu> */}
     </Box>
   );
 };

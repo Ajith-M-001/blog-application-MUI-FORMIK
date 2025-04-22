@@ -4,6 +4,7 @@ import {
   Button,
   CircularProgress,
   Input,
+  TextareaAutosize,
   Typography,
   useTheme,
 } from "@mui/material";
@@ -16,6 +17,7 @@ import { useShallow } from "zustand/react/shallow";
 import useStore from "../../store/zustand.store";
 import { useUploadImage } from "../../hooks/api/Upload";
 import { showToast } from "../../utils/toast";
+import TiptapEditor from "../../TipTak/TiptapEditor";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const ALLOWED_FILE_TYPES = [
@@ -208,8 +210,30 @@ const CreateBlog = () => {
               maxWidth: "1100px",
               mx: "auto",
               px: 2,
+              display: "flex",
+              flexDirection: "column",
+              gap: 2,
             }}
           >
+            <Box>
+              <TextareaAutosize
+                minRows={1}
+                placeholder="Enter blog title..."
+                style={{
+                  width: "100%",
+                  fontSize: "1.8rem",
+                  fontWeight: 600,
+                  padding: "10px 14px",
+                  borderRadius: 8,
+                  border: `0.1px solid ${theme.palette.divider}`,
+                  resize: "none",
+                  fontFamily: theme.typography.fontFamily,
+                  backgroundColor: theme.palette.background.paper,
+                }}
+                onChange={(e) => setBlogData({ title: e.target.value })}
+                value={blog?.title || ""}
+              />
+            </Box>
             <Box
               onClick={handleClick}
               sx={{
@@ -347,6 +371,10 @@ const CreateBlog = () => {
                 sx={{ display: "none" }}
                 onChange={handleFileChange}
               />
+            </Box>
+
+            <Box>
+              <TiptapEditor />
             </Box>
           </Box>
           <Footer />

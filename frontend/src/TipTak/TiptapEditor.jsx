@@ -9,9 +9,15 @@ import Underline from "@tiptap/extension-underline";
 import Highlight from "@tiptap/extension-highlight";
 import { Box, Divider, useTheme } from "@mui/material";
 import { MenuBar } from "./MenuBar";
+import Heading from "@tiptap/extension-heading";
 
 const extensions = [
-  StarterKit,
+  StarterKit.configure({
+    heading: false, // disable default heading to avoid conflicts
+  }),
+  Heading.configure({
+    levels: [1, 2, 3], // explicitly set heading levels
+  }),
   Underline,
   Highlight.configure({
     multicolor: true,

@@ -9,18 +9,25 @@ import Underline from "@tiptap/extension-underline";
 import Highlight from "@tiptap/extension-highlight";
 import { Box, Divider, useTheme } from "@mui/material";
 import { MenuBar } from "./MenuBar";
-import Heading from "@tiptap/extension-heading";
+import TextAlign from "@tiptap/extension-text-align";
+import Link from "@tiptap/extension-link";
 
 const extensions = [
-  StarterKit.configure({
-    heading: false, // disable default heading to avoid conflicts
-  }),
-  Heading.configure({
-    levels: [1, 2, 3], // explicitly set heading levels
-  }),
+  StarterKit,
   Underline,
   Highlight.configure({
     multicolor: true,
+  }),
+  TextAlign.configure({
+    types: ["heading", "paragraph"],
+  }),
+  Link.configure({
+    HTMLAttributes: {
+      openOnClick: false,
+      target: "_blank",
+      rel: "noopener noreferrer",
+    },
+    validate: (href) => /^https?:\/\//.test(href), // Validate URLs
   }),
 ];
 
@@ -40,6 +47,23 @@ const TiptapEditor = () => {
 
   if (!editor) return null;
 
+  console.log("Editor content:", editor.getHTML());
+  console.log("Editor JSON:", editor.getJSON());
+  const editorStyles = `
+  .ProseMirror blockquote {
+    border-left: 4px solid ${theme.palette.primary.main};
+    margin: 16px 0;
+    padding: 8px 16px;
+    background-color: ${
+      theme.palette.mode === "dark"
+        ? theme.palette.grey[800]
+        : theme.palette.grey[100]
+    };
+    font-style: italic;
+    border-radius: 4px;
+  },
+`;
+
   return (
     <Box
       sx={{
@@ -49,6 +73,7 @@ const TiptapEditor = () => {
         overflow: "hidden",
       }}
     >
+      <style>{editorStyles}</style>
       <MenuBar editor={editor} />
       <Divider />
 

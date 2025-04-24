@@ -1,11 +1,22 @@
 import { Box, Divider, IconButton, Stack, Tooltip } from "@mui/material";
 import {
+  AlignCenter,
+  AlignJustify,
+  AlignLeft,
+  AlignRight,
   Bold,
+  Code2,
   Heading1,
   Heading2,
   Heading3,
   Highlighter,
+  Image,
   Italic,
+  Link,
+  List,
+  ListOrdered,
+  Quote,
+  SeparatorHorizontal,
   Strikethrough,
   Underline,
 } from "lucide-react";
@@ -52,7 +63,7 @@ const MenuBar = ({ editor }) => {
         },
         {
           title: "Italic",
-          icon: <Italic />,
+          icon: <Italic size={20} />,
           action: () => editor.chain().focus().toggleItalic().run(),
           isActive: editor.isActive("italic"),
         },
@@ -99,6 +110,110 @@ const MenuBar = ({ editor }) => {
           action: () =>
             editor.chain().focus().toggleHeading({ level: 3 }).run(),
           isActive: editor.isActive("heading", { level: 3 }),
+        },
+        {
+          title: "Blockquote",
+          icon: <Quote size={20} />, // Using Quote icon for blockquotes
+          action: () => editor.chain().focus().toggleBlockquote().run(),
+          isActive: editor.isActive("blockquote"),
+        },
+        {
+          title: "Horizontal Rule",
+          icon: <SeparatorHorizontal size={20} />,
+          action: () => editor.chain().focus().setHorizontalRule().run(),
+        },
+        {
+          title: "Code Block",
+          icon: <Code2 size={20} />,
+          action: () => editor.chain().focus().toggleCodeBlock().run(),
+          isActive: editor.isActive("codeBlock"),
+        },
+      ],
+    },
+    {
+      label: "Lists & Indentation",
+      buttons: [
+        {
+          title: "Bullet List",
+          icon: <List size={20} />,
+          action: () => editor.chain().focus().toggleBulletList().run(),
+          isActive: editor.isActive("bulletList"),
+        },
+        {
+          title: "Numbered List",
+          icon: <ListOrdered size={20} />,
+          action: () => editor.chain().focus().toggleOrderedList().run(),
+          isActive: editor.isActive("orderedList"),
+        },
+      ],
+    },
+    {
+      label: "Alignment & Layout",
+      buttons: [
+        {
+          title: "Align Left",
+          icon: <AlignLeft size={20} />,
+          action: () => editor.chain().focus().setTextAlign("left").run(),
+          isActive: editor.isActive({ textAlign: "left" }), // Direct boolean check
+        },
+        {
+          title: "Align Center",
+          icon: <AlignCenter size={20} />,
+          action: () => editor.chain().focus().setTextAlign("center").run(),
+          isActive: editor.isActive({ textAlign: "center" }),
+        },
+        {
+          title: "Align Right",
+          icon: <AlignRight size={20} />,
+          action: () => editor.chain().focus().setTextAlign("right").run(),
+          isActive: editor.isActive({ textAlign: "right" }),
+        },
+        {
+          title: "Justify",
+          icon: <AlignJustify size={20} />,
+          action: () => editor.chain().focus().setTextAlign("justify").run(),
+          isActive: editor.isActive({ textAlign: "justify" }),
+        },
+      ],
+    },
+    {
+      label: "links and images",
+      buttons: [
+        {
+          title: "Insert Link",
+          icon: <Link size={20} />,
+          action: () => {
+            // Get the current link attributes if a link is selected
+            const previousUrl = editor.getAttributes("link").href;
+            const url = window.prompt("URL", previousUrl);
+
+            // If user cancels prompt or clears the URL
+            if (url === null) {
+              return;
+            }
+
+            // If URL is empty, unset the link
+            if (url === "") {
+              editor.chain().focus().unsetLink().run();
+              return;
+            }
+
+            // Prepend 'https://' if missing
+            const finalUrl = url.startsWith("http") ? url : `https://${url}`;
+
+            editor.chain().focus().toggleLink({ href: finalUrl }).run();
+          },
+          isActive: editor.isActive("link"),
+        },
+        {
+          title: "Insert Image",
+          icon: <Image />,
+          action: () =>
+            editor
+              .chain()
+              .focus()
+              .setImage({ src: "https://example.com/image.jpg" })
+              .run(),
         },
       ],
     },

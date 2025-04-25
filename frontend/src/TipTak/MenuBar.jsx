@@ -1,55 +1,30 @@
-import { Box, Divider, IconButton, Stack, Tooltip } from "@mui/material";
+import React from "react";
+import PropTypes from "prop-types";
 import {
-  AlignCenter,
-  AlignJustify,
-  AlignLeft,
-  AlignRight,
+  Box,
+  ToggleButton,
+  ToggleButtonGroup,
+  Divider,
+  Tooltip,
+} from "@mui/material";
+import {
   Bold,
-  Code2,
+  Italic,
+  Underline,
+  Strikethrough,
+  Highlighter,
+  Palette,
+  PaintBucket,
   Heading1,
   Heading2,
   Heading3,
-  Highlighter,
-  Image,
-  Italic,
-  Link,
-  List,
-  ListOrdered,
   Quote,
   SeparatorHorizontal,
-  Strikethrough,
-  Underline,
+  Code2,
 } from "lucide-react";
-import PropTypes from "prop-types";
-import React from "react";
 
 const MenuBar = ({ editor }) => {
-  const highlightColor = "#ffff00"; // Default yellow
-
-  const createButton = ({ title, icon, action, isActive }) => (
-    <Tooltip key={title} title={title} arrow placement="top">
-      <IconButton
-        onClick={action}
-        size="small"
-        sx={{
-          borderRadius: "4px",
-          color: isActive ? "primary.main" : "text.secondary",
-          backgroundColor: isActive ? "action.selected" : "transparent",
-          "&:hover": {
-            backgroundColor: "action.hover",
-          },
-        }}
-      >
-        {icon}
-      </IconButton>
-    </Tooltip>
-  );
-
   if (!editor) return null;
-
-  const applyHighlight = () => {
-    editor.chain().focus().toggleHighlight({ color: highlightColor }).run();
-  };
 
   const formattingButtons = [
     {
@@ -57,33 +32,54 @@ const MenuBar = ({ editor }) => {
       buttons: [
         {
           title: "Bold",
+          value: "bold",
           icon: <Bold size={20} />,
-          action: () => editor.chain().focus().toggleBold().run(),
-          isActive: editor.isActive("bold"),
+          action: (editor) => editor.chain().focus().toggleBold().run(),
+          isActive: (editor) => editor.isActive("bold"),
         },
         {
           title: "Italic",
+          value: "italic",
           icon: <Italic size={20} />,
-          action: () => editor.chain().focus().toggleItalic().run(),
-          isActive: editor.isActive("italic"),
+          action: (editor) => editor.chain().focus().toggleItalic().run(),
+          isActive: (editor) => editor.isActive("italic"),
         },
         {
           title: "Underline",
+          value: "underline",
           icon: <Underline size={20} />,
-          action: () => editor.chain().focus().toggleUnderline().run(),
-          isActive: editor.isActive("underline"),
+          action: (editor) => editor.chain().focus().toggleUnderline().run(),
+          isActive: (editor) => editor.isActive("underline"),
         },
         {
           title: "Strikethrough",
+          value: "strike",
           icon: <Strikethrough size={20} />,
-          action: () => editor.chain().focus().toggleStrike().run(),
-          isActive: editor.isActive("strike"),
+          action: (editor) => editor.chain().focus().toggleStrike().run(),
+          isActive: (editor) => editor.isActive("strike"),
         },
         {
           title: "Highlight",
+          value: "highlight",
           icon: <Highlighter size={20} />,
-          action: applyHighlight,
-          isActive: editor.isActive("highlight"),
+          action: (editor) => editor.chain().focus().toggleHighlight().run(),
+          isActive: (editor) => editor.isActive("highlight"),
+        },
+        {
+          title: "Text Color",
+          value: "text-color",
+          icon: <Palette size={20} />,
+          action: (editor, event) =>
+            handleOpenColorPicker(event, "text", editor),
+          isActive: () => false,
+        },
+        {
+          title: "Background Color",
+          value: "bg-color",
+          icon: <PaintBucket size={20} />,
+          action: (editor, event) =>
+            handleOpenColorPicker(event, "background", editor),
+          isActive: () => false,
         },
       ],
     },
@@ -92,151 +88,115 @@ const MenuBar = ({ editor }) => {
       buttons: [
         {
           title: "Heading 1",
+          value: "h1",
           icon: <Heading1 size={22} />,
-          action: () =>
+          action: (editor) =>
             editor.chain().focus().toggleHeading({ level: 1 }).run(),
-          isActive: editor.isActive("heading", { level: 1 }),
+          isActive: (editor) => editor.isActive("heading", { level: 1 }),
         },
         {
           title: "Heading 2",
+          value: "h2",
           icon: <Heading2 size={22} />,
-          action: () =>
+          action: (editor) =>
             editor.chain().focus().toggleHeading({ level: 2 }).run(),
-          isActive: editor.isActive("heading", { level: 2 }),
+          isActive: (editor) => editor.isActive("heading", { level: 2 }),
         },
         {
           title: "Heading 3",
+          value: "h3",
           icon: <Heading3 size={22} />,
-          action: () =>
+          action: (editor) =>
             editor.chain().focus().toggleHeading({ level: 3 }).run(),
-          isActive: editor.isActive("heading", { level: 3 }),
+          isActive: (editor) => editor.isActive("heading", { level: 3 }),
         },
         {
           title: "Blockquote",
-          icon: <Quote size={20} />, // Using Quote icon for blockquotes
-          action: () => editor.chain().focus().toggleBlockquote().run(),
-          isActive: editor.isActive("blockquote"),
+          value: "blockquote",
+          icon: <Quote size={20} />,
+          action: (editor) => editor.chain().focus().toggleBlockquote().run(),
+          isActive: (editor) => editor.isActive("blockquote"),
         },
         {
           title: "Horizontal Rule",
+          value: "hr",
           icon: <SeparatorHorizontal size={20} />,
-          action: () => editor.chain().focus().setHorizontalRule().run(),
+          action: (editor) => editor.chain().focus().setHorizontalRule().run(),
+          isActive: () => false,
         },
         {
           title: "Code Block",
+          value: "code-block",
           icon: <Code2 size={20} />,
-          action: () => editor.chain().focus().toggleCodeBlock().run(),
-          isActive: editor.isActive("codeBlock"),
-        },
-      ],
-    },
-    {
-      label: "Lists & Indentation",
-      buttons: [
-        {
-          title: "Bullet List",
-          icon: <List size={20} />,
-          action: () => editor.chain().focus().toggleBulletList().run(),
-          isActive: editor.isActive("bulletList"),
-        },
-        {
-          title: "Numbered List",
-          icon: <ListOrdered size={20} />,
-          action: () => editor.chain().focus().toggleOrderedList().run(),
-          isActive: editor.isActive("orderedList"),
-        },
-      ],
-    },
-    {
-      label: "Alignment & Layout",
-      buttons: [
-        {
-          title: "Align Left",
-          icon: <AlignLeft size={20} />,
-          action: () => editor.chain().focus().setTextAlign("left").run(),
-          isActive: editor.isActive({ textAlign: "left" }), // Direct boolean check
-        },
-        {
-          title: "Align Center",
-          icon: <AlignCenter size={20} />,
-          action: () => editor.chain().focus().setTextAlign("center").run(),
-          isActive: editor.isActive({ textAlign: "center" }),
-        },
-        {
-          title: "Align Right",
-          icon: <AlignRight size={20} />,
-          action: () => editor.chain().focus().setTextAlign("right").run(),
-          isActive: editor.isActive({ textAlign: "right" }),
-        },
-        {
-          title: "Justify",
-          icon: <AlignJustify size={20} />,
-          action: () => editor.chain().focus().setTextAlign("justify").run(),
-          isActive: editor.isActive({ textAlign: "justify" }),
-        },
-      ],
-    },
-    {
-      label: "links and images",
-      buttons: [
-        {
-          title: "Insert Link",
-          icon: <Link size={20} />,
-          action: () => {
-            // Get the current link attributes if a link is selected
-            const previousUrl = editor.getAttributes("link").href;
-            const url = window.prompt("URL", previousUrl);
-
-            // If user cancels prompt or clears the URL
-            if (url === null) {
-              return;
-            }
-
-            // If URL is empty, unset the link
-            if (url === "") {
-              editor.chain().focus().unsetLink().run();
-              return;
-            }
-
-            // Prepend 'https://' if missing
-            const finalUrl = url.startsWith("http") ? url : `https://${url}`;
-
-            editor.chain().focus().toggleLink({ href: finalUrl }).run();
-          },
-          isActive: editor.isActive("link"),
-        },
-        {
-          title: "Insert Image",
-          icon: <Image />,
-          action: () =>
-            editor
-              .chain()
-              .focus()
-              .setImage({ src: "https://example.com/image.jpg" })
-              .run(),
+          action: (editor) => editor.chain().focus().toggleCodeBlock().run(),
+          isActive: (editor) => editor.isActive("codeBlock"),
         },
       ],
     },
   ];
 
+  const handleOpenColorPicker = (event, type, editor) => {
+    // Implement color picker logic here
+    console.log(`Open ${type} color picker`);
+  };
+
   return (
     <Box
       sx={{
-        padding: 2,
-        overflowX: "auto",
+        display: "flex",
+        alignItems: "center",
         backgroundColor: "background.paper",
+        px: 1,
+        py: 0.5,
+        gap: 1,
+        borderBottom: 1,
+        borderColor: "divider",
       }}
     >
-      <Stack direction="row" spacing={0.5} flexWrap="wrap" alignItems="center">
-        {formattingButtons.map((group, index) => (
-          <React.Fragment key={group.label}>
-            {group.buttons.map(createButton)}
-            {index < formattingButtons.length - 1 && (
-              <Divider orientation="vertical" flexItem sx={{ mx: 0.5 }} />
-            )}
-          </React.Fragment>
-        ))}
-      </Stack>
+      {formattingButtons.map((group, groupIndex) => (
+        <React.Fragment key={group.label}>
+          <ToggleButtonGroup
+            value={group.buttons
+              .filter((button) => button.isActive(editor))
+              .map((button) => button.value)}
+            aria-label={group.label}
+            sx={{
+              gap: 0.5,
+              "& .MuiToggleButton-root": {
+                padding: 0.5,
+                border: "none",
+                "&:hover": {
+                  backgroundColor: "action.hover",
+                },
+                "&.Mui-selected": {
+                  backgroundColor: "action.selected",
+                  color: "primary.main",
+                },
+              },
+            }}
+          >
+            {group.buttons.map((button) => (
+              <Tooltip key={button.value} title={button.title} arrow>
+                <ToggleButton
+                  value={button.value}
+                  aria-label={button.title}
+                  onClick={(e) => button.action(editor, e)}
+                  selected={button.isActive(editor)}
+                >
+                  {button.icon}
+                </ToggleButton>
+              </Tooltip>
+            ))}
+          </ToggleButtonGroup>
+          {groupIndex < formattingButtons.length - 1 && (
+            <Divider
+              orientation="vertical"
+              flexItem
+              sx={{ height: 28, mx: 1 }}
+            />
+          )}
+        </React.Fragment>
+      ))}
     </Box>
   );
 };
@@ -248,4 +208,4 @@ MenuBar.propTypes = {
   }),
 };
 
-export { MenuBar };
+export default MenuBar;

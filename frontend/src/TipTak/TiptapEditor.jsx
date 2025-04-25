@@ -1,86 +1,118 @@
+// src/TiptapEditor.jsx
 import {
-  // BubbleMenu,
+  useEditor,
   EditorContent,
   // FloatingMenu,
-  useEditor,
+  // BubbleMenu,
 } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import Underline from "@tiptap/extension-underline";
-import Highlight from "@tiptap/extension-highlight";
-import { Box, Divider, useTheme } from "@mui/material";
-import { MenuBar } from "./MenuBar";
-import TextAlign from "@tiptap/extension-text-align";
-import Link from "@tiptap/extension-link";
+import Placeholder from "@tiptap/extension-placeholder";
+import { Box, Divider, Typography, useTheme } from "@mui/material";
+import { useEffect, useState } from "react";
+import MenuBar from "./MenuBar";
 
-const extensions = [
-  StarterKit,
-  Underline,
-  Highlight.configure({
-    multicolor: true,
-  }),
-  TextAlign.configure({
-    types: ["heading", "paragraph"],
-  }),
-  Link.configure({
-    HTMLAttributes: {
-      openOnClick: false,
-      target: "_blank",
-      rel: "noopener noreferrer",
-    },
-    validate: (href) => /^https?:\/\//.test(href), // Validate URLs
-  }),
-];
+const editorStyles = `
+  .tiptap-editor {
+    min-height: 150px;
+    padding: 16px;
+    outline: none;
+  }
 
-const content = "<p>Hello World!</p>";
+  .tiptap-editor p.is-empty::before {
+    content: attr(data-placeholder);
+    float: left;
+    color: #888;
+    pointer-events: none;
+    height: 0;
+  }
+`;
 
-const TiptapEditor = () => {
+const TiptapEditor = ({
+  initialContent = "",
+  showWordCount = true,
+  showReadingTime = true,
+}) => {
   const theme = useTheme();
+  const [wordCount, setWordCount] = useState(0);
+  const [readingTime, setReadingTime] = useState(0);
+  const [isMounted, setIsMounted] = useState(false);
+
   const editor = useEditor({
-    extensions,
-    content,
+    extensions: [
+      StarterKit,
+      Placeholder.configure({
+        placeholder: "Start writing your blog...",
+      }),
+    ],
+    content: initialContent,
     editorProps: {
       attributes: {
-        style: "min-height: 150px; padding: 16px; outline: none;",
+        class: "tiptap-editor",
       },
     },
   });
 
-  if (!editor) return null;
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
-  console.log("Editor content:", editor.getHTML());
-  console.log("Editor JSON:", editor.getJSON());
-  const editorStyles = `
-  .ProseMirror blockquote {
-    border-left: 4px solid ${theme.palette.primary.main};
-    margin: 16px 0;
-    padding: 8px 16px;
-    background-color: ${
-      theme.palette.mode === "dark"
-        ? theme.palette.grey[800]
-        : theme.palette.grey[100]
+  useEffect(() => {
+    if (!editor) return;
+
+    const updateStats = () => {
+      const text = editor.getText();
+      const words = text.trim().split(/\s+/).filter(Boolean).length;
+      const time = Math.ceil(words / 200); // ~200 words/min read speed
+      setWordCount(words);
+      setReadingTime(time);
     };
-    font-style: italic;
-    border-radius: 4px;
-  },
-`;
+
+    updateStats();
+    editor.on("update", updateStats);
+
+    return () => {
+      editor.off("update", updateStats);
+    };
+  }, [editor]);
+
+  if (!isMounted || !editor) return null;
 
   return (
     <Box
       sx={{
         border: `1px solid ${theme.palette.divider}`,
-        borderRadius: 0.5,
-        padding: 0,
+        borderRadius: 1,
         overflow: "hidden",
       }}
     >
       <style>{editorStyles}</style>
       <MenuBar editor={editor} />
-      <Divider />
 
+      <Divider />
       <EditorContent editor={editor} />
       <Divider />
-      {/* <FloatingMenu editor={editor}>This is the floating menu</FloatingMenu> */}
-      {/* <BubbleMenu editor={editor}>This is the bubble menu</BubbleMenu> */}
+
+      {(showWordCount || showReadingTime) && (
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "flex-end",
+            p: 1,
+            bgcolor: theme.palette.mode === "dark" ? "grey.900" : "grey.100",
+          }}
+        >
+          {showWordCount && (
+            <Typography variant="caption" color="text.secondary" sx={{ mr: 2 }}>
+              {wordCount} {wordCount === 1 ? "word" : "words"}
+            </Typography>
+          )}
+          {showReadingTime && (
+            <Typography variant="caption" color="text.secondary">
+              {readingTime} {readingTime === 1 ? "min" : "mins"} read
+            </Typography>
+          )}
+        </Box>
+      )}
     </Box>
   );
 };

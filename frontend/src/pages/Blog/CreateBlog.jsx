@@ -16,18 +16,8 @@ import { useEffect, useRef, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
 import useStore from "../../store/zustand.store";
 import { useUploadImage } from "../../hooks/api/Upload";
-import { showToast } from "../../utils/toast";
 import TiptapEditor from "../../TipTak/TiptapEditor";
-
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-const ALLOWED_FILE_TYPES = [
-  "image/png",
-  "image/jpeg",
-  "image/jpg",
-  "image/gif",
-  "image/avif",
-  "image/webp",
-];
+import { validateFile } from "../../utils/imageValidation";
 
 const CreateBlog = () => {
   const theme = useTheme();
@@ -39,15 +29,12 @@ const CreateBlog = () => {
   const [previewUrl, setPreviewUrl] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
 
-  const { blog, setBlogData, clearBlogData } = useStore(
+  const { blog, setBlogData } = useStore(
     useShallow((state) => ({
       blog: state.blog,
       setBlogData: state.setBlogData,
-      clearBlogData: state.clearBlogData,
     }))
   );
-
-  console.log("Blog data:", blog);
 
   useEffect(() => {
     return () => {
@@ -63,24 +50,6 @@ const CreateBlog = () => {
     if (inputRef.current) {
       inputRef.current.click();
     }
-  };
-
-  const validateFile = (file) => {
-    if (!file) return { valid: false, error: "No file selected" };
-
-    if (file.size > MAX_FILE_SIZE) {
-      return { valid: false, error: "File size exceeds 10MB limit" };
-    }
-
-    if (!ALLOWED_FILE_TYPES.includes(file.type)) {
-      return {
-        valid: false,
-        error:
-          "File type not supported. Please upload PNG, JPG, GIF, AVIF, JPEG or WEBP",
-      };
-    }
-
-    return { valid: true, error: null };
   };
 
   const handleFileChange = (event) => {
@@ -374,7 +343,7 @@ const CreateBlog = () => {
             </Box>
 
             <Box>
-              <TiptapEditor />
+              <TiptapEditor initialContent={blog?.content} />
             </Box>
           </Box>
           <Footer />

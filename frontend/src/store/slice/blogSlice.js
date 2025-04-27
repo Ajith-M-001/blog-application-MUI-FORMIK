@@ -12,6 +12,10 @@ const initialBlogState = {
   shortDescription: "",
   status: BLOG_STATUS.DRAFT,
   scheduleDate: "",
+  readingTime: {
+    minutes: 0,
+    words: 0,
+  },
 };
 
 export const createBlogSlice = (set) => ({

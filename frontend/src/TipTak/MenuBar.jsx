@@ -1,30 +1,77 @@
-import React from "react";
-import PropTypes from "prop-types";
 import {
   Box,
+  Divider,
   ToggleButton,
   ToggleButtonGroup,
-  Divider,
   Tooltip,
 } from "@mui/material";
 import {
+  AlignCenter,
+  AlignLeft,
+  AlignRight,
   Bold,
-  Italic,
-  Underline,
-  Strikethrough,
-  Highlighter,
-  Palette,
-  PaintBucket,
+  Code2,
   Heading1,
   Heading2,
   Heading3,
+  Highlighter,
+  ImageIcon,
+  Italic,
+  Link,
+  List,
+  ListOrdered,
   Quote,
+  Redo,
   SeparatorHorizontal,
-  Code2,
+  Strikethrough,
+  Underline,
+  Undo,
 } from "lucide-react";
+import PropTypes from "prop-types";
+import React, { Suspense, useState } from "react";
+
+const LinkDialog = React.lazy(() => import("./components/LinkDialog"));
+const ImageUploadDialog = React.lazy(() =>
+  import("./components/ImageUploadDialog")
+);
 
 const MenuBar = ({ editor }) => {
+  const [linkUrl, setLinkUrl] = useState("");
+  const [linkDialogOpen, setLinkDialogOpen] = useState(false);
+  const [imageDialogOpen, setImageDialogOpen] = useState(false);
+
+  // Link Dialog Handlers
   if (!editor) return null;
+
+  const handleCloseLinkDialog = () => {
+    setLinkDialogOpen(false);
+  };
+
+  const handleSaveLink = () => {
+    if (!linkUrl) {
+      editor.chain().focus().unsetLink().run();
+    } else {
+      const finalUrl = linkUrl.startsWith("http")
+        ? linkUrl
+        : `https://${linkUrl}`;
+      editor.chain().focus().setLink({ href: finalUrl }).run();
+    }
+    handleCloseLinkDialog();
+  };
+
+  const handleOpenLinkDialog = () => {
+    const previousUrl = editor.getAttributes("link").href || "";
+    setLinkUrl(previousUrl);
+    setLinkDialogOpen(true);
+  };
+
+  const handleOpenImageDialog = () => {
+    setImageDialogOpen(true);
+  };
+
+  const handleCloseImageDialog = () => {
+    setImageDialogOpen(false);
+  };
 
   const formattingButtons = [
     {
@@ -64,22 +111,6 @@ const MenuBar = ({ editor }) => {
           icon: <Highlighter size={20} />,
           action: (editor) => editor.chain().focus().toggleHighlight().run(),
           isActive: (editor) => editor.isActive("highlight"),
-        },
-        {
-          title: "Text Color",
-          value: "text-color",
-          icon: <Palette size={20} />,
-          action: (editor, event) =>
-            handleOpenColorPicker(event, "text", editor),
-          isActive: () => false,
-        },
-        {
-          title: "Background Color",
-          value: "bg-color",
-          icon: <PaintBucket size={20} />,
-          action: (editor, event) =>
-            handleOpenColorPicker(event, "background", editor),
-          isActive: () => false,
         },
       ],
     },
@@ -133,12 +164,94 @@ const MenuBar = ({ editor }) => {
         },
       ],
     },
+    {
+      label: "Lists & Indentation",
+      buttons: [
+        {
+          title: "Bullet List",
+          value: "bullet-list",
+          icon: <List size={20} />,
+          action: (editor) => editor.chain().focus().toggleBulletList().run(),
+          isActive: (editor) => editor.isActive("bulletList"),
+        },
+        {
+          title: "Numbered List",
+          value: "ordered-list",
+          icon: <ListOrdered size={20} />,
+          action: (editor) => editor.chain().focus().toggleOrderedList().run(),
+          isActive: (editor) => editor.isActive("orderedList"),
+        },
+      ],
+    },
+    {
+      label: "Alignment & Layout",
+      buttons: [
+        {
+          title: "Align Left",
+          value: "align-left",
+          icon: <AlignLeft size={20} />,
+          action: (editor) => editor.chain().focus().setTextAlign("left").run(),
+          isActive: (editor) => editor.isActive({ textAlign: "left" }),
+        },
+        {
+          title: "Align Center",
+          value: "align-center",
+          icon: <AlignCenter size={20} />,
+          action: (editor) =>
+            editor.chain().focus().setTextAlign("center").run(),
+          isActive: (editor) => editor.isActive({ textAlign: "center" }),
+        },
+        {
+          title: "Align Right",
+          value: "align-right",
+          icon: <AlignRight size={20} />,
+          action: (editor) =>
+            editor.chain().focus().setTextAlign("right").run(),
+          isActive: (editor) => editor.isActive({ textAlign: "right" }),
+        },
+      ],
+    },
+    {
+      label: "Media",
+      buttons: [
+        {
+          title: "Insert Link",
+          value: "link",
+          icon: <Link size={20} />,
+          action: handleOpenLinkDialog,
+          isActive: (editor) => editor.isActive("link"),
+        },
+        {
+          title: "Insert Image",
+          value: "image",
+          icon: <ImageIcon size={20} />,
+          action: handleOpenImageDialog,
+          isActive: (editor) => editor.isActive("image"),
+        },
+      ],
+    },
+    {
+      label: "History",
+      buttons: [
+        {
+          title: "Undo",
+          value: "undo",
+          icon: <Undo size={20} />,
+          action: () => editor.chain().focus().undo().run(),
+          disabled: (editor) => !editor.can().undo(),
+          isActive: () => false,
+        },
+        {
+          title: "Redo",
+          value: "redo",
+          icon: <Redo size={20} />,
+          action: () => editor.chain().focus().redo().run(),
+          disabled: (editor) => !editor.can().redo(),
+          isActive: () => false,
+        },
+      ],
+    },
   ];
-
-  const handleOpenColorPicker = (event, type, editor) => {
-    // Implement color picker logic here
-    console.log(`Open ${type} color picker`);
-  };
 
   return (
     <Box
@@ -149,8 +262,7 @@ const MenuBar = ({ editor }) => {
         px: 1,
         py: 0.5,
         gap: 1,
-        borderBottom: 1,
-        borderColor: "divider",
+        flexWrap: "wrap",
       }}
     >
       {formattingButtons.map((group, groupIndex) => (
@@ -161,9 +273,9 @@ const MenuBar = ({ editor }) => {
               .map((button) => button.value)}
             aria-label={group.label}
             sx={{
-              gap: 0.5,
+              gap: 0.2,
               "& .MuiToggleButton-root": {
-                padding: 0.5,
+                padding: 1,
                 border: "none",
                 "&:hover": {
                   backgroundColor: "action.hover",
@@ -172,16 +284,26 @@ const MenuBar = ({ editor }) => {
                   backgroundColor: "action.selected",
                   color: "primary.main",
                 },
+                "&.Mui-disabled": {
+                  border: "none",
+                  color: "text.disabled",
+                },
               },
             }}
           >
             {group.buttons.map((button) => (
-              <Tooltip key={button.value} title={button.title} arrow>
+              <Tooltip
+                key={`${group.label}-${button.value}`}
+                title={button.title}
+                arrow
+                placement="top"
+              >
                 <ToggleButton
                   value={button.value}
                   aria-label={button.title}
                   onClick={(e) => button.action(editor, e)}
                   selected={button.isActive(editor)}
+                  disabled={button.disabled ? button.disabled(editor) : false}
                 >
                   {button.icon}
                 </ToggleButton>
@@ -197,6 +319,27 @@ const MenuBar = ({ editor }) => {
           )}
         </React.Fragment>
       ))}
+
+      <Suspense fallback={<div>Loading...</div>}>
+        {linkDialogOpen && (
+          <LinkDialog
+            editor={editor}
+            open={linkDialogOpen}
+            onClose={handleCloseLinkDialog}
+            linkUrl={linkUrl}
+            setLinkUrl={setLinkUrl}
+            handleSaveLink={handleSaveLink}
+          />
+        )}
+
+        {imageDialogOpen && (
+          <ImageUploadDialog
+            open={imageDialogOpen}
+            onClose={handleCloseImageDialog}
+            editor={editor}
+          />
+        )}
+      </Suspense>
     </Box>
   );
 };
@@ -205,6 +348,9 @@ MenuBar.propTypes = {
   editor: PropTypes.shape({
     chain: PropTypes.func.isRequired,
     isActive: PropTypes.func.isRequired,
+    getAttributes: PropTypes.func.isRequired,
+    can: PropTypes.func.isRequired,
+    focus: PropTypes.func.isRequired,
   }),
 };
 

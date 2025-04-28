@@ -76,10 +76,13 @@ const BlogHeader = () => {
 
   return (
     <Box
+      position={"sticky"}
+      top={0}
+      zIndex={100}
       sx={{
         backdropFilter: "blur(10px)",
         borderBottom: `1px solid ${alpha(theme.palette.divider, 0.6)}`,
-        backgroundColor: alpha(theme.palette.background.paper, 0.95),
+        backgroundColor: theme.palette.background.paper,
       }}
     >
       <Stack

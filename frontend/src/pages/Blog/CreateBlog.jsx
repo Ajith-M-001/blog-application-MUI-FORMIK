@@ -185,15 +185,22 @@ const CreateBlog = () => {
             }}
           >
             <Box>
+              <Typography variant="h6" gutterBottom>
+                Blog Title{" "}
+                <span style={{ color: theme.palette.error.main }}>*</span>
+              </Typography>
+
               <TextareaAutosize
                 minRows={1}
                 placeholder="Enter blog title..."
+                maxLength={150}
                 style={{
                   width: "100%",
                   fontSize: "1.8rem",
                   fontWeight: 600,
                   padding: "10px 14px",
                   borderRadius: 8,
+                  outline: "none",
                   border: `0.1px solid ${theme.palette.divider}`,
                   resize: "none",
                   fontFamily: theme.typography.fontFamily,
@@ -202,148 +209,178 @@ const CreateBlog = () => {
                 onChange={(e) => setBlogData({ title: e.target.value })}
                 value={blog?.title || ""}
               />
+              <Typography
+                variant="caption"
+                color="textSecondary"
+                sx={{ display: "block" }}
+              >
+                {blog.title?.length || 0}/150 characters
+              </Typography>
             </Box>
-            <Box
-              onClick={handleClick}
-              sx={{
-                border: "2px dashed",
-                borderColor: theme.palette.divider,
-                borderRadius: 0.9,
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                flexDirection: "column",
-                padding: 5,
-                position: "relative",
-                overflow: "hidden",
-                aspectRatio: "16/9",
-                "&:hover": {
-                  borderColor: theme.palette.text.primary,
-                },
-              }}
-              role="button"
-              aria-label={
-                previewUrl ? "Change cover image" : "Upload cover image"
-              }
-              aria-describedby="image-upload-description"
-            >
-              {uploadError && (
-                <Alert
-                  severity="error"
-                  sx={{ mb: 2, zIndex: 3 }}
-                  onClose={handleClearError}
-                >
-                  {uploadError}
-                </Alert>
-              )}
-              {previewUrl || blog?.coverImage?.url ? (
-                <>
-                  <Box
-                    component="img"
-                    src={previewUrl || blog?.coverImage?.url}
-                    alt="Blog cover"
-                    sx={{
-                      position: "absolute",
-                      top: 0,
-                      left: 0,
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "cover",
-                    }}
-                  />
 
-                  {isUploading && (
+            <Box>
+              <Typography variant="h6" gutterBottom>
+                Cover Image{" "}
+                <span style={{ color: theme.palette.error.main }}>*</span>
+              </Typography>
+              <Box
+                onClick={handleClick}
+                sx={{
+                  border: "2px dashed",
+                  borderColor: theme.palette.divider,
+                  borderRadius: 0.9,
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  flexDirection: "column",
+                  padding: 5,
+                  position: "relative",
+                  overflow: "hidden",
+                  aspectRatio: "16/9",
+                  "&:hover": {
+                    borderColor: theme.palette.text.primary,
+                  },
+                }}
+                role="button"
+                aria-label={
+                  previewUrl ? "Change cover image" : "Upload cover image"
+                }
+                aria-describedby="image-upload-description"
+              >
+                {uploadError && (
+                  <Alert
+                    severity="error"
+                    sx={{ mb: 2, zIndex: 3 }}
+                    onClose={handleClearError}
+                  >
+                    {uploadError}
+                  </Alert>
+                )}
+                {previewUrl || blog?.coverImage?.url ? (
+                  <>
                     <Box
+                      component="img"
+                      src={previewUrl || blog?.coverImage?.url}
+                      alt="Blog cover"
                       sx={{
                         position: "absolute",
                         top: 0,
                         left: 0,
                         width: "100%",
                         height: "100%",
-                        bgcolor: "rgba(0, 0, 0, 0.6)", // Black semi-transparent overlay
-                        zIndex: 2,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        flexDirection: "column",
-                        gap: 1,
-                      }}
-                    >
-                      <CircularProgress
-                        variant="determinate"
-                        value={uploadProgress}
-                        size={60}
-                        thickness={4}
-                        aria-label={`Upload progress: ${uploadProgress}%`}
-                      />
-                      <Typography
-                        variant="body2"
-                        color="white"
-                        sx={{
-                          fontWeight: 500,
-                          px: 2,
-                          py: 0.5,
-                          borderRadius: 1,
-                        }}
-                        role="status"
-                      >
-                        {uploadProgress}% Uploaded
-                      </Typography>
-                      <Button
-                        onClick={handleCancelUpload}
-                        variant="outlined"
-                        color="error"
-                        size="small"
-                        sx={{ mt: 1, fontSize: "0.7rem" }}
-                        aria-label="Cancel upload"
-                      >
-                        Cancel Upload
-                      </Button>
-                    </Box>
-                  )}
-                </>
-              ) : (
-                <>
-                  <Box sx={{ flexGrow: 1 }} />
-                  <>
-                    <ImageUp
-                      size={80}
-                      color={theme.palette.text.secondary}
-                      style={{
-                        margin: "10 auto",
+                        objectFit: "cover",
                       }}
                     />
-                    <Typography variant="subtitle1" sx={{ fontWeight: 500 }}>
-                      Click to upload or drag & drop
-                    </Typography>
 
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
-                      sx={{ mt: 0.5 }}
-                    >
-                      PNG, JPG , GIF , AVIF , JPEG or WEBP — max 10MB
+                    {isUploading && (
+                      <Box
+                        sx={{
+                          position: "absolute",
+                          top: 0,
+                          left: 0,
+                          width: "100%",
+                          height: "100%",
+                          bgcolor: "rgba(0, 0, 0, 0.6)", // Black semi-transparent overlay
+                          zIndex: 2,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          flexDirection: "column",
+                          gap: 1,
+                        }}
+                      >
+                        <CircularProgress
+                          variant="determinate"
+                          value={uploadProgress}
+                          size={60}
+                          thickness={4}
+                          aria-label={`Upload progress: ${uploadProgress}%`}
+                        />
+                        <Typography
+                          variant="body2"
+                          color="white"
+                          sx={{
+                            fontWeight: 500,
+                            px: 2,
+                            py: 0.5,
+                            borderRadius: 1,
+                          }}
+                          role="status"
+                        >
+                          {uploadProgress}% Uploaded
+                        </Typography>
+                        <Button
+                          onClick={handleCancelUpload}
+                          variant="outlined"
+                          color="error"
+                          size="small"
+                          sx={{ mt: 1, fontSize: "0.7rem" }}
+                          aria-label="Cancel upload"
+                        >
+                          Cancel Upload
+                        </Button>
+                      </Box>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <Box sx={{ flexGrow: 1 }} />
+                    <>
+                      <ImageUp
+                        size={80}
+                        color={theme.palette.text.secondary}
+                        style={{
+                          margin: "10 auto",
+                        }}
+                      />
+                      <Typography variant="subtitle1" sx={{ fontWeight: 500 }}>
+                        Click to upload or drag & drop
+                      </Typography>
+
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{ mt: 0.5 }}
+                      >
+                        PNG, JPG , GIF , AVIF , JPEG or WEBP — max 10MB
+                      </Typography>
+                    </>
+                    <Box sx={{ flexGrow: 1 }} />
+                    <Typography variant="caption" color="text.secondary">
+                      Recommended size: 1280×720 (16:9)
                     </Typography>
                   </>
-                  <Box sx={{ flexGrow: 1 }} />
-                  <Typography variant="caption" color="text.secondary">
-                    Recommended size: 1280×720 (16:9)
-                  </Typography>
-                </>
-              )}
-              <Input
-                type="file"
-                inputRef={inputRef}
-                accept="images/*"
-                id="cover-image-upload"
-                sx={{ display: "none" }}
-                onChange={handleFileChange}
-              />
+                )}
+                <Input
+                  type="file"
+                  inputRef={inputRef}
+                  accept="images/*"
+                  id="cover-image-upload"
+                  sx={{ display: "none" }}
+                  onChange={handleFileChange}
+                />
+              </Box>
+              <Typography variant="caption" color="textSecondary">
+                Accepted formats: PNG, JPG, GIF, AVIF, JPEG, or WEBP — Max size:
+                10MB — Recommended dimensions: 16:9 ratio.
+              </Typography>
             </Box>
 
             <Box>
+              <Typography variant="h6" gutterBottom>
+                Content{" "}
+                <span style={{ color: theme.palette.error.main }}>*</span>
+              </Typography>
               <TiptapEditor initialContent={blog?.content} />
+              <Typography
+                variant="caption"
+                color="textSecondary"
+                sx={{ display: "block" }}
+              >
+                Pro Tip: Use headings, lists, and images to structure your
+                content. Minimum 50 words of text content
+              </Typography>
             </Box>
           </Box>
           <Footer />

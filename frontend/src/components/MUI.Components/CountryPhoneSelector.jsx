@@ -1,10 +1,10 @@
-import React, { useMemo, useCallback } from "react";
+import { useMemo, useCallback } from "react";
 import { Box, Autocomplete, TextField, InputAdornment } from "@mui/material";
 import { useField, useFormikContext } from "formik";
 import PropTypes from "prop-types";
 
 const CountryPhoneSelector = ({ countries, hide, disabled = true }) => {
-  const { values, setFieldValue, setFieldTouched } = useFormikContext();
+  const { values, setFieldValue } = useFormikContext();
   const [countryField, countryMeta] = useField("country");
   const [phoneField, phoneMeta] = useField("phoneNumber");
 

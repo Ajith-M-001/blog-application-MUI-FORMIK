@@ -1,13 +1,32 @@
-import { Box, Grid2, TextareaAutosize, useTheme } from "@mui/material";
+import {
+  Autocomplete,
+  Box,
+  FormControl,
+  Grid2,
+  InputLabel,
+  MenuItem,
+  Select,
+  TextareaAutosize,
+  TextField,
+  Typography,
+  useTheme,
+} from "@mui/material";
 import { AnimatePresence, motion } from "motion/react";
 import { Footer } from "../../components/Footer";
 import { BlogContent } from "./components/BlogContent";
 import BlogHeader from "./components/BlogHeader";
 import useStore from "../../store/zustand.store";
 import { useShallow } from "zustand/react/shallow";
+import { useGetAllCategory } from "../../hooks/api/category";
+import { useGetAllTags } from "../../hooks/api/tags";
 
 const PreviewBlog = () => {
   const theme = useTheme();
+
+  const { data: allCategories } = useGetAllCategory();
+  const { data: allTags } = useGetAllTags();
+
+  console.log("allCategories", allTags);
 
   const { blog, setBlogData } = useStore(
     useShallow((state) => ({
@@ -54,12 +73,17 @@ const PreviewBlog = () => {
               <Grid2 size={{ xs: 12, md: 8 }}>
                 <BlogContent />
               </Grid2>
-              <Grid2 size={{ xs: 12, md: 4 }}>
-                <Box>
+              <Grid2 size={{ xs: 12, md: 4 }} spacing={4}>
+                <Box sx={{ mb: 4 }}>
+                  <Typography variant="h6" gutterBottom>
+                    description{" "}
+                    <span style={{ color: theme.palette.error.main }}>*</span>
+                  </Typography>
                   <TextareaAutosize
                     aria-label="short-description"
                     minRows={3}
                     placeholder="Enter description here..."
+                    maxLength={200}
                     style={{
                       fullWidth: true,
                       width: "100%",
@@ -77,6 +101,137 @@ const PreviewBlog = () => {
                     }
                     value={blog?.shortDescription || ""}
                   />
+
+                  <Typography
+                    variant="caption"
+                    color="textSecondary"
+                    sx={{ display: "block" }}
+                  >
+                    <Typography
+                      variant="caption"
+                      color="textSecondary"
+                      sx={{ display: "block" }}
+                    >
+                      This is a short description of your blog. Max{" "}
+                      {blog?.shortDescription?.length || 0}/200 characters
+                    </Typography>
+                  </Typography>
+                </Box>
+
+                <Box sx={{ mb: 4, width: "100%" }}>
+                  <Typography variant="h6" gutterBottom>
+                    category{" "}
+                    <span style={{ color: theme.palette.error.main }}>*</span>
+                  </Typography>
+
+                  <Autocomplete
+                    disablePortal
+                    id="category"
+                    options={allCategories?.data || []} // Pass the array directly
+                    getOptionLabel={(option) => option.name}
+                    onChange={(event, value) => {
+                      setBlogData({ category: value }); // Save selected category
+                    }}
+                    value={blog?.category || null}
+                    sx={{
+                      width: "100%",
+                      mt: 2,
+                      backgroundColor: theme.palette.background.paper,
+                    }}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        placeholder="Select category"
+                        label="Categories"
+                      />
+                    )}
+                  />
+
+                  <Typography
+                    variant="caption"
+                    color="textSecondary"
+                    sx={{ display: "block" }}
+                  >
+                    Select a category for your blog
+                  </Typography>
+                </Box>
+
+                <Box sx={{ mb: 4, width: "100%" }}>
+                  <Typography variant="h6" gutterBottom>
+                    Tags{" "}
+                    <span style={{ color: theme.palette.error.main }}>*</span>
+                  </Typography>
+
+                  <Autocomplete
+                    multiple
+                    id="tags"
+                    options={allTags?.data || []}
+                    getOptionLabel={(option) => option.name}
+                    value={blog?.tags || []}
+                    onChange={(event, value) => {
+                      if (value.length <= 10) {
+                        setBlogData({ tags: value });
+                      }
+                    }}
+                    filterSelectedOptions
+                    sx={{
+                      width: "100%",
+                      mt: 2,
+                      backgroundColor: theme.palette.background.paper,
+                    }}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        placeholder="Select up to 10 tags"
+                        label="Tags"
+                      />
+                    )}
+                  />
+
+                  <Typography
+                    variant="caption"
+                    color="textSecondary"
+                    sx={{ display: "block", mt: 1 }}
+                  >
+                    You can select up to 10 tags. Selected{" "}
+                    {blog?.tags?.length || 0}/10
+                  </Typography>
+                </Box>
+
+                <Box sx={{ mb: 4, width: "100%" }}>
+                  <FormControl fullWidth>
+                    <InputLabel id="status-label">Status</InputLabel>
+                    <Select
+                      labelId="status-label"
+                      id="status-select"
+                      value={blog?.status || ""}
+                      label="Status"
+                      onChange={(event) =>
+                        setBlogData({ status: event.target.value })
+                      }
+                    >
+                      <MenuItem value="draft">Draft</MenuItem>
+                      <MenuItem value="published">Published</MenuItem>
+                      <MenuItem value="scheduled">Scheduled</MenuItem>
+                    </Select>
+                  </FormControl>
+
+                  {blog?.status === "scheduled" && (
+                    <TextField
+                      id="schedule-date"
+                      label="Schedule Date"
+                      type="datetime-local"
+                      value={blog?.scheduleDate || ""}
+                      onChange={(event) =>
+                        setBlogData({ scheduleDate: event.target.value })
+                      }
+                      slotProps={{
+                        inputLabel: { shrink: true },
+                      }}
+                      fullWidth
+                      margin="normal"
+                    />
+                  )}
                 </Box>
               </Grid2>
             </Grid2>

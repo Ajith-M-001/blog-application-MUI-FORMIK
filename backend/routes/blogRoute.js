@@ -7,10 +7,16 @@ import {
   deleteBlog,
 } from "../controllers/blogController.js";
 import { verifyAccessToken } from "../utils/verifyToken.js";
+import { validatePublishBlog } from "../middleware/blogValidators.js";
 
 const router = express.Router();
 
-router.post("/publish-blog", verifyAccessToken, publishBlog);
+router.post(
+  "/publish-blog",
+  verifyAccessToken,
+  validatePublishBlog,
+  publishBlog
+);
 router.get("/all", verifyAccessToken, getAllBlog);
 router.get("/:slug", verifyAccessToken, getBlogBySlug);
 router.put("/:id", verifyAccessToken, updateBlog);

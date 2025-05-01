@@ -22,45 +22,6 @@ export const publishBlog = transactionHandler(
     } = req.body;
     const userId = req.user._id;
 
-    if (!title || !content || !category || !description || !coverImage) {
-      return res
-        .status(400)
-        .json(ApiResponse.error("All required fields must be provided.", 400));
-    }
-
-    if (!Object.values(BLOG_STATUS).includes(status)) {
-      return res
-        .status(400)
-        .json(ApiResponse.error("Invalid blog status.", 400));
-    }
-
-    if (status === BLOG_STATUS.SCHEDULED && !scheduleDateAndTime) {
-      return res
-        .status(400)
-        .jso(
-          ApiResponse.error(
-            "Schedule date and time is required for scheduled blogs.",
-            400
-          )
-        );
-    }
-
-    const scheduleDate = new Date(scheduleDateAndTime);
-    if (scheduleDate < new Date()) {
-      return res
-        .status(400)
-        .json(
-          ApiResponse.error(
-            "Schedule date and time must be in the future.",
-            400
-          )
-        );
-    }
-
-    if (tags && !Array.isArray(tags)) {
-      return res.status(400).json(ApiResponse.error("Tags must be an array"));
-    }
-
     let blogSlugBase = generateSlug(title);
     let finalSlug = blogSlugBase;
     let slugExists = await Blog.findOne({ slug: finalSlug });
@@ -71,10 +32,10 @@ export const publishBlog = transactionHandler(
       counter++;
     }
 
-    const blog = new Blog({
+    // Construct blog object conditionally
+    const blogData = {
       title,
       content,
-      category,
       tags,
       description,
       coverImage,
@@ -84,7 +45,14 @@ export const publishBlog = transactionHandler(
       readingTime,
       author: userId,
       publishedAt: status === BLOG_STATUS.PUBLISHED ? new Date() : null,
-    });
+    };
+
+    // Only set category if it exists and is not an empty string
+    if (category) {
+      blogData.category = category._id;
+    }
+
+    const blog = new Blog(blogData);
 
     await redisService.clearCacheByPattern("blogs:*");
     await blog.save({ session });

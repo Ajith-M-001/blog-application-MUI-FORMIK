@@ -1,5 +1,6 @@
 const INITIAL_USER_STATE = {
-  userData: {},
+  userData: null,
+  isAuthenticated: false,
 };
 
 export const createUserSlice = (set) => ({
@@ -21,6 +22,15 @@ export const createUserSlice = (set) => ({
         },
         false,
         "user/clearUserData"
+      ),
+
+    setIsAuthenticated: (data) =>
+      set(
+        (state) => {
+          state.user.isAuthenticated = data;
+        },
+        false,
+        "user/setIsAuthenticated"
       ),
   },
 });

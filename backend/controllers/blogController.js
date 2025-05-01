@@ -1,4 +1,4 @@
-import { BLOG_STATUS } from "../../common/constants/constants.js";
+import { BLOG_STATUS } from "../../common/constants/constants.mjs";
 import Blog from "../model/blogSchema.js";
 import userModel from "../model/user.schema.js";
 import { redisService } from "../services/redis/cacheService.js";

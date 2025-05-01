@@ -1,6 +1,6 @@
 import { body, check, validationResult } from "express-validator";
 import { ApiResponse } from "../utils/ApiResponse.js";
-import { BLOG_STATUS } from "../../common/constants/constants.js";
+import { BLOG_STATUS } from "../../common/constants/constants.mjs";
 import mongoose from "mongoose";
 
 const MIN_WORDS = 50;

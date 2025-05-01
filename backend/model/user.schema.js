@@ -3,7 +3,7 @@ import bcrypt from "bcrypt";
 import {
   SESSION_PREFERENCE,
   USER_ROLES,
-} from "../../common/constants/constants.mjs";
+} from "../../common/constants/constants.js";
 
 // refreshToken Schema
 const refreshTokenSchema = new mongoose.Schema(

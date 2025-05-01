@@ -1,22 +1,24 @@
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import App from "./App.jsx";
 import "@fontsource-variable/inter"; // Supports weights 100-900
 import "@fontsource-variable/open-sans"; // Supports weights 300-800
 import { CssBaseline } from "@mui/material";
 import { ThemeProvider } from "@mui/material/styles";
+import { lightTheme, darkTheme } from "./theme.js";
+import useStore from "./store/zustand.store.js";
+import { useShallow } from "zustand/react/shallow";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import { StrictMode } from "react";
-import { createRoot } from "react-dom/client";
-import App from "./App.jsx";
 import { NotificationToaster } from "./components/Toaster.jsx";
 import "./index.css";
-import { useIsDarkTheme } from "./store/zustand.store.js";
-import { darkTheme, lightTheme } from "./theme.js";
 
 const RootApp = () => {
-
-  const isDarkTheme =useIsDarkTheme();
-
-  console.log("isDarkTheme", isDarkTheme);
+  const { isDarkTheme } = useStore(
+    useShallow((state) => ({
+      isDarkTheme: state.isDarkTheme,
+    }))
+  );
 
   return (
     <ThemeProvider theme={isDarkTheme ? darkTheme : lightTheme}>

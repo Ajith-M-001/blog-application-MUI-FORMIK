@@ -5,7 +5,7 @@ import { generateSlug } from "../utils/generateSlug.js";
 import Blog from "../model/blogSchema.js";
 import userModel from "../model/user.schema.js";
 import dotenv from "dotenv";
-import { BLOG_STATUS } from "../../common/constants/constants.mjs";
+import { BLOG_STATUS } from "../../common/constants/constants.js";
 dotenv.config({
   path: "../.env",
 });

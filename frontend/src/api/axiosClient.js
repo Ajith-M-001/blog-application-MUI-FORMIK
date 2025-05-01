@@ -87,8 +87,9 @@ axiosInstance.interceptors.response.use(
 );
 
 const logoutUser = () => {
-  const { clearUserData } = useStore.getState();
-  clearUserData();
+  const { clearUser, setIsAuthenticated } = useStore.getState();
+  clearUser();
+  setIsAuthenticated(false);
   window.location.href = "/sign-in";
 };
 

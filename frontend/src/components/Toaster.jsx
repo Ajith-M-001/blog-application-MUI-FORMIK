@@ -1,10 +1,9 @@
 // src/components/Toaster.jsx
 import { Toaster } from "sonner";
-import { useIsDarkTheme } from "../store/zustand.store";
+import useStore from "../store/zustand.store";
 
 export const NotificationToaster = () => {
-  const  isDarkTheme  = useIsDarkTheme();
-
+  const { isDarkTheme } = useStore();
   return (
     <Toaster
       theme={isDarkTheme ? "dark" : "light"}

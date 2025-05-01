@@ -8,15 +8,16 @@ import {
   Typography,
   useTheme,
 } from "@mui/material";
-import { ImageUp } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
-import { useEffect, useRef, useState } from "react";
+import BlogHeader from "./components/BlogHeader";
 import { Footer } from "../../components/Footer";
-import { useUploadImage } from "../../hooks/api/upload";
-import { useBlogActions, useBlogData } from "../../store/zustand.store";
+import { ImageUp } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { useShallow } from "zustand/react/shallow";
+import useStore from "../../store/zustand.store";
+import { useUploadImage } from "../../hooks/api/Upload";
 import TiptapEditor from "../../TipTak/TiptapEditor";
 import { validateFile } from "../../utils/imageValidation";
-import BlogHeader from "./components/BlogHeader";
 
 const CreateBlog = () => {
   const theme = useTheme();
@@ -28,10 +29,12 @@ const CreateBlog = () => {
   const [previewUrl, setPreviewUrl] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
 
-  const {  setBlogData } =  useBlogActions();
-  const blog = useBlogData();
-
-  console.log(blog , "blog");
+  const { blog, setBlogData } = useStore(
+    useShallow((state) => ({
+      blog: state.blog,
+      setBlogData: state.setBlogData,
+    }))
+  );
 
   useEffect(() => {
     return () => {
@@ -206,7 +209,13 @@ const CreateBlog = () => {
                 onChange={(e) => setBlogData({ title: e.target.value })}
                 value={blog?.title || ""}
               />
-             
+              <Typography
+                variant="caption"
+                color="textSecondary"
+                sx={{ display: "block" }}
+              >
+                {blog.title?.length || 0}/150 characters
+              </Typography>
             </Box>
 
             <Box>
@@ -352,6 +361,10 @@ const CreateBlog = () => {
                   onChange={handleFileChange}
                 />
               </Box>
+              <Typography variant="caption" color="textSecondary">
+                Accepted formats: PNG, JPG, GIF, AVIF, JPEG, or WEBP — Max size:
+                10MB — Recommended dimensions: 16:9 ratio.
+              </Typography>
             </Box>
 
             <Box>
@@ -360,6 +373,14 @@ const CreateBlog = () => {
                 <span style={{ color: theme.palette.error.main }}>*</span>
               </Typography>
               <TiptapEditor initialContent={blog?.content} />
+              <Typography
+                variant="caption"
+                color="textSecondary"
+                sx={{ display: "block" }}
+              >
+                Pro Tip: Use headings, lists, and images to structure your
+                content. Minimum 50 words of text content
+              </Typography>
             </Box>
           </Box>
           <Footer />

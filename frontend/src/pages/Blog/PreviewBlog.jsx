@@ -13,25 +13,27 @@ import {
 } from "@mui/material";
 import { AnimatePresence, motion } from "motion/react";
 import { Footer } from "../../components/Footer";
-import { useGetAllCategory } from "../../hooks/api/category";
-import { useGetAllTags } from "../../hooks/api/tags";
-import { useBlogActions, useBlogData } from "../../store/zustand.store";
 import { BlogContent } from "./components/BlogContent";
 import BlogHeader from "./components/BlogHeader";
+import useStore from "../../store/zustand.store";
+import { useShallow } from "zustand/react/shallow";
+import { useGetAllCategory } from "../../hooks/api/category";
+import { useGetAllTags } from "../../hooks/api/tags";
 
 const PreviewBlog = () => {
   const theme = useTheme();
-
-  // Preview mode that shows how the blog will appear to readers
 
   const { data: allCategories } = useGetAllCategory();
   const { data: allTags } = useGetAllTags();
 
   console.log("allCategories", allTags);
 
-  const { setBlogData } = useBlogActions();
-  const blog = useBlogData();
-
+  const { blog, setBlogData } = useStore(
+    useShallow((state) => ({
+      blog: state.blog,
+      setBlogData: state.setBlogData,
+    }))
+  );
   return (
     <AnimatePresence>
       <motion.div
@@ -99,6 +101,21 @@ const PreviewBlog = () => {
                     }
                     value={blog?.shortDescription || ""}
                   />
+
+                  <Typography
+                    variant="caption"
+                    color="textSecondary"
+                    sx={{ display: "block" }}
+                  >
+                    <Typography
+                      variant="caption"
+                      color="textSecondary"
+                      sx={{ display: "block" }}
+                    >
+                      This is a short description of your blog. Max{" "}
+                      {blog?.shortDescription?.length || 0}/200 characters
+                    </Typography>
+                  </Typography>
                 </Box>
 
                 <Box sx={{ mb: 4, width: "100%" }}>
@@ -129,6 +146,14 @@ const PreviewBlog = () => {
                       />
                     )}
                   />
+
+                  <Typography
+                    variant="caption"
+                    color="textSecondary"
+                    sx={{ display: "block" }}
+                  >
+                    Select a category for your blog
+                  </Typography>
                 </Box>
 
                 <Box sx={{ mb: 4, width: "100%" }}>
@@ -162,14 +187,19 @@ const PreviewBlog = () => {
                       />
                     )}
                   />
+
+                  <Typography
+                    variant="caption"
+                    color="textSecondary"
+                    sx={{ display: "block", mt: 1 }}
+                  >
+                    You can select up to 10 tags. Selected{" "}
+                    {blog?.tags?.length || 0}/10
+                  </Typography>
                 </Box>
 
                 <Box sx={{ mb: 4, width: "100%" }}>
-                  <Typography variant="h6" gutterBottom>
-                    Status{" "}
-                    <span style={{ color: theme.palette.error.main }}>*</span>
-                  </Typography>
-                  <FormControl fullWidth mt={2}>
+                  <FormControl fullWidth>
                     <InputLabel id="status-label">Status</InputLabel>
                     <Select
                       labelId="status-label"
@@ -187,28 +217,20 @@ const PreviewBlog = () => {
                   </FormControl>
 
                   {blog?.status === "scheduled" && (
-                    <>
-                      <Typography variant="h6" gutterBottom>
-                        select date and time for schedule  the Blog to go published{" "}
-                        <span style={{ color: theme.palette.error.main }}>
-                          *
-                        </span>
-                      </Typography>
-                      <TextField
-                        id="schedule-date"
-                        label="Schedule Date"
-                        type="datetime-local"
-                        value={blog?.scheduleDate || ""}
-                        onChange={(event) =>
-                          setBlogData({ scheduleDate: event.target.value })
-                        }
-                        slotProps={{
-                          inputLabel: { shrink: true },
-                        }}
-                        fullWidth
-                        margin="normal"
-                      />
-                    </>
+                    <TextField
+                      id="schedule-date"
+                      label="Schedule Date"
+                      type="datetime-local"
+                      value={blog?.scheduleDate || ""}
+                      onChange={(event) =>
+                        setBlogData({ scheduleDate: event.target.value })
+                      }
+                      slotProps={{
+                        inputLabel: { shrink: true },
+                      }}
+                      fullWidth
+                      margin="normal"
+                    />
                   )}
                 </Box>
               </Grid2>

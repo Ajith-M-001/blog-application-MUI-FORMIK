@@ -1,19 +1,26 @@
-const initialUserState = {
-  isAuthenticated: false,
-  needsOtpVerification: false,
-  user: null,
+const INITIAL_USER_STATE = {
+  userData: {},
 };
 
 export const createUserSlice = (set) => ({
-  ...initialUserState, // Spread the state instead of nesting it
-  setIsAuthenticated: (isAuthenticated) =>
-    set(() => ({ isAuthenticated }), false, "user/setIsAuthenticated"),
-  setUser: (user) => set(() => ({ user }), false, "user/setUser"),
-  clearUser: () => set(() => ({ user: null }), false, "user/clearUser"),
-  setNeedsOtpVerification: (value) =>
-    set(
-      () => ({ needsOtpVerification: value }),
-      false,
-      "user/setNeedsOtpVerification"
-    ),
+  user: INITIAL_USER_STATE,
+  userActions: {
+    setUserData: (data) =>
+      set(
+        (state) => {
+          state.user.userData = data;
+        },
+        false,
+        "user/setUserData"
+      ),
+
+    clearUserData: () =>
+      set(
+        (state) => {
+          state.user.userData = null; // Reset the userData property to null
+        },
+        false,
+        "user/clearUserData"
+      ),
+  },
 });

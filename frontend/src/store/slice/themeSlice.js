@@ -1,13 +1,13 @@
-const initialThemeState = {
+const INITIAL_THEME_STATE = {
   isDarkTheme: true,
 };
 
 export const createThemeSlice = (set) => ({
-  ...initialThemeState, // Spread the state instead of nesting it
-  toggleTheme: () =>
-    set(
-      (state) => ({ isDarkTheme: !state.isDarkTheme }), // Return new state object
-      false,
-      "theme/toggleTheme"
-    ),
+  theme: INITIAL_THEME_STATE,
+  themeActions: {
+    toggleTheme: () =>
+      set((state) => {
+        state.theme.isDarkTheme = !state.theme.isDarkTheme;
+      }),
+  },
 });

@@ -1,19 +1,16 @@
+import { Article, CalendarMonth, Schedule } from "@mui/icons-material";
 import { Avatar, Box, Grid2, Typography, useTheme } from "@mui/material";
-import { CalendarMonth, Schedule, Article } from "@mui/icons-material";
 import { format } from "date-fns";
+import { useBlogData, useUserData } from "../../../store/zustand.store";
 import { capitalizeFirstLetter } from "../../../utils/capitalizeFirstLetter";
-import useStore from "../../../store/zustand.store";
-import { useShallow } from "zustand/react/shallow";
 
 const UserCard = () => {
   const theme = useTheme();
 
-  const { blog, user } = useStore(
-    useShallow((state) => ({
-      blog: state.blog,
-      user: state.user,
-    }))
-  );
+
+
+  const blog = useBlogData();
+  const user = useUserData();
 
   console.log("UserCard", user, blog);
 
@@ -104,3 +101,4 @@ const UserCard = () => {
 };
 
 export { UserCard };
+

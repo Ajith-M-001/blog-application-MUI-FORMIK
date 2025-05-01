@@ -1,23 +1,20 @@
 // src/TiptapEditor.jsx
-import {
-  useEditor,
-  EditorContent,
-  // FloatingMenu,
-  // BubbleMenu,
-} from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit";
-import Placeholder from "@tiptap/extension-placeholder";
-import Underline from "@tiptap/extension-underline";
+import { Box, Divider, Typography, useTheme } from "@mui/material";
 import Highlight from "@tiptap/extension-highlight";
 import Image from "@tiptap/extension-image";
 import Link from "@tiptap/extension-link";
-import { Box, Divider, Typography, useTheme } from "@mui/material";
-import { useEffect, useState } from "react";
-import MenuBar from "./MenuBar";
+import Placeholder from "@tiptap/extension-placeholder";
 import TextAlign from "@tiptap/extension-text-align";
+import Underline from "@tiptap/extension-underline";
+import {
+  EditorContent,
+  useEditor,
+} from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
 import PropTypes from "prop-types";
-import useStore from "../store/zustand.store";
-import { useShallow } from "zustand/react/shallow";
+import { useEffect, useState } from "react";
+import { useBlogActions } from "../store/zustand.store";
+import MenuBar from "./MenuBar";
 
 const TiptapEditor = ({
   initialContent = {},
@@ -31,11 +28,9 @@ const TiptapEditor = ({
 
   console.log("initialContent", initialContent);
 
-  const { setBlogData } = useStore(
-    useShallow((state) => ({
-      setBlogData: state.setBlogData,
-    }))
-  );
+  const { setBlogData } = useBlogActions();
+
+  
 
   const editorStyles = `
   .tiptap-editor {

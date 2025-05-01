@@ -1,3 +1,4 @@
+import NoteAddIcon from "@mui/icons-material/NoteAdd";
 import {
   alpha,
   AppBar,
@@ -13,35 +14,39 @@ import {
   List,
   ListItem,
   ListItemText,
+  Menu,
+  MenuItem,
   styled,
   Toolbar,
   Typography,
   useMediaQuery,
   useTheme,
-  Menu,
-  MenuItem,
 } from "@mui/material";
-import { motion } from "motion/react";
 import {
-  Menu as MenuIcon,
-  X,
-  Sun,
-  Moon,
-  Search,
-  User,
-  Settings,
   HelpCircle,
   LogOut,
+  Menu as MenuIcon,
+  Moon,
+  Search,
+  Settings,
+  Sun,
+  User,
+  X,
 } from "lucide-react";
-import { useState, memo } from "react";
-import useStore from "../store/zustand.store";
-import { useShallow } from "zustand/react/shallow";
-import { buttonHoverVariants } from "../utils/motionVariants";
+import { motion } from "motion/react";
+import { memo, useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router";
 import { useSignOutUser } from "../hooks/api/Users";
+import {
+  useIsAuthenticated,
+  useIsDarkTheme,
+  useThemeActions,
+  useUserActions,
+  useUserData,
+} from "../store/zustand.store";
 import { capitalizeFirstLetter } from "../utils/capitalizeFirstLetter";
+import { buttonHoverVariants } from "../utils/motionVariants";
 import { showToast } from "../utils/toast";
-import NoteAddIcon from "@mui/icons-material/NoteAdd";
 
 const SearchContainer = styled("div")(({ theme }) => ({
   position: "relative",
@@ -122,30 +127,21 @@ const Header = () => {
     { label: "Help", icon: <HelpCircle />, path: "/help" },
   ];
 
-  const {
-    isDarkTheme,
-    toggleTheme,
-    isAuthenticated,
-    user,
-    clearUser,
-    setIsAuthenticated,
-  } = useStore(
-    useShallow((state) => ({
-      isDarkTheme: state.isDarkTheme,
-      toggleTheme: state.toggleTheme,
-      isAuthenticated: state.isAuthenticated,
-      user: state.user,
-      clearUser: state.clearUser,
-      setIsAuthenticated: state.setIsAuthenticated,
-    }))
-  );
+  const isDarkTheme = useIsDarkTheme();
+  const { clearUserData , setIsAuthenticated } = useUserActions();
+  const user = useUserData();
+  const isAuthenticated = useIsAuthenticated();
+
+  const { toggleTheme } = useThemeActions();
+
+  console.log("user", user);
 
   const handleSignOut = () => {
     signOut(undefined, {
       onSuccess: (data) => {
         navigate("/sign-in");
+        clearUserData();
         setIsAuthenticated(false);
-        clearUser();
         showToast(data?.message, { type: "success" });
         handleUserMenuClose();
         setMobileMenuOpen(false);
@@ -806,3 +802,4 @@ const Header = () => {
 
 const MemorizedHeader = memo(Header);
 export { MemorizedHeader as Header };
+

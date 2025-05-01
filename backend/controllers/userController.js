@@ -7,7 +7,7 @@ import { generateOTP } from "../utils/otpUtils.js";
 import { sendOTPViaEmail } from "../services/emailService.js";
 import { sendOTPViaSMS } from "../services/smsServices.js";
 import { v4 as uuidv4 } from "uuid";
-import { SESSION_PREFERENCE } from "../../common/constants/constants.js";
+import { SESSION_PREFERENCE } from "../../common/constants/constants.mjs";
 import { authConfig } from "../config/auth.config.js";
 import { getMaxAgeFromExpiresIn } from "../utils/getMaxAgeFromExpiresIn.js";
 import { redisService } from "../services/redis/cacheService.js";

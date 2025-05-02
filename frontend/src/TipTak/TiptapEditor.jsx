@@ -14,7 +14,15 @@ import { useBlogActions } from "../store/zustand.store";
 import MenuBar from "./MenuBar";
 
 const TiptapEditor = ({
-  initialContent = null,
+  initialContent = {
+    type: "doc",
+    content: [
+      {
+        type: "paragraph",
+        content: [],
+      },
+    ],
+  },
   showWordCount = true,
   showReadingTime = true,
 }) => {

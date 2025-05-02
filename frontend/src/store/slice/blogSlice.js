@@ -31,8 +31,3 @@ export const createBlogSlice = (set) => ({
       set(() => ({ blog: INITIAL_BLOG_STATE }), false, "blog/clearBlogData"),
   },
 });
-
-// setBlogData: (data) =>
-//   set((state) => {
-//     Object.assign(state.blog, data);
-//   }),

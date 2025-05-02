@@ -20,7 +20,6 @@ let useStore = create(
           theme: state.theme,
           user: state.user,
           blog: state.blog,
-          // Exclude the action slices like `userActions`, `themeActions`, `blogActions`
         }),
       }
     )

@@ -1,7 +1,7 @@
 import { body, check, validationResult } from "express-validator";
 import { ApiResponse } from "../utils/ApiResponse.js";
-import { BLOG_STATUS } from "../../common/constants/constants.js";
 import mongoose from "mongoose";
+import { BLOG_STATUS } from "../constants/constants.js";
 
 const MIN_WORDS = 50;
 const MAX_WORDS = 5000;

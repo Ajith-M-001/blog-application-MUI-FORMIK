@@ -8,16 +8,15 @@ import {
   Typography,
   useTheme,
 } from "@mui/material";
-import { AnimatePresence, motion } from "motion/react";
-import BlogHeader from "./components/BlogHeader";
-import { Footer } from "../../components/Footer";
 import { ImageUp } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
-import { useShallow } from "zustand/react/shallow";
-import useStore from "../../store/zustand.store";
+import { Footer } from "../../components/Footer";
 import { useUploadImage } from "../../hooks/api/Upload";
+import { useBlogActions, useBlogData } from "../../store/zustand.store";
 import TiptapEditor from "../../TipTak/TiptapEditor";
 import { validateFile } from "../../utils/imageValidation";
+import BlogHeader from "./components/BlogHeader";
 
 const CreateBlog = () => {
   const theme = useTheme();
@@ -29,12 +28,8 @@ const CreateBlog = () => {
   const [previewUrl, setPreviewUrl] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
 
-  const { blog, setBlogData } = useStore(
-    useShallow((state) => ({
-      blog: state.blog,
-      setBlogData: state.setBlogData,
-    }))
-  );
+  const { setBlogData } = useBlogActions();
+  const blog = useBlogData();
 
   useEffect(() => {
     return () => {

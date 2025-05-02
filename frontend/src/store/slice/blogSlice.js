@@ -1,4 +1,4 @@
-import { BLOG_STATUS } from "../../../../common/constants/constants";
+import { BLOG_STATUS } from "../../constants/constants";
 
 const INITIAL_BLOG_STATE = {
   title: "",
@@ -7,7 +7,7 @@ const INITIAL_BLOG_STATE = {
     public_id: "",
   },
   content: {},
-  category: {},
+  category: null,
   tags: [],
   shortDescription: "",
   status: BLOG_STATUS.DRAFT,
@@ -55,7 +55,6 @@ export const createBlogSlice = (set) => ({
       set(() => ({ blog: INITIAL_BLOG_STATE }), false, "blog/clearBlogData"),
   },
 });
-
 
 // setBlogData: (data) =>
 //   set((state) => {

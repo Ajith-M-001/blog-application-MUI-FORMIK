@@ -19,14 +19,13 @@ import {
   TriangleAlert,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
+import { useEffect } from "react";
 import { Link, useNavigate } from "react-router";
 import * as Yup from "yup";
-import { useShallow } from "zustand/react/shallow";
 import { FormField } from "../components/MUI.Components/FormField";
 import { useSignInUser } from "../hooks/api/Users";
-import useStore from "../store/zustand.store";
+import { useUserActions } from "../store/zustand.store";
 import { showToast } from "../utils/toast";
-import { useEffect } from "react";
 
 const SignInSchema = Yup.object().shape({
   email: Yup.string().when("useEmail", {
@@ -63,12 +62,7 @@ const SignIn = () => {
   const urlParams = new URLSearchParams(window.location.search);
   const authMessage = urlParams.get("auth");
 
-  const { setUser, setIsAuthenticated } = useStore(
-    useShallow((state) => ({
-      setUser: state.setUser,
-      setIsAuthenticated: state.setIsAuthenticated,
-    }))
-  );
+  const { setIsAuthenticated } = useUserActions();
 
   useEffect(() => {
     if (authMessage === "google_auth_failed") {
@@ -88,7 +82,6 @@ const SignIn = () => {
     signInUser(values, {
       onSuccess: (data) => {
         setIsAuthenticated(true);
-        setUser(data.data);
         resetForm();
         showToast(data.message, { type: "success" });
         navigate("/");

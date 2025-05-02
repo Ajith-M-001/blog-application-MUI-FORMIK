@@ -2,20 +2,17 @@ import { Avatar, Box, Grid2, Typography, useTheme } from "@mui/material";
 import { CalendarMonth, Schedule, Article } from "@mui/icons-material";
 import { format } from "date-fns";
 import { capitalizeFirstLetter } from "../../../utils/capitalizeFirstLetter";
-import useStore from "../../../store/zustand.store";
+import useStore, {
+  useBlogData,
+  useUserData,
+} from "../../../store/zustand.store";
 import { useShallow } from "zustand/react/shallow";
 
 const UserCard = () => {
   const theme = useTheme();
 
-  const { blog, user } = useStore(
-    useShallow((state) => ({
-      blog: state.blog,
-      user: state.user,
-    }))
-  );
-
-  console.log("UserCard", user, blog);
+  const blog = useBlogData();
+  const user = useUserData();
 
   // Get user initials for avatar fallback
   const getInitials = () => {

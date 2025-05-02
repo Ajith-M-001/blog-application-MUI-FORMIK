@@ -298,15 +298,17 @@ const MenuBar = ({ editor }) => {
                 arrow
                 placement="top"
               >
-                <ToggleButton
-                  value={button.value}
-                  aria-label={button.title}
-                  onClick={(e) => button.action(editor, e)}
-                  selected={button.isActive(editor)}
-                  disabled={button.disabled ? button.disabled(editor) : false}
-                >
-                  {button.icon}
-                </ToggleButton>
+                <span>
+                  <ToggleButton
+                    value={button.value}
+                    aria-label={button.title}
+                    onClick={(e) => button.action(editor, e)}
+                    selected={button.isActive(editor)}
+                    disabled={button.disabled ? button.disabled(editor) : false}
+                  >
+                    {button.icon}
+                  </ToggleButton>
+                </span>
               </Tooltip>
             ))}
           </ToggleButtonGroup>

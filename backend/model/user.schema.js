@@ -1,9 +1,6 @@
 import mongoose from "mongoose";
 import bcrypt from "bcrypt";
-import {
-  SESSION_PREFERENCE,
-  USER_ROLES,
-} from "../../common/constants/constants.js";
+import { SESSION_PREFERENCE, USER_ROLES } from "../constants/constants.js";
 
 // refreshToken Schema
 const refreshTokenSchema = new mongoose.Schema(

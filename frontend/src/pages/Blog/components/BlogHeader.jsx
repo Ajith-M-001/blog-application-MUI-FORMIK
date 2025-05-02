@@ -25,7 +25,10 @@ import { motion } from "motion/react";
 import { Link, useLocation, useNavigate } from "react-router";
 import { useSignOutUser } from "../../../hooks/api/Users";
 import { useShallow } from "zustand/react/shallow";
-import useStore from "../../../store/zustand.store";
+import useStore, {
+  useUserActions,
+  useUserData,
+} from "../../../store/zustand.store";
 import { showToast } from "../../../utils/toast";
 import { capitalizeFirstLetter } from "../../../utils/capitalizeFirstLetter";
 
@@ -54,20 +57,15 @@ const BlogHeader = () => {
     { label: "Help", icon: <HelpCircle />, path: "/help" },
   ];
 
-  const { clearUser, user, setIsAuthenticated } = useStore(
-    useShallow((state) => ({
-      clearUser: state.clearUser,
-      user: state.user,
-      setIsAuthenticated: state.setIsAuthenticated,
-    }))
-  );
+  const user = useUserData();
+  const { clearUserData, setIsAuthenticated } = useUserActions();
 
   const handleSignOut = () => {
     signOut(undefined, {
       onSuccess: (data) => {
         navigate("/sign-in");
         setIsAuthenticated(false);
-        clearUser();
+        clearUserData();
         showToast(data?.message, { type: "success" });
         handleUserMenuClose();
       },

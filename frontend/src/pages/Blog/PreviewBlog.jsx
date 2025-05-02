@@ -13,27 +13,23 @@ import {
 } from "@mui/material";
 import { AnimatePresence, motion } from "motion/react";
 import { Footer } from "../../components/Footer";
-import { BlogContent } from "./components/BlogContent";
-import BlogHeader from "./components/BlogHeader";
-import useStore from "../../store/zustand.store";
-import { useShallow } from "zustand/react/shallow";
 import { useGetAllCategory } from "../../hooks/api/category";
 import { useGetAllTags } from "../../hooks/api/tags";
+import { useBlogActions, useBlogData } from "../../store/zustand.store";
+import { BlogContent } from "./components/BlogContent";
+import BlogHeader from "./components/BlogHeader";
 
 const PreviewBlog = () => {
   const theme = useTheme();
 
+  // Preview mode that shows how the blog will appear to readers
+
   const { data: allCategories } = useGetAllCategory();
   const { data: allTags } = useGetAllTags();
 
-  console.log("allCategories", allTags);
+  const { setBlogData } = useBlogActions();
+  const blog = useBlogData();
 
-  const { blog, setBlogData } = useStore(
-    useShallow((state) => ({
-      blog: state.blog,
-      setBlogData: state.setBlogData,
-    }))
-  );
   return (
     <AnimatePresence>
       <motion.div

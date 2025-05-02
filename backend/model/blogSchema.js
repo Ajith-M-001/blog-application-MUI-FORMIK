@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { BLOG_STATUS } from "../../common/constants/constants.js";
+import { BLOG_STATUS } from "../constants/constants.js";
 const blogSchema = new mongoose.Schema(
   {
     title: { type: String, trim: true },

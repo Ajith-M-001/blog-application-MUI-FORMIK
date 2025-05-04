@@ -5,6 +5,7 @@ import { FallBackLoader } from "./components/Loaders/FallBackLoader";
 import { ProtectedRoute } from "./components/routes/ProtectedOtpRoute";
 import { NoAuthRoute } from "./components/routes/NoAuthRoute";
 import { AuthProtectedRoute } from "./components/routes/AuthProtectedRoute";
+import BlogFormProvider from "./pages/Blog/components/BlogFormProvider";
 
 // Lazy load
 
@@ -65,8 +66,22 @@ const App = () => {
             </Route>
             {/* Authenticated User Protected Routes */}
             <Route element={<AuthProtectedRoute />}>
-              <Route path="create-blog" element={<CreateBlog />} />
-              <Route path="preview-blog" element={<PreviewBlog />} />
+              <Route
+                path="create-blog"
+                element={
+                  <BlogFormProvider>
+                    <CreateBlog />
+                  </BlogFormProvider>
+                }
+              />
+              <Route
+                path="preview-blog"
+                element={
+                  <BlogFormProvider>
+                    <PreviewBlog />
+                  </BlogFormProvider>
+                }
+              />
             </Route>
           </Routes>
         </Suspense>

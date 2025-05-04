@@ -3,25 +3,28 @@ import {
   Box,
   Button,
   CircularProgress,
+  IconButton,
   Input,
   TextareaAutosize,
   Typography,
   useTheme,
 } from "@mui/material";
-import { ImageUp } from "lucide-react";
+import { ImageUp, Trash2 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Footer } from "../../components/Footer";
 import { useUploadImage } from "../../hooks/api/Upload";
 import { useBlogActions, useBlogData } from "../../store/zustand.store";
 import TiptapEditor from "../../TipTak/TiptapEditor";
 import { validateFile } from "../../utils/imageValidation";
 import BlogHeader from "./components/BlogHeader";
+import { useBlogForm } from "./components/BlogFormProvider";
 
 const CreateBlog = () => {
   const theme = useTheme();
   const inputRef = useRef(null);
   const abortControllerRef = useRef(null);
+  const { formik, goToPreview } = useBlogForm();
 
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadError, setUploadError] = useState(null);
@@ -41,11 +44,24 @@ const CreateBlog = () => {
 
   const { mutate: uploadImage } = useUploadImage();
 
-  const handleClick = () => {
+  const handleDeleteImage = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    setPreviewUrl(null);
+    setBlogData({
+      coverImage: {
+        url: "",
+        public_id: "",
+      },
+    });
+  };
+
+  const handleClick = useCallback(() => {
     if (inputRef.current) {
       inputRef.current.click();
     }
-  };
+  }, []);
 
   const handleFileChange = (event) => {
     event.preventDefault();
@@ -94,11 +110,10 @@ const CreateBlog = () => {
             URL.revokeObjectURL(previewUrl);
           }
 
-          setBlogData({
-            coverImage: {
-              url: imageInfo.url,
-              public_id: imageInfo.public_id,
-            },
+          // Insert image into the editor
+          formik.setFieldValue("coverImage", {
+            url: imageInfo.url,
+            public_id: imageInfo.public_id,
           });
 
           setPreviewUrl(null);
@@ -112,11 +127,9 @@ const CreateBlog = () => {
           setUploadProgress(0);
           setPreviewUrl(null);
 
-          setBlogData({
-            coverImage: {
-              url: "",
-              public_id: "",
-            },
+          formik.setFieldValue("coverImage", {
+            url: "",
+            public_id: "",
           });
 
           abortControllerRef.current = null;
@@ -165,7 +178,7 @@ const CreateBlog = () => {
             minHeight: "100vh",
           }}
         >
-          <BlogHeader />
+          <BlogHeader goToPreview={goToPreview} />
           <Box
             sx={{
               flex: 1,
@@ -196,21 +209,31 @@ const CreateBlog = () => {
                   padding: "10px 14px",
                   borderRadius: 8,
                   outline: "none",
-                  border: `0.1px solid ${theme.palette.divider}`,
+                  border:
+                    formik.touched.title && formik.errors.title
+                      ? `1px solid ${theme.palette.error.main}`
+                      : `0.1px solid ${theme.palette.divider}`,
+
                   resize: "none",
                   fontFamily: theme.typography.fontFamily,
                   backgroundColor: theme.palette.background.paper,
                 }}
-                onChange={(e) => setBlogData({ title: e.target.value })}
-                value={blog?.title || ""}
+                value={formik.values.title}
+                onChange={formik.handleChange}
+                name="title"
+                onBlur={formik.handleBlur}
               />
-              <Typography
-                variant="caption"
-                color="textSecondary"
-                sx={{ display: "block" }}
-              >
-                {blog.title?.length || 0}/150 characters
-              </Typography>
+              {formik.touched.title && formik.errors.title && (
+                <div
+                  style={{
+                    color: theme.palette.error.main,
+                    fontSize: "0.875rem",
+                    marginTop: "4px",
+                  }}
+                >
+                  {formik.errors.title}
+                </div>
+              )}
             </Box>
 
             <Box>
@@ -222,7 +245,10 @@ const CreateBlog = () => {
                 onClick={handleClick}
                 sx={{
                   border: "2px dashed",
-                  borderColor: theme.palette.divider,
+                  borderColor:
+                    formik.touched.coverImage && formik.errors.coverImage
+                      ? theme.palette.error.main
+                      : theme.palette.divider,
                   borderRadius: 0.9,
                   cursor: "pointer",
                   display: "flex",
@@ -234,7 +260,10 @@ const CreateBlog = () => {
                   overflow: "hidden",
                   aspectRatio: "16/9",
                   "&:hover": {
-                    borderColor: theme.palette.text.primary,
+                    borderColor:
+                      formik.touched.coverImage && formik.errors.coverImage
+                        ? theme.palette.error.dark
+                        : theme.palette.text.primary,
                   },
                 }}
                 role="button"
@@ -267,6 +296,26 @@ const CreateBlog = () => {
                         objectFit: "cover",
                       }}
                     />
+
+                    {blog?.coverImage?.url && (
+                      <IconButton
+                        onClick={handleDeleteImage}
+                        sx={{
+                          position: "absolute",
+                          top: 8,
+                          right: 8,
+                          zIndex: 3,
+                          backgroundColor: "rgba(0, 0, 0, 0.5)",
+                          color: "white",
+                          "&:hover": {
+                            backgroundColor: "rgba(0, 0, 0, 0.7)",
+                          },
+                        }}
+                        aria-label="Delete cover image"
+                      >
+                        <Trash2 />
+                      </IconButton>
+                    )}
 
                     {isUploading && (
                       <Box
@@ -356,10 +405,12 @@ const CreateBlog = () => {
                   onChange={handleFileChange}
                 />
               </Box>
-              <Typography variant="caption" color="textSecondary">
-                Accepted formats: PNG, JPG, GIF, AVIF, JPEG, or WEBP — Max size:
-                10MB — Recommended dimensions: 16:9 ratio.
-              </Typography>
+              {formik.touched.coverImage && formik.errors.coverImage && (
+                <Typography variant="body2" color="error" sx={{ mt: 1 }}>
+                  {formik.errors.coverImage?.url ||
+                    formik.errors.coverImage?.public_id}
+                </Typography>
+              )}
             </Box>
 
             <Box>
@@ -367,15 +418,7 @@ const CreateBlog = () => {
                 Content{" "}
                 <span style={{ color: theme.palette.error.main }}>*</span>
               </Typography>
-              <TiptapEditor initialContent={blog?.content} />
-              <Typography
-                variant="caption"
-                color="textSecondary"
-                sx={{ display: "block" }}
-              >
-                Pro Tip: Use headings, lists, and images to structure your
-                content. Minimum 50 words of text content
-              </Typography>
+              <TiptapEditor initialContent={blog?.content} formik={formik} />
             </Box>
           </Box>
           <Footer />

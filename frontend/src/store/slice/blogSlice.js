@@ -6,7 +6,7 @@ const INITIAL_BLOG_STATE = {
     url: "",
     public_id: "",
   },
-  content: {},
+  content: null,
   category: null,
   tags: [],
   shortDescription: "",

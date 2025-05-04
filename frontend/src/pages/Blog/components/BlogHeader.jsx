@@ -24,20 +24,17 @@ import {
 import { motion } from "motion/react";
 import { Link, useLocation, useNavigate } from "react-router";
 import { useSignOutUser } from "../../../hooks/api/Users";
-import { useShallow } from "zustand/react/shallow";
-import useStore, {
-  useUserActions,
-  useUserData,
-} from "../../../store/zustand.store";
+import { useUserActions, useUserData } from "../../../store/zustand.store";
 import { showToast } from "../../../utils/toast";
 import { capitalizeFirstLetter } from "../../../utils/capitalizeFirstLetter";
+import PropTypes from "prop-types";
 
-const BlogHeader = () => {
+const BlogHeader = (props) => {
   const theme = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const currentPath = location.pathname.replace(/^\/+/, ""); // Removes leading slashes
-
+  const { goToPreview, goToEdit, previewFormik } = props;
   const { mutate: signOut, isPending: isSignOutPending } = useSignOutUser();
 
   const [anchorEl, setAnchorEl] = useState(null);
@@ -118,7 +115,7 @@ const BlogHeader = () => {
           {currentPath === "create-blog" && (
             <Button
               variant="contained"
-              onClick={() => navigate("/preview-blog")}
+              onClick={() => goToPreview()}
               startIcon={<Eye size={18} />}
               sx={{
                 textTransform: "capitalize",
@@ -138,7 +135,7 @@ const BlogHeader = () => {
             <Box>
               <Button
                 variant="outlined"
-                onClick={() => navigate("/create-blog")}
+                onClick={() => goToEdit()}
                 startIcon={<ArrowLeft size={18} />}
                 sx={{
                   textTransform: "capitalize",
@@ -153,8 +150,9 @@ const BlogHeader = () => {
                 Back
               </Button>{" "}
               <Button
+                type="button"
                 variant="contained"
-                onClick={() => {}}
+                onClick={() => previewFormik.submitForm()}
                 startIcon={<Send size={16} />}
                 sx={{
                   textTransform: "capitalize",
@@ -276,6 +274,12 @@ const BlogHeader = () => {
       </Stack>
     </Box>
   );
+};
+
+BlogHeader.propTypes = {
+  goToPreview: PropTypes.func,
+  goToEdit: PropTypes.func,
+  previewFormik: PropTypes.object,
 };
 
 export default memo(BlogHeader);

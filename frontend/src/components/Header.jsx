@@ -38,6 +38,7 @@ import { memo, useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router";
 import { useSignOutUser } from "../hooks/api/Users";
 import {
+  useBlogActions,
   useIsAuthenticated,
   useIsDarkTheme,
   useThemeActions,
@@ -108,10 +109,17 @@ const Header = () => {
   const [activeItem, setActiveItem] = useState(null);
   const navigate = useNavigate();
 
+  const { clearBlogData } = useBlogActions();
+
   const { mutate: signOut, isPending: isSignOutPending } = useSignOutUser();
 
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
+
+  const handleCreatePost = () => {
+    clearBlogData();
+    navigate("/create-blog");
+  };
 
   const handleUserMenuOpen = (event) => {
     setAnchorEl(event.currentTarget);
@@ -373,19 +381,18 @@ const Header = () => {
                   </IconButton>
                   {isAuthenticated ? (
                     <>
-                      <Link to="/create-blog">
-                        <IconButton
-                          component={motion.button}
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                          transition={{ duration: 0.3 }}
-                          sx={{
-                            color: theme.palette.text.secondary,
-                          }}
-                        >
-                          <NoteAddIcon />
-                        </IconButton>
-                      </Link>
+                      <IconButton
+                        onClick={handleCreatePost}
+                        component={motion.button}
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        transition={{ duration: 0.3 }}
+                        sx={{
+                          color: theme.palette.text.secondary,
+                        }}
+                      >
+                        <NoteAddIcon />
+                      </IconButton>
                       <IconButton
                         component={motion.button}
                         whileHover={{ scale: 1.05 }}

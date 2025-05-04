@@ -10,30 +10,18 @@ import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import PropTypes from "prop-types";
 import { memo, useEffect, useMemo, useState } from "react";
-import { useBlogActions } from "../store/zustand.store";
 import MenuBar from "./MenuBar";
 
 const TiptapEditor = ({
-  initialContent = {
-    type: "doc",
-    content: [
-      {
-        type: "paragraph",
-        content: [],
-      },
-    ],
-  },
+  initialContent = null,
   showWordCount = true,
   showReadingTime = true,
+  formik,
 }) => {
   const theme = useTheme();
   const [wordCount, setWordCount] = useState(0);
   const [readingTime, setReadingTime] = useState(0);
   const [isMounted, setIsMounted] = useState(false);
-
-  console.log("initialContent", initialContent);
-
-  const { setBlogData } = useBlogActions();
 
   const editorStyles = useMemo(
     () => `
@@ -185,12 +173,10 @@ const TiptapEditor = ({
       setWordCount(words);
       setReadingTime(time);
 
-      setBlogData({
-        content: editor.getJSON(),
-        readingTime: {
-          minutes: time,
-          words: words,
-        },
+      formik.setFieldValue("content", editor.getJSON());
+      formik.setFieldValue("readingTime", {
+        minutes: time,
+        words: words,
       });
     };
 
@@ -200,54 +186,76 @@ const TiptapEditor = ({
     return () => {
       editor.off("update", updateStatsAndContent);
     };
-  }, [editor, setBlogData]);
+  }, [editor]);
 
   if (!isMounted || !editor) return null;
 
+  const isError = formik.touched.content && formik.errors.content;
+
   return (
-    <Box
-      sx={{
-        border: `1px solid ${theme.palette.divider}`,
-        borderRadius: 1,
-        overflow: "hidden",
-      }}
-    >
-      <style>{editorStyles}</style>
-      <MenuBar editor={editor} />
+    <>
+      <Box
+        sx={{
+          border: `1px solid ${
+            isError ? theme.palette.error.main : theme.palette.divider
+          }`,
+          borderRadius: 1,
+          overflow: "hidden",
+        }}
+      >
+        <style>{editorStyles}</style>
+        <MenuBar editor={editor} />
 
-      <Divider />
-      <EditorContent editor={editor} />
-      <Divider />
+        <Divider />
+        <EditorContent editor={editor} />
+        <Divider />
 
-      {(showWordCount || showReadingTime) && (
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "flex-end",
-            p: 1,
-            bgcolor: theme.palette.mode === "dark" ? "grey.900" : "grey.100",
-          }}
-        >
-          {showWordCount && (
-            <Typography variant="caption" color="text.secondary" sx={{ mr: 2 }}>
-              {wordCount} {wordCount === 1 ? "word" : "words"}
-            </Typography>
-          )}
-          {showReadingTime && (
-            <Typography variant="caption" color="text.secondary">
-              {readingTime} {readingTime === 1 ? "min" : "mins"} read
-            </Typography>
-          )}
+        {(showWordCount || showReadingTime) && (
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "flex-end",
+              p: 1,
+              bgcolor: theme.palette.mode === "dark" ? "grey.900" : "grey.100",
+            }}
+          >
+            {showWordCount && (
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{ mr: 2 }}
+              >
+                {wordCount} {wordCount === 1 ? "word" : "words"}
+              </Typography>
+            )}
+            {showReadingTime && (
+              <Typography variant="caption" color="text.secondary">
+                {readingTime} {readingTime === 1 ? "min" : "mins"} read
+              </Typography>
+            )}
+          </Box>
+        )}
+      </Box>
+      {isError && (
+        <Box sx={{ mt: 0.3 }}>
+          <Typography variant="caption" color="error">
+            {formik.errors.content}
+          </Typography>
         </Box>
       )}
-    </Box>
+    </>
   );
 };
-
+// PropTypes validation
 TiptapEditor.propTypes = {
   initialContent: PropTypes.object,
   showWordCount: PropTypes.bool,
   showReadingTime: PropTypes.bool,
+  formik: PropTypes.shape({
+    setFieldValue: PropTypes.func.isRequired,
+    touched: PropTypes.object,
+    errors: PropTypes.object,
+  }).isRequired, // Ensure formik has setFieldValue
 };
 
 export default memo(TiptapEditor);

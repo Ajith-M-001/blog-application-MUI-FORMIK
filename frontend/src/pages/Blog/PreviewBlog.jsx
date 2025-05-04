@@ -15,19 +15,23 @@ import { AnimatePresence, motion } from "motion/react";
 import { Footer } from "../../components/Footer";
 import { useGetAllCategory } from "../../hooks/api/category";
 import { useGetAllTags } from "../../hooks/api/tags";
-import { useBlogActions, useBlogData } from "../../store/zustand.store";
+import { useBlogData } from "../../store/zustand.store";
 import { BlogContent } from "./components/BlogContent";
 import BlogHeader from "./components/BlogHeader";
+import { useBlogForm } from "./components/BlogFormProvider";
 
 const PreviewBlog = () => {
   const theme = useTheme();
+
+  const { formik, goToEdit } = useBlogForm();
+
+  console.log("formik", formik);
 
   // Preview mode that shows how the blog will appear to readers
 
   const { data: allCategories } = useGetAllCategory();
   const { data: allTags } = useGetAllTags();
 
-  const { setBlogData } = useBlogActions();
   const blog = useBlogData();
 
   return (
@@ -46,7 +50,7 @@ const PreviewBlog = () => {
             minHeight: "100vh",
           }}
         >
-          <BlogHeader />
+          <BlogHeader previewFormik={formik} goToEdit={goToEdit} />
           <Box
             sx={{
               flexGrow: 1,
@@ -78,6 +82,7 @@ const PreviewBlog = () => {
                   <TextareaAutosize
                     aria-label="short-description"
                     minRows={3}
+                    name="shortDescription"
                     placeholder="Enter description here..."
                     maxLength={200}
                     style={{
@@ -87,31 +92,32 @@ const PreviewBlog = () => {
                       padding: "10px 14px",
                       borderRadius: 2,
                       outline: "none",
-                      border: `0.1px solid ${theme.palette.divider}`,
+                      border: `1px solid ${
+                        formik.touched.shortDescription &&
+                        formik.errors.shortDescription
+                          ? theme.palette.error.main
+                          : theme.palette.divider
+                      }`,
                       resize: "none",
                       fontFamily: theme.typography.fontFamily,
                       backgroundColor: theme.palette.background.paper,
                     }}
-                    onChange={(e) =>
-                      setBlogData({ shortDescription: e.target.value })
-                    }
-                    value={blog?.shortDescription || ""}
+                    value={formik.values.shortDescription}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
                   />
-
-                  <Typography
-                    variant="caption"
-                    color="textSecondary"
-                    sx={{ display: "block" }}
-                  >
-                    <Typography
-                      variant="caption"
-                      color="textSecondary"
-                      sx={{ display: "block" }}
-                    >
-                      This is a short description of your blog. Max{" "}
-                      {blog?.shortDescription?.length || 0}/200 characters
-                    </Typography>
-                  </Typography>
+                  {formik.touched.shortDescription &&
+                    formik.errors.shortDescription && (
+                      <div
+                        style={{
+                          color: theme.palette.error.main,
+                          fontSize: "0.875rem",
+                          marginTop: "4px",
+                        }}
+                      >
+                        {formik.errors.shortDescription}
+                      </div>
+                    )}
                 </Box>
 
                 <Box sx={{ mb: 4, width: "100%" }}>
@@ -123,12 +129,13 @@ const PreviewBlog = () => {
                   <Autocomplete
                     disablePortal
                     id="category"
+                    name="category"
                     options={allCategories?.data || []} // Pass the array directly
                     getOptionLabel={(option) => option.name}
                     onChange={(event, value) => {
-                      setBlogData({ category: value }); // Save selected category
+                      formik.setFieldValue("category", value); // Only update Formik state
                     }}
-                    value={blog?.category || null}
+                    value={formik.values.category}
                     sx={{
                       width: "100%",
                       mt: 2,
@@ -139,34 +146,42 @@ const PreviewBlog = () => {
                         {...params}
                         placeholder="Select category"
                         label="Categories"
+                        name="category"
+                        error={
+                          formik.touched.category &&
+                          Boolean(formik.errors.category)
+                        }
                       />
                     )}
                   />
-
-                  <Typography
-                    variant="caption"
-                    color="textSecondary"
-                    sx={{ display: "block" }}
-                  >
-                    Select a category for your blog
-                  </Typography>
+                  {formik.touched.category && formik.errors.category && (
+                    <div
+                      style={{
+                        color: theme.palette.error.main,
+                        fontSize: "0.875rem",
+                        marginTop: "4px",
+                      }}
+                    >
+                      {formik.errors.category}
+                    </div>
+                  )}
                 </Box>
 
                 <Box sx={{ mb: 4, width: "100%" }}>
                   <Typography variant="h6" gutterBottom>
-                    Tags{" "}
-                    <span style={{ color: theme.palette.error.main }}>*</span>
+                    Tags (optional)
                   </Typography>
 
                   <Autocomplete
                     multiple
                     id="tags"
+                    name="tags"
                     options={allTags?.data || []}
                     getOptionLabel={(option) => option.name}
-                    value={blog?.tags || []}
+                    value={formik.values.tags}
                     onChange={(event, value) => {
                       if (value.length <= 10) {
-                        setBlogData({ tags: value });
+                        formik.setFieldValue("tags", value);
                       }
                     }}
                     filterSelectedOptions
@@ -180,18 +195,13 @@ const PreviewBlog = () => {
                         {...params}
                         placeholder="Select up to 10 tags"
                         label="Tags"
+                        name="tags"
+                        error={
+                          formik.touched.tags && Boolean(formik.errors.tags)
+                        }
                       />
                     )}
                   />
-
-                  <Typography
-                    variant="caption"
-                    color="textSecondary"
-                    sx={{ display: "block", mt: 1 }}
-                  >
-                    You can select up to 10 tags. Selected{" "}
-                    {blog?.tags?.length || 0}/10
-                  </Typography>
                 </Box>
 
                 <Box sx={{ mb: 4, width: "100%" }}>
@@ -200,11 +210,11 @@ const PreviewBlog = () => {
                     <Select
                       labelId="status-label"
                       id="status-select"
-                      value={blog?.status || ""}
+                      name="status"
+                      fullWidth
+                      value={formik.values.status}
                       label="Status"
-                      onChange={(event) =>
-                        setBlogData({ status: event.target.value })
-                      }
+                      onChange={formik.handleChange}
                     >
                       <MenuItem value="draft">Draft</MenuItem>
                       <MenuItem value="published">Published</MenuItem>
@@ -216,18 +226,44 @@ const PreviewBlog = () => {
                     <TextField
                       id="schedule-date"
                       label="Schedule Date"
+                      name="scheduleDateAndTime"
                       type="datetime-local"
-                      value={blog?.scheduleDate || ""}
+                      value={formik.values.scheduleDateAndTime || ""}
                       onChange={(event) =>
-                        setBlogData({ scheduleDate: event.target.value })
+                        formik.setFieldValue(
+                          "scheduleDateAndTime",
+                          event.target.value
+                        )
                       }
                       slotProps={{
                         inputLabel: { shrink: true },
                       }}
+                      borderColor={
+                        formik.touched.scheduleDateAndTime &&
+                        formik.errors.scheduleDateAndTime
+                          ? theme.palette.error.main
+                          : theme.palette.divider
+                      }
+                      error={
+                        formik.touched.scheduleDateAndTime &&
+                        Boolean(formik.errors.scheduleDateAndTime)
+                      }
                       fullWidth
                       margin="normal"
                     />
                   )}
+                  {formik.touched.scheduleDateAndTime &&
+                    formik.errors.scheduleDateAndTime && (
+                      <div
+                        style={{
+                          color: theme.palette.error.main,
+                          fontSize: "0.875rem",
+                          marginTop: "4px",
+                        }}
+                      >
+                        {formik.errors.scheduleDate}
+                      </div>
+                    )}
                 </Box>
               </Grid2>
             </Grid2>

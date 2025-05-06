@@ -13,12 +13,16 @@ const AppLayout = lazy(() => import("./layout/AppLayout"));
 const Home = lazy(() => import("./pages/Home"));
 const About = lazy(() => import("./pages/About"));
 const Contact = lazy(() => import("./pages/Contact"));
-const SignIn = lazy(() => import("./pages/SignIn"));
-const SignUp = lazy(() => import("./pages/SignUp"));
+const SignIn = lazy(() => import("./features/auth/pages/SignIn"));
+const SignUp = lazy(() => import("./features/auth/pages/SignUp"));
 const NotFound = lazy(() => import("./pages/NotFound"));
-const OtpVerificationPage = lazy(() => import("./pages/OtpVerificationPage"));
-const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
-const ResetPassword = lazy(() => import("./pages/ResetPassword"));
+const OtpVerificationPage = lazy(() =>
+  import("./features/auth/pages/OtpVerificationPage")
+);
+const ForgotPassword = lazy(() =>
+  import("./features/auth/pages/ForgotPassword")
+);
+const ResetPassword = lazy(() => import("./features/auth/pages/ResetPassword"));
 const PreviewBlog = lazy(() => import("./pages/Blog/PreviewBlog"));
 const CreateBlog = lazy(() => import("./pages/Blog/CreateBlog"));
 

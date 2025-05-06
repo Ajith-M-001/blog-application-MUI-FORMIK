@@ -36,18 +36,19 @@ import {
 import { motion } from "motion/react";
 import { memo, useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router";
-import { useSignOutUser } from "../hooks/api/Users";
 import {
   useBlogActions,
-  useIsAuthenticated,
   useIsDarkTheme,
   useThemeActions,
-  useUserActions,
-  useUserData,
 } from "../store/zustand.store";
 import { capitalizeFirstLetter } from "../utils/capitalizeFirstLetter";
 import { buttonHoverVariants } from "../utils/motionVariants";
-import { showToast } from "../utils/toast";
+import { useSignOutUser } from "../features/auth/hooks/use-auth";
+import {
+  useIsAuthenticated,
+  useUserActions,
+  useUserData,
+} from "../features/auth/store/userStore";
 
 const SearchContainer = styled("div")(({ theme }) => ({
   position: "relative",
@@ -144,11 +145,10 @@ const Header = () => {
 
   const handleSignOut = () => {
     signOut(undefined, {
-      onSuccess: (data) => {
+      onSuccess: () => {
         navigate("/sign-in");
         setIsAuthenticated(false);
         clearUserData();
-        showToast(data?.message, { type: "success" });
         handleUserMenuClose();
         setMobileMenuOpen(false);
       },

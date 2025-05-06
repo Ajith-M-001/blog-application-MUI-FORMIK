@@ -1,6 +1,6 @@
 // src/components/routes/AuthProtectedRoute.tsx
 import { Navigate, Outlet, useLocation } from "react-router";
-import { useIsAuthenticated } from "../../store/zustand.store";
+import { useIsAuthenticated } from "../../features/auth/store/userStore";
 
 const AuthProtectedRoute = () => {
   const isAuthenticated = useIsAuthenticated();

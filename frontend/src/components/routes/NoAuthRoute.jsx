@@ -1,5 +1,5 @@
-import { useIsAuthenticated } from "../../store/zustand.store";
 import { Navigate, Outlet, useLocation } from "react-router";
+import { useIsAuthenticated } from "../../features/auth/store/userStore";
 
 const NoAuthRoute = () => {
   const isAuthenticated = useIsAuthenticated();

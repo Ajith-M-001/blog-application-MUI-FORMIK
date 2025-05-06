@@ -3,14 +3,11 @@ import { useEffect, useRef, useState } from "react";
 import { Form, Formik } from "formik";
 import * as Yup from "yup";
 import { LoaderCircle, BadgeCheck, MoveRight } from "lucide-react";
-import { useResentOTP, useVerifyOtp } from "../../hooks/api/Users";
 import { useNavigate } from "react-router";
-import { showToast } from "../../utils/toast";
 import PropTypes from "prop-types";
-
+import { useResendOTP, useVerifyOtp } from "../../hooks/use-auth";
 const OtpVerification = ({ contactType, contactValue, reset }) => {
   const [resendTimer, setResendTimer] = useState(30);
-
 
   const inputRefs = useRef([]);
   const navigate = useNavigate();
@@ -28,7 +25,7 @@ const OtpVerification = ({ contactType, contactValue, reset }) => {
   }, [resendTimer]);
 
   const { mutate: verifyOTP, isPending: isVerifying } = useVerifyOtp();
-  const { mutate: resendOTP, isPending: isResending } = useResentOTP();
+  const { mutate: resendOTP, isPending: isResending } = useResendOTP();
 
   // Mask the contact value (email or phone)
   const maskedContact = () => {
@@ -59,15 +56,13 @@ const OtpVerification = ({ contactType, contactValue, reset }) => {
     setResendTimer(30);
   };
 
-  const handleSubmit = (values) => {
+  const handleSubmit = (values, { resetForm }) => {
     const OTP = values.otp.join("");
     verifyOTP(
       { [contactType]: contactValue, otp: OTP, reset },
       {
-        onSuccess: (data) => {
-          showToast(data.message, { type: "success" });
-
-          const navigateTo = reset ? "/reset-password" : "/";
+        onSuccess: () => {
+          const navigateTo = reset ? "/reset-password" : "/sign-in";
           const navigateOptions = reset
             ? {
                 state: {
@@ -78,6 +73,9 @@ const OtpVerification = ({ contactType, contactValue, reset }) => {
               }
             : {};
           navigate(navigateTo, navigateOptions);
+        },
+        onError: () => {
+          resetForm();
         },
       }
     );

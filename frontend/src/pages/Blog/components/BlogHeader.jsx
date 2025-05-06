@@ -23,11 +23,10 @@ import {
 } from "lucide-react";
 import { motion } from "motion/react";
 import { Link, useLocation, useNavigate } from "react-router";
-import { useSignOutUser } from "../../../hooks/api/Users";
-import { useUserActions, useUserData } from "../../../store/zustand.store";
-import { showToast } from "../../../utils/toast";
 import { capitalizeFirstLetter } from "../../../utils/capitalizeFirstLetter";
 import PropTypes from "prop-types";
+import { useSignOutUser } from "../../../features/auth/hooks/use-auth";
+import { useUserActions, useUserData } from "../../../features/auth/store/userStore";
 
 const BlogHeader = (props) => {
   const theme = useTheme();
@@ -59,11 +58,10 @@ const BlogHeader = (props) => {
 
   const handleSignOut = () => {
     signOut(undefined, {
-      onSuccess: (data) => {
+      onSuccess: () => {
         navigate("/sign-in");
         setIsAuthenticated(false);
         clearUserData();
-        showToast(data?.message, { type: "success" });
         handleUserMenuClose();
       },
     });

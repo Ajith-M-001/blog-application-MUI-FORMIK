@@ -9,8 +9,6 @@ import {
 import { Form, Formik } from "formik";
 import { AnimatePresence, motion } from "motion/react";
 import * as Yup from "yup";
-import CountryPhoneSelector from "../components/MUI.Components/CountryPhoneSelector";
-import { FormField } from "../components/MUI.Components/FormField";
 import {
   LoaderCircle,
   BadgeCheck,
@@ -20,8 +18,9 @@ import {
   MoveLeft,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router";
-import { useForgotPassword } from "../hooks/api/Users";
-import { showToast } from "../utils/toast";
+import { useForgotPassword } from "../hooks/use-auth";
+import { FormField } from "../../../components/MUI.Components/FormField";
+import CountryPhoneSelector from "../../../components/MUI.Components/CountryPhoneSelector";
 
 const resetSchema = Yup.object().shape({
   useEmail: Yup.boolean(),
@@ -55,9 +54,7 @@ const ForgotPassword = () => {
       : { phoneNumber: values.phoneNumber, reset: true };
 
     forgotPassword(payload, {
-      onSuccess: (data) => {
-        showToast(data.message, { type: "success" });
-        console.log("FASDFASDF", data);
+      onSuccess: () => {
         navigate("/otp-verification", {
           state: {
             reset: true,

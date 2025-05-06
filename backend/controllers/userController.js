@@ -434,20 +434,7 @@ export const resendOtp = asyncHandler(async (req, res, next) => {
   if (!user) {
     return res.status(404).json(ApiResponse.notFound("User not found"));
   }
-
-  if (reset) {
-    if (user.forgotPasswordExpires > new Date()) {
-      return res
-        .status(400)
-        .json(ApiResponse.error("OTP has already been sent", 400));
-    }
-  } else {
-    if (user.verificationCodeExpires > new Date()) {
-      return res
-        .status(400)
-        .json(ApiResponse.error("OTP has already been sent", 400));
-    }
-  }
+   
   const otp = generateOTP();
   const otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
 
@@ -583,12 +570,6 @@ export const forgotPassword = transactionHandler(async (req, res, next) => {
   console.log("user", user.forgotPasswordExpires, new Date());
   if (!user) {
     return res.status(404).json(ApiResponse.notFound("User not found"));
-  }
-
-  if (user.forgotPasswordExpires > new Date()) {
-    return res
-      .status(400)
-      .json(ApiResponse.error("OTP has already been sent", 400));
   }
 
   const otp = generateOTP();

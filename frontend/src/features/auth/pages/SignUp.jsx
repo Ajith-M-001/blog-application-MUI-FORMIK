@@ -12,14 +12,13 @@ import { Form, Formik } from "formik";
 import { AnimatePresence, motion } from "motion/react";
 import * as Yup from "yup";
 import { parsePhoneNumber } from "libphonenumber-js/max";
-import { useGetAllCountry } from "../hooks/api/countries";
 import { Link, useNavigate } from "react-router";
-import { showToast } from "../utils/toast";
-import { FormField } from "../components/MUI.Components/FormField";
 import { LoaderCircle, BadgeCheck, MoveRight, Phone, Mail } from "lucide-react";
-import CountryPhoneSelector from "../components/MUI.Components/CountryPhoneSelector";
 import GoogleIcon from "@mui/icons-material/Google";
-import { useSignUpUser } from "../hooks/api/Users";
+import { FormField } from "../../../components/MUI.Components/FormField";
+import { useSignUpUser } from "../hooks/use-auth";
+import CountryPhoneSelector from "../../../components/MUI.Components/CountryPhoneSelector";
+import { useGetAllCountry } from "../../../hooks/api/countries";
 
 // Validation schema with conditional validation for email/phone
 const SignUpSchema = Yup.object().shape({
@@ -115,7 +114,6 @@ const SignUp = () => {
   const handleSubmit = (values) => {
     SignUpUser(values, {
       onSuccess: (data) => {
-        showToast(data.message, { type: "success" });
         navigate("/otp-verification", {
           state: {
             contactType: values.useEmail ? "email" : "phoneNumber",

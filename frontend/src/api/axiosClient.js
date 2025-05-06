@@ -1,11 +1,11 @@
 import axios from "axios";
-import { API_ENDPOINTS } from "./endpoints";
-import useStore from "../store/zustand.store";
+import { API_ENDPOINTS } from "../features/auth/api/endpoints";
+import useUserStore from "../features/auth/store/userStore";
 
 const baseURL =
   import.meta.env.MODE === "development"
-    ? "http://localhost:3000/api/v1"
-    : import.meta.env.VITE_API_BASE_URL;
+    ? import.meta.env.VITE_API_BASE_URL_DEV
+    : import.meta.env.VITE_API_BASE_URL_PROD;
 
 // Create axios instance with base URL
 const axiosInstance = axios.create({
@@ -87,9 +87,9 @@ axiosInstance.interceptors.response.use(
 );
 
 const logoutUser = () => {
-  const { clearUserData, setIsAuthenticated } = useStore.getState();
-  clearUserData();
-  setIsAuthenticated(false);
+  const { userActions } = useUserStore.getState();
+  userActions.clearUserData();
+  userActions.setIsAuthenticated(false);
   window.location.href = "/sign-in";
 };
 

@@ -4,9 +4,8 @@ import { KeyRound } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useLocation, useNavigate } from "react-router";
 import * as Yup from "yup";
-import { FormField } from "../components/MUI.Components/FormField";
-import { useResetPassword, useResetPasswordWithOTP } from "../hooks/api/Users";
-import { showToast } from "../utils/toast";
+import { useResetPassword, useResetPasswordWithOTP } from "../hooks/use-auth";
+import { FormField } from "../../../components/MUI.Components/FormField";
 
 const resetPasswordSchema = Yup.object().shape({
   password: Yup.string()
@@ -34,9 +33,6 @@ const ResetPassword = () => {
     isPending: resetPasswordWithOTPPending,
   } = useResetPasswordWithOTP();
 
-  console.log("location", location);
-  console.log("location", isFromOTPVerification);
-
   const initialValues = {
     fromOTPVerification: isFromOTPVerification,
     password: "",
@@ -62,14 +58,12 @@ const ResetPassword = () => {
 
     isFromOTPVerification
       ? resetPasswordWithOTP(payload, {
-          onSuccess: (data) => {
-            showToast(data.message, { type: "success" });
+          onSuccess: () => {
             navigate("/sign-in");
           },
         })
       : resetPassword(values, {
-          onSuccess: (data) => {
-            showToast(data.message, { type: "success" });
+          onSuccess: () => {
             navigate("/sign-in");
           },
         });

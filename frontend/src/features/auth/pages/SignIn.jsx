@@ -22,10 +22,10 @@ import { AnimatePresence, motion } from "motion/react";
 import { useEffect } from "react";
 import { Link, useNavigate } from "react-router";
 import * as Yup from "yup";
-import { FormField } from "../components/MUI.Components/FormField";
-import { useSignInUser } from "../hooks/api/Users";
-import { useUserActions } from "../store/zustand.store";
-import { showToast } from "../utils/toast";
+import { showToast } from "../../../utils/toast";
+import { useSignInUser } from "../hooks/use-auth";
+import { FormField } from "../../../components/MUI.Components/FormField";
+import { useUserActions } from "../store/userStore";
 
 const SignInSchema = Yup.object().shape({
   email: Yup.string().when("useEmail", {
@@ -58,7 +58,7 @@ const SignInSchema = Yup.object().shape({
 const SignIn = () => {
   const theme = useTheme();
   const navigate = useNavigate();
-  const { mutate: signInUser, isPending: isSigningIn } = useSignInUser();
+  const { mutate: signInUser, isPending: isSigningIn } = useSignInUser({});
   const urlParams = new URLSearchParams(window.location.search);
   const authMessage = urlParams.get("auth");
 
@@ -80,10 +80,9 @@ const SignIn = () => {
   const HandleSubmit = (values, { resetForm }) => {
     console.log(values);
     signInUser(values, {
-      onSuccess: (data) => {
+      onSuccess: () => {
         setIsAuthenticated(true);
         resetForm();
-        showToast(data.message, { type: "success" });
         navigate("/");
       },
     });

@@ -1,8 +1,11 @@
 import { Typography, useTheme } from "@mui/material";
 import { lazy, Suspense, useEffect, useState } from "react";
-import { useGetUserDetails } from "../hooks/api/Users";
-import { useIsAuthenticated, useUserActions } from "../store/zustand.store";
 import { showToast } from "../utils/toast";
+import { useGetUserDetails } from "../features/auth/hooks/use-auth";
+import {
+  useIsAuthenticated,
+  useUserActions,
+} from "../features/auth/store/userStore";
 
 const VerificationDrawer = lazy(() =>
   import("../components/Drawer/VerificationDrawer")

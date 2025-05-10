@@ -434,7 +434,7 @@ export const resendOtp = asyncHandler(async (req, res, next) => {
   if (!user) {
     return res.status(404).json(ApiResponse.notFound("User not found"));
   }
-   
+
   const otp = generateOTP();
   const otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
 
@@ -567,7 +567,6 @@ export const forgotPassword = transactionHandler(async (req, res, next) => {
     "+forgotPasswordCode +forgotPasswordExpires"
   );
 
-  console.log("user", user.forgotPasswordExpires, new Date());
   if (!user) {
     return res.status(404).json(ApiResponse.notFound("User not found"));
   }

@@ -3,9 +3,10 @@ import { API_ENDPOINTS } from "../features/auth/api/endpoints";
 import useUserStore from "../features/auth/store/userStore";
 
 const baseURL =
-  import.meta.env.MODE === "development"
+  import.meta.env.VITE_ENV === "development"
     ? import.meta.env.VITE_API_BASE_URL_DEV
     : import.meta.env.VITE_API_BASE_URL_PROD;
+
 
 // Create axios instance with base URL
 const axiosInstance = axios.create({

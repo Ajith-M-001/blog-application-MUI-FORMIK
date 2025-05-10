@@ -41,34 +41,33 @@ class ErrorBoundary extends React.Component {
             <Typography variant="body1" color="text.secondary" paragraph>
               We&apos;re sorry, but there was an error loading this page.
             </Typography>
-            {import.meta.env.VITE_NODE_ENV === "development" &&
-              this.state.error && (
-                <Box
-                  sx={{
-                    my: 4,
-                    textAlign: "left",
-                    bgcolor: "#f5f5f5",
-                    p: 2,
-                    borderRadius: 1,
-                  }}
+            {import.meta.env.VITE_ENV === "development" && this.state.error && (
+              <Box
+                sx={{
+                  my: 4,
+                  textAlign: "left",
+                  bgcolor: "#f5f5f5",
+                  p: 2,
+                  borderRadius: 1,
+                }}
+              >
+                <Typography
+                  variant="subtitle2"
+                  component="p"
+                  sx={{ fontFamily: "monospace" }}
                 >
-                  <Typography
-                    variant="subtitle2"
-                    component="p"
-                    sx={{ fontFamily: "monospace" }}
+                  {this.state.error.toString()}
+                </Typography>
+                {this.state.errorInfo && (
+                  <Box
+                    component="pre"
+                    sx={{ mt: 2, overflow: "auto", maxHeight: "300px" }}
                   >
-                    {this.state.error.toString()}
-                  </Typography>
-                  {this.state.errorInfo && (
-                    <Box
-                      component="pre"
-                      sx={{ mt: 2, overflow: "auto", maxHeight: "300px" }}
-                    >
-                      {this.state.errorInfo.componentStack}
-                    </Box>
-                  )}
-                </Box>
-              )}
+                    {this.state.errorInfo.componentStack}
+                  </Box>
+                )}
+              </Box>
+            )}
             <Button
               variant="contained"
               color="primary"

@@ -16,9 +16,8 @@ import { Link, useNavigate } from "react-router";
 import { LoaderCircle, BadgeCheck, MoveRight, Phone, Mail } from "lucide-react";
 import GoogleIcon from "@mui/icons-material/Google";
 import { FormField } from "../../../shared/components/MUI.Components/FormField";
-import { useSignUpUser } from "../hooks/use-auth";
+import { useGetAllCountry, useSignUpUser } from "../hooks/use-auth";
 import CountryPhoneSelector from "../../../shared/components/MUI.Components/CountryPhoneSelector";
-import { useGetAllCountry } from "../../../hooks/api/countries";
 
 // Validation schema with conditional validation for email/phone
 const SignUpSchema = Yup.object().shape({

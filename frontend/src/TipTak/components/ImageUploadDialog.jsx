@@ -12,9 +12,9 @@ import {
 } from "@mui/material";
 import { Image, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { validateFile } from "../../utils/imageValidation";
-import { useUploadImage } from "../../hooks/api/Upload";
 import PropTypes from "prop-types";
+import { useUploadImage } from "../../features/blog/hooks/use-blog";
+import { validateFile } from "../../shared/utils/imageValidation";
 
 const ImageUploadDialog = ({ editor, open, onClose }) => {
   const [selectedFile, setSelectedFile] = useState(null);

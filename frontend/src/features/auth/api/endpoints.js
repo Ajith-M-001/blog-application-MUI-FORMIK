@@ -1,4 +1,5 @@
 const USER_URL = "/users";
+const COUNTRY_URL = "/countries";
 
 export const API_ENDPOINTS = {
   users: {
@@ -13,5 +14,8 @@ export const API_ENDPOINTS = {
     getUserDetails: `${USER_URL}/get-user-details`,
     resetPassword: `${USER_URL}/reset-password`,
     resetPasswordWithOTP: `${USER_URL}/reset-password-with-otp`,
+  },
+  countries: {
+    all: `${COUNTRY_URL}/all`,
   },
 };

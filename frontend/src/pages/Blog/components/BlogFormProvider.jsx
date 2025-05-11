@@ -3,8 +3,8 @@ import { useFormik } from "formik";
 import { useNavigate } from "react-router";
 import { useBlogActions, useBlogData } from "../../../store/zustand.store";
 import * as Yup from "yup";
-import { BLOG_STATUS } from "../../../constants/constants";
 import { createContext, useCallback, useContext, useEffect } from "react";
+import { BLOG_STATUS } from "../../../shared/constants/constants";
 
 const countWordsInContent = (content) => {
   const text = content?.content?.length

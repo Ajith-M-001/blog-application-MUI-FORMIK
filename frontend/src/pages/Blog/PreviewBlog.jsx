@@ -12,13 +12,15 @@ import {
   useTheme,
 } from "@mui/material";
 import { AnimatePresence, motion } from "motion/react";
-import { Footer } from "../../components/Footer";
-import { useGetAllCategory } from "../../hooks/api/category";
-import { useGetAllTags } from "../../hooks/api/tags";
 import { useBlogData } from "../../store/zustand.store";
 import { BlogContent } from "./components/BlogContent";
 import BlogHeader from "./components/BlogHeader";
 import { useBlogForm } from "./components/BlogFormProvider";
+import {
+  useGetAllCategory,
+  useGetAllTags,
+} from "../../features/blog/hooks/use-blog";
+import { Footer } from "../../shared/components/layout/Footer";
 
 const PreviewBlog = () => {
   const theme = useTheme();

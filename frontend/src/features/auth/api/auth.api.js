@@ -72,5 +72,9 @@ export const resetPasswordWithOTP = async (resetData) => {
   return data;
 };
 
-
-
+export const getAllCountry = async ({ signal }) => {
+  const response = await axiosInstance.get(API_ENDPOINTS.countries.all, {
+    signal,
+  });
+  return response.data;
+};

@@ -12,13 +12,13 @@ import {
 import { ImageUp, Trash2 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Footer } from "../../components/Footer";
-import { useUploadImage } from "../../hooks/api/Upload";
 import { useBlogActions, useBlogData } from "../../store/zustand.store";
 import TiptapEditor from "../../TipTak/TiptapEditor";
-import { validateFile } from "../../utils/imageValidation";
 import BlogHeader from "./components/BlogHeader";
 import { useBlogForm } from "./components/BlogFormProvider";
+import { useUploadImage } from "../../features/blog/hooks/use-blog";
+import { Footer } from "../../shared/components/layout/Footer";
+import { validateFile } from "../../shared/utils/imageValidation";
 
 const CreateBlog = () => {
   const theme = useTheme();

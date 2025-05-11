@@ -41,7 +41,6 @@ import {
   useIsDarkTheme,
   useThemeActions,
 } from "../../../store/zustand.store";
-import { capitalizeFirstLetter } from "../../utils/capitalizeFirstLetter";
 import { buttonHoverVariants } from "../../utils/motionVariants";
 import { useSignOutUser } from "../../../features/auth/hooks/use-auth";
 import {
@@ -49,6 +48,7 @@ import {
   useUserActions,
   useUserData,
 } from "../../../features/auth/store/userStore";
+import { capitalizeFirstLetter } from "../../utils/capitalizeFirstLetter";
 
 const SearchContainer = styled("div")(({ theme }) => ({
   position: "relative",

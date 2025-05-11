@@ -4,6 +4,7 @@ import { FallBackLoader } from "../../shared/components/Loaders/FallBackLoader";
 import AppLayout from "../layouts/AppLayout";
 import { authRoutes } from "../../features/auth/routes/AuthRoutes";
 import { ErrorBoundary } from "../../shared/components/ErrorBoundary/ErrorBoundary";
+import { blogRoutes } from "../../features/blog/routes/blogRoutes";
 
 // Lazy load public pages
 const Home = lazy(() => import("../../pages/Home"));
@@ -29,6 +30,7 @@ const AppRoutes = () => {
               {/* Catch-all Route */}
               <Route path="*" element={<NotFound />} />
             </Route>
+            {blogRoutes}
           </Routes>
         </Suspense>
       </BrowserRouter>

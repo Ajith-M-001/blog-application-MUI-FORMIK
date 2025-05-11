@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   forgotPassword,
+  getAllCountry,
   getUserDetails,
   resentOtp,
   resetPassword,
@@ -76,6 +77,14 @@ export const useResetPassword = (options = {}) => {
 export const useResetPasswordWithOTP = (options = {}) => {
   return useMutation({
     mutationFn: resetPasswordWithOTP,
+    ...options,
+  });
+};
+
+export const useGetAllCountry = (options = {}) => {
+  return useQuery({
+    queryKey: AUTH_QUERY_KEYS.COUNTRIES,
+    queryFn: ({ signal }) => getAllCountry({ signal }),
     ...options,
   });
 };

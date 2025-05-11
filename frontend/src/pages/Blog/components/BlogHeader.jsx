@@ -23,10 +23,10 @@ import {
 } from "lucide-react";
 import { motion } from "motion/react";
 import { Link, useLocation, useNavigate } from "react-router";
-import { capitalizeFirstLetter } from "../../../utils/capitalizeFirstLetter";
 import PropTypes from "prop-types";
 import { useSignOutUser } from "../../../features/auth/hooks/use-auth";
 import { useUserActions, useUserData } from "../../../features/auth/store/userStore";
+import { capitalizeFirstLetter } from "../../../shared/utils/capitalizeFirstLetter";
 
 const BlogHeader = (props) => {
   const theme = useTheme();

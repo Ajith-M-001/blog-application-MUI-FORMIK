@@ -15,9 +15,9 @@ import { X } from "lucide-react";
 import { useNavigate } from "react-router";
 import * as Yup from "yup";
 import { useResentOTP } from "../../hooks/api/Users";
-import { showToast } from "../../utils/toast";
-import CountryPhoneSelector from "../MUI.Components/CountryPhoneSelector";
-import { FormField } from "../MUI.Components/FormField";
+import { showToast } from "../../../shared/utils/toast";
+import CountryPhoneSelector from "../../../shared/components/MUI.Components/CountryPhoneSelector";
+import { FormField } from "../../../shared/components/MUI.Components/FormField";
 import PropTypes from "prop-types";
 
 const getValidateSchema = Yup.object().shape({

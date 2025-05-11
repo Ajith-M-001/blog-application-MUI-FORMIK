@@ -6,12 +6,12 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import App from "./App.jsx";
-import { NotificationToaster } from "./components/Toaster.jsx";
+import { NotificationToaster } from "./shared/components/Toaster/Toaster.jsx";
 import "./index.css";
 import { useIsDarkTheme } from "./store/zustand.store.js";
 import { darkTheme, lightTheme } from "./theme.js";
 import queryClient from "./api/queryClient.js";
+import App from "./app/App.jsx";
 
 const RootApp = () => {
   const isDarkTheme = useIsDarkTheme();

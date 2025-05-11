@@ -2,7 +2,7 @@ import { Box } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router";
 import { AnimatePresence, motion } from "motion/react";
-import { OtpVerification } from "../components/otpVerification/OtpVerification";
+import { OtpVerification } from "../components/OtpVerification";
 
 const OtpVerificationPage = () => {
   const [mounted, setMounted] = useState(false);

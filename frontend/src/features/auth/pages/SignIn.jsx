@@ -22,9 +22,9 @@ import { AnimatePresence, motion } from "motion/react";
 import { useEffect } from "react";
 import { Link, useNavigate } from "react-router";
 import * as Yup from "yup";
-import { showToast } from "../../../utils/toast";
+import { showToast } from "../../../shared/utils/toast";
 import { useSignInUser } from "../hooks/use-auth";
-import { FormField } from "../../../components/MUI.Components/FormField";
+import { FormField } from "../../../shared/components/MUI.Components/FormField";
 import { useUserActions } from "../store/userStore";
 
 const SignInSchema = Yup.object().shape({

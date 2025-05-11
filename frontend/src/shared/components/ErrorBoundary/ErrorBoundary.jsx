@@ -46,7 +46,7 @@ class ErrorBoundary extends React.Component {
                 sx={{
                   my: 4,
                   textAlign: "left",
-                  bgcolor: "#f5f5f5",
+                  bgcolor: "background.paper",
                   p: 2,
                   borderRadius: 1,
                 }}

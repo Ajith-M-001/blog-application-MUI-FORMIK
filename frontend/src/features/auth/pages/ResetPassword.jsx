@@ -5,7 +5,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { useLocation, useNavigate } from "react-router";
 import * as Yup from "yup";
 import { useResetPassword, useResetPasswordWithOTP } from "../hooks/use-auth";
-import { FormField } from "../../../components/MUI.Components/FormField";
+import { FormField } from "../../../shared/components/MUI.Components/FormField";
 
 const resetPasswordSchema = Yup.object().shape({
   password: Yup.string()

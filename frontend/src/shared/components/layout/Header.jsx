@@ -40,15 +40,15 @@ import {
   useBlogActions,
   useIsDarkTheme,
   useThemeActions,
-} from "../store/zustand.store";
-import { capitalizeFirstLetter } from "../utils/capitalizeFirstLetter";
-import { buttonHoverVariants } from "../utils/motionVariants";
-import { useSignOutUser } from "../features/auth/hooks/use-auth";
+} from "../../../store/zustand.store";
+import { capitalizeFirstLetter } from "../../utils/capitalizeFirstLetter";
+import { buttonHoverVariants } from "../../utils/motionVariants";
+import { useSignOutUser } from "../../../features/auth/hooks/use-auth";
 import {
   useIsAuthenticated,
   useUserActions,
   useUserData,
-} from "../features/auth/store/userStore";
+} from "../../../features/auth/store/userStore";
 
 const SearchContainer = styled("div")(({ theme }) => ({
   position: "relative",

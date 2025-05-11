@@ -1,6 +1,6 @@
 import { Box, Container, useTheme } from "@mui/material";
-import { Header } from "../components/Header";
-import { Footer } from "../components/Footer";
+import { Header } from "../../shared/components/layout/Header";
+import { Footer } from "../../shared/components/layout/Footer";
 import { Outlet } from "react-router";
 
 const AppLayout = () => {
@@ -18,7 +18,7 @@ const AppLayout = () => {
           pb: theme.spacing(0.2),
         }}
       >
-        <Container maxWidth="xl" sx={{ height: "100%"}}>
+        <Container maxWidth="xl" sx={{ height: "100%" }}>
           <Outlet />
         </Container>
       </Box>

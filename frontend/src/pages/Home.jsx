@@ -1,6 +1,6 @@
 import { Typography, useTheme } from "@mui/material";
 import { lazy, Suspense, useEffect, useState } from "react";
-import { showToast } from "../utils/toast";
+import { showToast } from "../shared/utils/toast";
 import { useGetUserDetails } from "../features/auth/hooks/use-auth";
 import {
   useIsAuthenticated,
@@ -8,7 +8,7 @@ import {
 } from "../features/auth/store/userStore";
 
 const VerificationDrawer = lazy(() =>
-  import("../components/Drawer/VerificationDrawer")
+  import("../features/auth/components/VerificationDrawer")
 );
 
 const Home = () => {

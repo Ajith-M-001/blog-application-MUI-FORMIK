@@ -19,8 +19,8 @@ import {
 } from "lucide-react";
 import { Link, useNavigate } from "react-router";
 import { useForgotPassword } from "../hooks/use-auth";
-import { FormField } from "../../../components/MUI.Components/FormField";
-import CountryPhoneSelector from "../../../components/MUI.Components/CountryPhoneSelector";
+import { FormField } from "../../../shared/components/MUI.Components/FormField";
+import CountryPhoneSelector from "../../../shared/components/MUI.Components/CountryPhoneSelector";
 
 const resetSchema = Yup.object().shape({
   useEmail: Yup.boolean(),

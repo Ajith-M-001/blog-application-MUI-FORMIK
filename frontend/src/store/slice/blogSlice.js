@@ -1,4 +1,4 @@
-import { BLOG_STATUS } from "../../constants/constants";
+import { BLOG_STATUS } from "../../shared/constants/constants";
 
 const INITIAL_BLOG_STATE = {
   title: "",

@@ -5,7 +5,7 @@ import * as Yup from "yup";
 import { LoaderCircle, BadgeCheck, MoveRight } from "lucide-react";
 import { useNavigate } from "react-router";
 import PropTypes from "prop-types";
-import { useResendOTP, useVerifyOtp } from "../../hooks/use-auth";
+import { useResendOTP, useVerifyOtp } from "../hooks/use-auth";
 const OtpVerification = ({ contactType, contactValue, reset }) => {
   const [resendTimer, setResendTimer] = useState(30);
 

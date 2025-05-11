@@ -16,3 +16,8 @@ export const BLOG_STATUS = {
   PUBLISHED: "published",
   SCHEDULED: "scheduled",
 };
+
+export const GUARD_TYPE = {
+  AUTH: "auth",
+  NO_AUTH: "no-auth",
+};

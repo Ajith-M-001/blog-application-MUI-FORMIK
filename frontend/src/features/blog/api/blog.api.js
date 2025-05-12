@@ -55,3 +55,38 @@ export const getAllCategory = async ({ signal }) => {
   });
   return response.data;
 };
+
+export const publishBlog = async ({ blogData }) => {
+  const response = await axiosInstance.post(
+    API_ENDPOINTS.blogs.publish,
+    blogData
+  );
+  return response.data;
+};
+
+export const getAllBlogs = async ({ signal }) => {
+  const response = await axiosInstance.get(API_ENDPOINTS.blogs.all, {
+    signal,
+  });
+  return response.data;
+};
+
+export const getBlogBySlug = async ({ slug, signal }) => {
+  const response = await axiosInstance.get(API_ENDPOINTS.blogs.slug(slug), {
+    signal,
+  });
+  return response.data;
+};
+
+export const updateBlog = async ({ id, blogData }) => {
+  const response = await axiosInstance.put(
+    API_ENDPOINTS.blogs.update(id),
+    blogData
+  );
+  return response.data;
+};
+
+export const deleteBlog = async ({ id }) => {
+  const response = await axiosInstance.delete(API_ENDPOINTS.blog.delete(id));
+  return response.data;
+};

@@ -25,7 +25,7 @@ import * as Yup from "yup";
 import { showToast } from "../../../shared/utils/toast";
 import { useSignInUser } from "../hooks/use-auth";
 import { FormField } from "../../../shared/components/MUI.Components/FormField";
-import { useUserActions } from "../store/userStore";
+import { useUserActions } from "../../../shared/store/userStore";
 
 const SignInSchema = Yup.object().shape({
   email: Yup.string().when("useEmail", {

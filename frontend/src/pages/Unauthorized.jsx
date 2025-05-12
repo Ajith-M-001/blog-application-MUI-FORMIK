@@ -1,9 +1,9 @@
 import { Box, Button, Typography, useTheme } from "@mui/material";
-import { ArrowLeft, Home } from "lucide-react";
+import { ArrowLeft, Home, ShieldAlert } from "lucide-react";
 import { motion } from "motion/react";
 import { useNavigate } from "react-router";
 
-const NotFound = () => {
+const Unauthorized = () => {
   const theme = useTheme();
   const navigate = useNavigate();
 
@@ -27,21 +27,37 @@ const NotFound = () => {
           textAlign: "center",
           maxWidth: "600px",
           mx: "auto",
-          padding: 4,
         }}
       >
+        <motion.div
+          initial={{ scale: 0.5, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <ShieldAlert
+            size={60}
+            color={theme.palette.error.main}
+            style={{ marginBottom: "1rem" }}
+          />
+        </motion.div>
+
         <Typography
           variant="h1"
           sx={{
-            fontSize: { xs: "6rem", sm: "8rem" },
+            fontSize: { xs: "3rem", sm: "6rem" },
             fontWeight: 700,
-            background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+            background: `linear-gradient(135deg, ${theme.palette.error.main}, ${theme.palette.error.light})`,
             WebkitBackgroundClip: "text",
             WebkitTextFillColor: "transparent",
             mb: 2,
           }}
         >
-          404
+          403
         </Typography>
 
         <Typography
@@ -51,7 +67,7 @@ const NotFound = () => {
             fontWeight: 600,
           }}
         >
-          Page Not Found
+          Access Denied
         </Typography>
 
         <Typography
@@ -63,8 +79,8 @@ const NotFound = () => {
             mx: "auto",
           }}
         >
-          The page you&apos;re looking for doesn&apos;t exist or has been moved.
-          Please check the URL or return to the homepage.
+          You don&apos;t have permission to access this page. Please sign in
+          with appropriate credentials or return to the homepage.
         </Typography>
 
         <Box
@@ -94,6 +110,7 @@ const NotFound = () => {
             variant="contained"
             startIcon={<Home size={18} />}
             onClick={() => navigate("/")}
+            color="error"
             sx={{
               px: 3,
               py: 1,
@@ -110,4 +127,4 @@ const NotFound = () => {
   );
 };
 
-export default NotFound;
+export default Unauthorized;

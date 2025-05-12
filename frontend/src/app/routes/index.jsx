@@ -5,6 +5,7 @@ import AppLayout from "../layouts/AppLayout";
 import { authRoutes } from "../../features/auth/routes/AuthRoutes";
 import { ErrorBoundary } from "../../shared/components/ErrorBoundary/ErrorBoundary";
 import { blogRoutes } from "../../features/blog/routes/blogRoutes";
+import Unauthorized from "../../pages/Unauthorized";
 
 // Lazy load public pages
 const Home = lazy(() => import("../../pages/Home"));
@@ -27,6 +28,7 @@ const AppRoutes = () => {
               {/* Auth Routes */}
               {authRoutes}
 
+              <Route path="unauthorized" element={<Unauthorized />} />
               {/* Catch-all Route */}
               <Route path="*" element={<NotFound />} />
             </Route>

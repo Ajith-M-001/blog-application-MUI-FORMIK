@@ -1,9 +1,13 @@
 import { Route } from "react-router";
 import ProtectedRoute from "../../../app/routes/ProtectedRoute";
 import { GUARD_TYPE } from "../../../shared/constants/constants";
-import CreateBlog from "../pages/CreateBlog";
-import PreviewBlog from "../pages/PreviewBlog";
 import BlogFormProvider from "../providers/BlogFormProvider";
+import { lazy, Suspense } from "react";
+import { FallBackLoader } from "../../../shared/components/Loaders/FallBackLoader";
+
+// Lazy load blog components for better performance
+const CreateBlog = lazy(() => import("../pages/CreateBlog"));
+const PreviewBlog = lazy(() => import("../pages/PreviewBlog"));
 
 export const blogRoutes = (
   <>
@@ -13,7 +17,9 @@ export const blogRoutes = (
         path="create-blog"
         element={
           <BlogFormProvider>
-            <CreateBlog />
+            <Suspense fallback={<FallBackLoader />}>
+              <CreateBlog />
+            </Suspense>
           </BlogFormProvider>
         }
       />
@@ -21,7 +27,9 @@ export const blogRoutes = (
         path="preview-blog"
         element={
           <BlogFormProvider>
-            <PreviewBlog />
+            <Suspense fallback={<FallBackLoader />}>
+              <PreviewBlog />
+            </Suspense>
           </BlogFormProvider>
         }
       />

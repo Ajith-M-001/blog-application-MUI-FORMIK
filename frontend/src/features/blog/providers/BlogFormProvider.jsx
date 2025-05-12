@@ -2,18 +2,25 @@ import PropTypes from "prop-types";
 import { useFormik } from "formik";
 import { useNavigate } from "react-router";
 import * as Yup from "yup";
-import { createContext, useCallback, useContext, useEffect } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+} from "react";
 import { BLOG_STATUS } from "../../../shared/constants/constants";
 import { useBlogActions, useBlogData } from "../../../shared/store/blogStore";
 
 const countWordsInContent = (content) => {
-  const text = content?.content?.length
-    ? content.content
-        .map((item) =>
-          item?.content?.map((textNode) => textNode.text).join(" ")
-        )
-        .join(" ")
-    : "";
+  if (!content?.content?.length) return 0;
+
+  const text = content.content
+    .map((item) =>
+      item?.content?.map((textNode) => textNode?.text || "").join(" ")
+    )
+    .join(" ");
 
   return text.trim().split(/\s+/).filter(Boolean).length;
 };
@@ -25,7 +32,7 @@ const createBlogSchema = Yup.object().shape({
   title: Yup.string()
     .required("Title is required")
     .min(5, "Title must be at least 5 characters")
-    .max(150, "Title must be at most 50 characters"),
+    .max(150, "Title must be at most 150 characters"),
   coverImage: Yup.object()
     .required("Cover image is required")
     .shape({
@@ -75,37 +82,107 @@ const BlogFormProvider = ({ children }) => {
   const blog = useBlogData();
   const { setBlogData } = useBlogActions();
 
+  const initialValues = useMemo(() => blog, [blog]);
+
+  // Use ref to avoid unnecessary validation during simple navigation
+  const skipValidationRef = useRef(false);
+
   const formik = useFormik({
-    initialValues: blog,
+    initialValues,
     validationSchema: blogValidationSchema,
+    validateOnMount: false,
+    validateOnChange: false,
+    validateOnBlur: true,
+    validate: (values) => {
+      if (skipValidationRef.current) {
+        return {};
+      }
+      return blogValidationSchema
+        .validate(values, { abortEarly: false })
+        .then(() => ({}))
+        .catch((err) => {
+          const errors = {};
+          err.inner.forEach((e) => {
+            errors[e.path] = e.message;
+          });
+          return errors;
+        });
+    },
     onSubmit: (values) => {
       console.log(values, "onSubmit");
     },
   });
 
+  // Debounce blog data updates to reduce state updates
   useEffect(() => {
-    if (setBlogData) {
-      setBlogData(formik.values);
-    }
+    const timeoutId = setTimeout(() => {
+      if (setBlogData) {
+        setBlogData(formik.values);
+      }
+    }, 300); // 300ms debounce
+
+    return () => clearTimeout(timeoutId);
   }, [formik.values, setBlogData]);
 
   const goToPreview = useCallback(async () => {
-    const step1Errors = await formik.validateForm(formik.values);
-    const step1Fields = Object.keys(createBlogSchema.fields);
-    const hasStep1Errors = step1Fields.some((field) => step1Errors[field]);
-    if (!hasStep1Errors) {
-      navigate("/preview-blog");
-    } else {
-      step1Fields.forEach((field) => formik.setFieldTouched(field, true));
+    try {
+      const step1Errors = await createBlogSchema
+        .validate(formik.values, { abortEarly: false })
+        .then(() => ({}))
+        .catch((err) => {
+          const errors = {};
+          err.inner.forEach((e) => {
+            errors[e.path] = e.message;
+          });
+          return errors;
+        });
+
+      const hasErrors = Object.keys(step1Errors).length > 0;
+
+      if (!hasErrors) {
+        navigate("/preview-blog");
+      } else {
+        // Set touched state for fields with errors
+        Object.keys(step1Errors).forEach((field) =>
+          formik.setFieldTouched(field, true)
+        );
+      }
+    } catch (error) {
+      console.error("Validation error:", error);
     }
   }, [formik, navigate]);
 
+  // Optimized edit navigation
   const goToEdit = useCallback(() => {
     navigate("/create-blog");
   }, [navigate]);
 
+  // Add direct navigation function that skips validation
+  const navigateWithoutValidation = useCallback(
+    (path) => {
+      skipValidationRef.current = true;
+      navigate(path);
+      // Reset after navigation
+      setTimeout(() => {
+        skipValidationRef.current = false;
+      }, 500);
+    },
+    [navigate]
+  );
+
+  // Memoize context value
+  const contextValue = useMemo(
+    () => ({
+      formik,
+      goToPreview,
+      goToEdit,
+      navigateWithoutValidation,
+    }),
+    [formik, goToPreview, goToEdit, navigateWithoutValidation]
+  );
+
   return (
-    <BlogFormContext.Provider value={{ formik, goToPreview, goToEdit }}>
+    <BlogFormContext.Provider value={contextValue}>
       {children}
     </BlogFormContext.Provider>
   );

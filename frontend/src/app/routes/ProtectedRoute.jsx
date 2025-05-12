@@ -1,7 +1,7 @@
 import { Navigate, Outlet, useLocation } from "react-router";
-import { useIsAuthenticated } from "../../features/auth/store/userStore";
 import { GUARD_TYPE } from "../../shared/constants/constants";
 import PropTypes from "prop-types";
+import { useIsAuthenticated } from "../../shared/store/userStore";
 
 const ProtectedRoute = ({
   type = GUARD_TYPE.AUTH,

@@ -36,19 +36,16 @@ import {
 import { motion } from "motion/react";
 import { memo, useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router";
-import {
-  useBlogActions,
-  useIsDarkTheme,
-  useThemeActions,
-} from "../../../store/zustand.store";
 import { buttonHoverVariants } from "../../utils/motionVariants";
 import { useSignOutUser } from "../../../features/auth/hooks/use-auth";
+import { capitalizeFirstLetter } from "../../utils/capitalizeFirstLetter";
 import {
   useIsAuthenticated,
   useUserActions,
   useUserData,
-} from "../../../features/auth/store/userStore";
-import { capitalizeFirstLetter } from "../../utils/capitalizeFirstLetter";
+} from "../../store/userStore";
+import { useIsDarkTheme, useThemeActions } from "../../store/themeStore";
+import { useBlogActions } from "../../store/blogStore";
 
 const SearchContainer = styled("div")(({ theme }) => ({
   position: "relative",

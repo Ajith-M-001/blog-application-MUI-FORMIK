@@ -1,9 +1,9 @@
 import { Route } from "react-router";
 import ProtectedRoute from "../../../app/routes/ProtectedRoute";
 import { GUARD_TYPE } from "../../../shared/constants/constants";
-import BlogFormProvider from "../../../pages/Blog/components/BlogFormProvider";
-import CreateBlog from "../../../pages/Blog/CreateBlog";
-import PreviewBlog from "../../../pages/Blog/PreviewBlog";
+import CreateBlog from "../pages/CreateBlog";
+import PreviewBlog from "../pages/PreviewBlog";
+import BlogFormProvider from "../providers/BlogFormProvider";
 
 export const blogRoutes = (
   <>

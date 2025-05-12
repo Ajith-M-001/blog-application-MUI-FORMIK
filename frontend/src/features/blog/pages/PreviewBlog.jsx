@@ -12,15 +12,12 @@ import {
   useTheme,
 } from "@mui/material";
 import { AnimatePresence, motion } from "motion/react";
-import { useBlogData } from "../../store/zustand.store";
-import { BlogContent } from "./components/BlogContent";
-import BlogHeader from "./components/BlogHeader";
-import { useBlogForm } from "./components/BlogFormProvider";
-import {
-  useGetAllCategory,
-  useGetAllTags,
-} from "../../features/blog/hooks/use-blog";
-import { Footer } from "../../shared/components/layout/Footer";
+import BlogHeader from "../components/BlogHeader";
+import { useBlogForm } from "../providers/BlogFormProvider";
+import { useGetAllCategory, useGetAllTags } from "../hooks/use-blog";
+import { Footer } from "../../../shared/components/layout/Footer";
+import { BlogContent } from "../components/BlogContent";
+import { useBlogData } from "../../../shared/store/blogStore";
 
 const PreviewBlog = () => {
   const theme = useTheme();

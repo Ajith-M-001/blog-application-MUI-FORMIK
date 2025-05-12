@@ -31,9 +31,10 @@ import PropTypes from "prop-types";
 import React, { memo, Suspense, useState } from "react";
 
 // Use React.lazy() for dialogs to reduce initial bundle size
-const LinkDialog = React.lazy(() => import("./components/LinkDialog"));
+const LinkDialog = React.lazy(() => import("./dialogs/LinkDialog"));
+
 const ImageUploadDialog = React.lazy(() =>
-  import("./components/ImageUploadDialog")
+  import("./dialogs/ImageUploadDialog")
 );
 
 // Pre-define button groups outside of component to prevent recreation on render

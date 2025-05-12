@@ -1,10 +1,10 @@
 import PropTypes from "prop-types";
 import { useFormik } from "formik";
 import { useNavigate } from "react-router";
-import { useBlogActions, useBlogData } from "../../../store/zustand.store";
 import * as Yup from "yup";
 import { createContext, useCallback, useContext, useEffect } from "react";
 import { BLOG_STATUS } from "../../../shared/constants/constants";
+import { useBlogActions, useBlogData } from "../../../shared/store/blogStore";
 
 const countWordsInContent = (content) => {
   const text = content?.content?.length
@@ -84,8 +84,10 @@ const BlogFormProvider = ({ children }) => {
   });
 
   useEffect(() => {
-    setBlogData(formik.values);
-  }, [formik.values]);
+    if (setBlogData) {
+      setBlogData(formik.values);
+    }
+  }, [formik.values, setBlogData]);
 
   const goToPreview = useCallback(async () => {
     const step1Errors = await formik.validateForm(formik.values);

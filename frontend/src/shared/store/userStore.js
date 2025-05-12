@@ -1,17 +1,18 @@
+// user.store.js
 import { create } from "zustand";
 import { devtools, persist } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 
-const INITIAL_USER_STATE = {
+const INITIAL_USER_STATE = Object.freeze({
   userData: null,
   isAuthenticated: false,
-};
+});
 
 const useUserStore = create(
   devtools(
     persist(
       immer((set) => ({
-        user: INITIAL_USER_STATE,
+        user: { ...INITIAL_USER_STATE },
         userActions: {
           setUserData: (data) =>
             set(
@@ -21,20 +22,18 @@ const useUserStore = create(
               false,
               "user/setUserData"
             ),
-
           clearUserData: () =>
             set(
               (state) => {
-                state.user.userData = null;
+                state.user = { ...INITIAL_USER_STATE };
               },
               false,
               "user/clearUserData"
             ),
-
-          setIsAuthenticated: (data) =>
+          setIsAuthenticated: (value) =>
             set(
               (state) => {
-                state.user.isAuthenticated = data;
+                state.user.isAuthenticated = value;
               },
               false,
               "user/setIsAuthenticated"
@@ -42,17 +41,16 @@ const useUserStore = create(
         },
       })),
       {
-        name: "user-store", // localStorage key
-        partialize: (state) => ({
-          user: state.user,
-        }),
+        name: "user-store",
+        version: 1,
+        partialize: (state) => ({ user: state.user }),
       }
     ),
-    { name: "UserStore" } // For Redux DevTools extension
+    { name: "UserStore" }
   )
 );
 
-// 🔸 Selectors (custom hooks)
+// Selectors
 export const useUserData = () => useUserStore((state) => state.user.userData);
 export const useIsAuthenticated = () =>
   useUserStore((state) => state.user.isAuthenticated);

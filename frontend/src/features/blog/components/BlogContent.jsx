@@ -1,17 +1,13 @@
 import { Box, Divider, Stack, Typography, useTheme } from "@mui/material";
-import useStore from "../../../store/zustand.store";
 import { useShallow } from "zustand/react/shallow";
 import { UserCard } from "./UserCard";
 import { useMemo } from "react";
+import { useBlogData } from "../../../shared/store/blogStore";
 
 const BlogContent = () => {
   const theme = useTheme();
 
-  const { blog } = useStore(
-    useShallow((state) => ({
-      blog: state.blog,
-    }))
-  );
+  const blog = useBlogData();
 
   const renderContent = useMemo(() => {
     if (!blog?.content?.content) return null;

@@ -24,9 +24,9 @@ import {
 import { motion } from "motion/react";
 import { Link, useLocation, useNavigate } from "react-router";
 import PropTypes from "prop-types";
-import { useSignOutUser } from "../../../features/auth/hooks/use-auth";
-import { useUserActions, useUserData } from "../../../features/auth/store/userStore";
+import { useSignOutUser } from "../../auth/hooks/use-auth";
 import { capitalizeFirstLetter } from "../../../shared/utils/capitalizeFirstLetter";
+import { useUserActions, useUserData } from "../../../shared/store/userStore";
 
 const BlogHeader = (props) => {
   const theme = useTheme();

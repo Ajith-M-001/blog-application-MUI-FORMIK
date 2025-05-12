@@ -8,10 +8,10 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { NotificationToaster } from "./shared/components/Toaster/Toaster.jsx";
 import "./index.css";
-import { useIsDarkTheme } from "./store/zustand.store.js";
 import { darkTheme, lightTheme } from "./theme.js";
 import queryClient from "./api/queryClient.js";
 import App from "./app/App.jsx";
+import { useIsDarkTheme } from "./shared/store/themeStore.js";
 
 const RootApp = () => {
   const isDarkTheme = useIsDarkTheme();

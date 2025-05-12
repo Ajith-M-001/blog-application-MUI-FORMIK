@@ -1,9 +1,9 @@
 import { Avatar, Box, Grid2, Typography, useTheme } from "@mui/material";
 import { CalendarMonth, Schedule, Article } from "@mui/icons-material";
 import { format } from "date-fns";
-import { useBlogData } from "../../../store/zustand.store";
-import { useUserData } from "../../../features/auth/store/userStore";
 import { capitalizeFirstLetter } from "../../../shared/utils/capitalizeFirstLetter";
+import { useUserData } from "../../../shared/store/userStore";
+import { useBlogData } from "../../../shared/store/blogStore";
 
 const UserCard = () => {
   const theme = useTheme();

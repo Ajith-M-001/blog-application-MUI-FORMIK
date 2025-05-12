@@ -9,22 +9,11 @@ import Underline from "@tiptap/extension-underline";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import PropTypes from "prop-types";
-import { memo, useEffect, useMemo, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import MenuBar from "./MenuBar";
+import { debounce } from "lodash";
 
-const TiptapEditor = ({
-  initialContent = null,
-  showWordCount = true,
-  showReadingTime = true,
-  formik,
-}) => {
-  const theme = useTheme();
-  const [wordCount, setWordCount] = useState(0);
-  const [readingTime, setReadingTime] = useState(0);
-  const [isMounted, setIsMounted] = useState(false);
-
-  const editorStyles = useMemo(
-    () => `
+const createEditorStyles = (theme) => `
   .tiptap-editor {
     min-height: 150px;
     padding: 16px;
@@ -119,18 +108,46 @@ const TiptapEditor = ({
   max-width: 100%;
   height: auto;
 }
-`,
-    [theme]
+`;
+
+const TiptapEditor = ({
+  initialContent = null,
+  showWordCount = true,
+  showReadingTime = true,
+  formik,
+}) => {
+  const theme = useTheme();
+  const [stats, setStats] = useState({ wordCount: 0, readingTime: 0 });
+  const [isMounted, setIsMounted] = useState(false);
+
+  const editorStyles = useMemo(() => createEditorStyles(theme), [theme]);
+
+  const updateFormikValues = useCallback(
+    debounce((content, wordCount, readingTime) => {
+      formik.setFieldValue("content", content);
+      formik.setFieldValue("readingTime", {
+        minutes: readingTime,
+        words: wordCount,
+      });
+    }, 300),
+    [formik]
   );
 
-  const editor = useEditor({
-    extensions: [
+  // Separate function to calculate stats to optimize editor update event
+  const calculateStats = useCallback((text) => {
+    const words = text.trim().split(/\s+/).filter(Boolean).length;
+    const time = Math.ceil(words / 200); // ~200 words/min read speed
+    return { wordCount: words, readingTime: time };
+  }, []);
+
+  // Memoize extensions so they aren’t recreated on every render
+  const extensions = useMemo(
+    () => [
       StarterKit,
       Underline,
       TextAlign.configure({
         types: ["heading", "paragraph"],
       }),
-
       Image.configure({
         HTMLAttributes: {
           class: "rich-text-image",
@@ -150,43 +167,68 @@ const TiptapEditor = ({
         placeholder: "Start writing your blog...",
       }),
     ],
+    []
+  );
+
+  // 2) Prevent React re-renders on every ProseMirror transaction
+  const editorProps = useMemo(
+    () => ({
+      attributes: { class: "tiptap-editor" },
+      handleDOMEvents: {},
+      shouldRerenderOnTransaction: false,
+    }),
+    []
+  );
+
+  const editor = useEditor({
+    extensions,
     content: initialContent,
-    editorProps: {
-      attributes: {
-        class: "tiptap-editor",
-      },
-    },
+    editorProps,
+    parseOptions: { preserveWhitespace: "full" },
   });
 
   useEffect(() => {
     setIsMounted(true);
-  }, []);
+  }, [editor]);
 
+  // Editor update effect - optimize with refs to reduce unnecessary work
   useEffect(() => {
     if (!editor) return;
 
-    const updateStatsAndContent = () => {
+    // Initial stats calculation
+    const text = editor.getText();
+    const newStats = calculateStats(text);
+    setStats(newStats);
+
+    // Set initial formik values
+    updateFormikValues(
+      editor.getJSON(),
+      newStats.wordCount,
+      newStats.readingTime
+    );
+
+    // Editor update handler - separate UI updates from formik updates
+    const handleUpdate = () => {
       const text = editor.getText();
-      const words = text.trim().split(/\s+/).filter(Boolean).length;
-      const time = Math.ceil(words / 200); // ~200 words/min read speed
+      const newStats = calculateStats(text);
 
-      setWordCount(words);
-      setReadingTime(time);
+      // Update UI stats immediately (lightweight operation)
+      setStats(newStats);
 
-      formik.setFieldValue("content", editor.getJSON());
-      formik.setFieldValue("readingTime", {
-        minutes: time,
-        words: words,
-      });
+      // Debounce heavier operations
+      updateFormikValues(
+        editor.getJSON(),
+        newStats.wordCount,
+        newStats.readingTime
+      );
     };
 
-    updateStatsAndContent();
-    editor.on("update", updateStatsAndContent);
+    editor.on("update", handleUpdate);
 
     return () => {
-      editor.off("update", updateStatsAndContent);
+      editor.off("update", handleUpdate);
     };
-  }, [editor]);
+  }, [editor, calculateStats, updateFormikValues]);
 
   if (!isMounted || !editor) return null;
 
@@ -225,12 +267,13 @@ const TiptapEditor = ({
                 color="text.secondary"
                 sx={{ mr: 2 }}
               >
-                {wordCount} {wordCount === 1 ? "word" : "words"}
+                {stats.wordCount} {stats.wordCount === 1 ? "word" : "words"}
               </Typography>
             )}
             {showReadingTime && (
               <Typography variant="caption" color="text.secondary">
-                {readingTime} {readingTime === 1 ? "min" : "mins"} read
+                {stats.readingTime} {stats.readingTime === 1 ? "min" : "mins"}{" "}
+                read
               </Typography>
             )}
           </Box>

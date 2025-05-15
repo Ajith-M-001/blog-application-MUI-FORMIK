@@ -12,6 +12,7 @@ import PropTypes from "prop-types";
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import MenuBar from "./MenuBar";
 import { debounce } from "lodash";
+import { useBlogActions } from "../../../../shared/store/blogStore";
 
 const createEditorStyles = (theme) => `
   .tiptap-editor {
@@ -114,23 +115,26 @@ const TiptapEditor = ({
   initialContent = null,
   showWordCount = true,
   showReadingTime = true,
-  formik,
 }) => {
   const theme = useTheme();
   const [stats, setStats] = useState({ wordCount: 0, readingTime: 0 });
   const [isMounted, setIsMounted] = useState(false);
+  const { setBlogData } = useBlogActions();
+  // const blog = useBlogData();
 
   const editorStyles = useMemo(() => createEditorStyles(theme), [theme]);
 
-  const updateFormikValues = useCallback(
+  const updateBlogContent = useCallback(
     debounce((content, wordCount, readingTime) => {
-      formik.setFieldValue("content", content);
-      formik.setFieldValue("readingTime", {
-        minutes: readingTime,
-        words: wordCount,
+      setBlogData({
+        content,
+        readingTime: {
+          minutes: readingTime,
+          words: wordCount,
+        },
       });
     }, 300),
-    [formik]
+    [setBlogData]
   );
 
   // Separate function to calculate stats to optimize editor update event
@@ -140,7 +144,7 @@ const TiptapEditor = ({
     return { wordCount: words, readingTime: time };
   }, []);
 
-  // Memoize extensions so they aren’t recreated on every render
+  // Memoize extensions so they aren't recreated on every render
   const extensions = useMemo(
     () => [
       StarterKit,
@@ -201,7 +205,7 @@ const TiptapEditor = ({
     setStats(newStats);
 
     // Set initial formik values
-    updateFormikValues(
+    updateBlogContent(
       editor.getJSON(),
       newStats.wordCount,
       newStats.readingTime
@@ -216,7 +220,7 @@ const TiptapEditor = ({
       setStats(newStats);
 
       // Debounce heavier operations
-      updateFormikValues(
+      updateBlogContent(
         editor.getJSON(),
         newStats.wordCount,
         newStats.readingTime
@@ -228,19 +232,15 @@ const TiptapEditor = ({
     return () => {
       editor.off("update", handleUpdate);
     };
-  }, [editor, calculateStats, updateFormikValues]);
+  }, [editor, calculateStats, updateBlogContent]);
 
   if (!isMounted || !editor) return null;
-
-  const isError = formik.touched.content && formik.errors.content;
 
   return (
     <>
       <Box
         sx={{
-          border: `1px solid ${
-            isError ? theme.palette.error.main : theme.palette.divider
-          }`,
+          border: `1px solid ${theme.palette.divider}`,
           borderRadius: 1,
           overflow: "hidden",
         }}
@@ -279,26 +279,14 @@ const TiptapEditor = ({
           </Box>
         )}
       </Box>
-      {isError && (
-        <Box sx={{ mt: 0.3 }}>
-          <Typography variant="caption" color="error">
-            {formik.errors.content}
-          </Typography>
-        </Box>
-      )}
     </>
   );
 };
-// PropTypes validation
+
 TiptapEditor.propTypes = {
   initialContent: PropTypes.object,
   showWordCount: PropTypes.bool,
   showReadingTime: PropTypes.bool,
-  formik: PropTypes.shape({
-    setFieldValue: PropTypes.func.isRequired,
-    touched: PropTypes.object,
-    errors: PropTypes.object,
-  }).isRequired, // Ensure formik has setFieldValue
 };
 
 export default memo(TiptapEditor);

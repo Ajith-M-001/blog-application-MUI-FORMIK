@@ -8,7 +8,7 @@ const INITIAL_BLOG_STATE = Object.freeze({
   title: "",
   coverImage: {
     url: "",
-    public_id: "",
+    publicId: "",
   },
   content: null,
   category: null,

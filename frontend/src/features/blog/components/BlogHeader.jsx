@@ -17,7 +17,6 @@ import {
   Eye,
   HelpCircle,
   LogOut,
-  Send,
   Settings,
   User,
 } from "lucide-react";
@@ -27,15 +26,13 @@ import PropTypes from "prop-types";
 import { useSignOutUser } from "../../auth/hooks/use-auth";
 import { capitalizeFirstLetter } from "../../../shared/utils/capitalizeFirstLetter";
 import { useUserActions, useUserData } from "../../../shared/store/userStore";
-import { useBlogForm } from "../providers/BlogFormProvider";
 
-const BlogHeader = () => {
+const BlogHeader = ({ goToEdit }) => {
   const theme = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const currentPath = location.pathname.replace(/^\/+/, "");
-  const { goToPreview, goToEdit, previewFormik, navigateWithoutValidation } =
-    useBlogForm();
+
   const { mutate: signOut, isPending: isSignOutPending } = useSignOutUser();
 
   const [anchorEl, setAnchorEl] = useState(null);
@@ -75,14 +72,13 @@ const BlogHeader = () => {
     handleUserMenuClose,
   ]);
 
-  // Handle logo click with optimized navigation
-  const handleLogoClick = useCallback(
-    (e) => {
-      e.preventDefault();
-      navigateWithoutValidation("/");
-    },
-    [navigateWithoutValidation]
-  );
+  const handleLogoClick = useCallback(() => {
+    navigate("/");
+  }, [navigate]);
+
+  const handlePreview = useCallback(() => {
+    navigate("/preview-blog");
+  }, [navigate]);
 
   return (
     <Box
@@ -108,7 +104,6 @@ const BlogHeader = () => {
           px: 2,
         }}
       >
-        {/* Replace Link with button that uses navigateWithoutValidation */}
         <Box
           component="button"
           onClick={handleLogoClick}
@@ -141,7 +136,7 @@ const BlogHeader = () => {
           {currentPath === "create-blog" && (
             <Button
               variant="contained"
-              onClick={goToPreview}
+              onClick={handlePreview}
               startIcon={<Eye size={18} />}
               sx={{
                 textTransform: "capitalize",
@@ -175,24 +170,6 @@ const BlogHeader = () => {
               >
                 Back
               </Button>{" "}
-              <Button
-                type="button"
-                variant="contained"
-                onClick={() => previewFormik?.submitForm()}
-                startIcon={<Send size={16} />}
-                sx={{
-                  textTransform: "capitalize",
-                  py: "4px",
-                  fontSize: "0.8rem",
-                  fontWeight: "400",
-                }}
-                size="small"
-                color="secondary"
-                disabled={!previewFormik}
-                disableElevation
-              >
-                Publish
-              </Button>
             </Box>
           )}
 
@@ -257,7 +234,7 @@ const BlogHeader = () => {
             {menuItems.map((item) => (
               <MenuItem
                 key={item.label}
-                onClick={() => navigateWithoutValidation(item.path)}
+                onClick={() => navigate(item.path)}
                 sx={{
                   py: 1.5,
                   px: 2,
@@ -304,9 +281,7 @@ const BlogHeader = () => {
 };
 
 BlogHeader.propTypes = {
-  goToPreview: PropTypes.func,
-  goToEdit: PropTypes.func,
-  previewFormik: PropTypes.object,
+  goToEdit: PropTypes.func.isRequired,
 };
 
 export default memo(BlogHeader);

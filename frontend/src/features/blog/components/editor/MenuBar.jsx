@@ -28,7 +28,7 @@ import {
   Undo,
 } from "lucide-react";
 import PropTypes from "prop-types";
-import React, { memo, Suspense, useState } from "react";
+import React, { Suspense, useState } from "react";
 
 // Use React.lazy() for dialogs to reduce initial bundle size
 const LinkDialog = React.lazy(() => import("./dialogs/LinkDialog"));
@@ -216,7 +216,7 @@ const formattingButtonGroups = [
   },
 ];
 
-// Memoize the toggle button styles
+// Toggle button styles
 const toggleButtonSx = {
   gap: 0.2,
   "& .MuiToggleButton-root": {
@@ -236,8 +236,8 @@ const toggleButtonSx = {
   },
 };
 
-// Create memoized button components
-const EditorButton = memo(({ button, editor, customAction }) => {
+// Button component - removed memo
+const EditorButton = ({ button, editor, customAction }) => {
   const handleClick = () => {
     if (customAction) {
       customAction();
@@ -246,6 +246,9 @@ const EditorButton = memo(({ button, editor, customAction }) => {
     }
   };
 
+  const isActive = button.isActive(editor);
+  const isDisabled = button.disabled ? button.disabled(editor) : false;
+
   return (
     <Tooltip title={button.title} arrow placement="top">
       <span>
@@ -253,15 +256,15 @@ const EditorButton = memo(({ button, editor, customAction }) => {
           value={button.value}
           aria-label={button.title}
           onClick={handleClick}
-          selected={button.isActive(editor)}
-          disabled={button.disabled ? button.disabled(editor) : false}
+          selected={isActive}
+          disabled={isDisabled}
         >
           {button.icon}
         </ToggleButton>
       </span>
     </Tooltip>
   );
-});
+};
 
 EditorButton.propTypes = {
   button: PropTypes.object.isRequired,
@@ -269,10 +272,9 @@ EditorButton.propTypes = {
   customAction: PropTypes.func,
 };
 
-EditorButton.displayName = "EditorButton";
-
-// Create memoized button group component
-const ButtonGroup = memo(({ group, editor, customActions }) => {
+// Button group component - removed memo
+const ButtonGroup = ({ group, editor, customActions }) => {
+  // Calculate active values directly when rendering
   const activeValues = group.buttons
     .filter((button) => button.isActive(editor))
     .map((button) => button.value);
@@ -299,7 +301,7 @@ const ButtonGroup = memo(({ group, editor, customActions }) => {
       ))}
     </ToggleButtonGroup>
   );
-});
+};
 
 ButtonGroup.propTypes = {
   group: PropTypes.object.isRequired,
@@ -307,9 +309,8 @@ ButtonGroup.propTypes = {
   customActions: PropTypes.object.isRequired,
 };
 
-ButtonGroup.displayName = "ButtonGroup";
-
-const MenuBar = memo(({ editor }) => {
+// Main MenuBar component - removed memo
+const MenuBar = ({ editor }) => {
   const [linkUrl, setLinkUrl] = useState("");
   const [linkDialogOpen, setLinkDialogOpen] = useState(false);
   const [imageDialogOpen, setImageDialogOpen] = useState(false);
@@ -402,7 +403,7 @@ const MenuBar = memo(({ editor }) => {
       </Suspense>
     </Box>
   );
-});
+};
 
 MenuBar.propTypes = {
   editor: PropTypes.shape({
@@ -413,7 +414,5 @@ MenuBar.propTypes = {
     focus: PropTypes.func.isRequired,
   }),
 };
-
-MenuBar.displayName = "MenuBar";
 
 export default MenuBar;

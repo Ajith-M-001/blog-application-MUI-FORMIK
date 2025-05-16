@@ -1,5 +1,4 @@
 import { Box, Divider, Stack, Typography, useTheme } from "@mui/material";
-import { useShallow } from "zustand/react/shallow";
 import { UserCard } from "./UserCard";
 import { useMemo } from "react";
 import { useBlogData } from "../../../shared/store/blogStore";
@@ -226,7 +225,7 @@ const BlogContent = () => {
             color: "text.secondary",
           }}
         >
-          {blog?.shortDescription}
+          {blog?.description}
         </Typography>
 
         {blog?.coverImage?.url && (

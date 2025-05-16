@@ -115,6 +115,7 @@ const TiptapEditor = ({
   initialContent = null,
   showWordCount = true,
   showReadingTime = true,
+  isError,
 }) => {
   const theme = useTheme();
   const [stats, setStats] = useState({ wordCount: 0, readingTime: 0 });
@@ -240,7 +241,10 @@ const TiptapEditor = ({
     <>
       <Box
         sx={{
-          border: `1px solid ${theme.palette.divider}`,
+          border: `0.1px solid ${
+            isError ? theme.palette.error.main : theme.palette.divider
+          }`,
+
           borderRadius: 1,
           overflow: "hidden",
         }}
@@ -287,6 +291,7 @@ TiptapEditor.propTypes = {
   initialContent: PropTypes.object,
   showWordCount: PropTypes.bool,
   showReadingTime: PropTypes.bool,
+  isError: PropTypes.bool,
 };
 
 export default memo(TiptapEditor);

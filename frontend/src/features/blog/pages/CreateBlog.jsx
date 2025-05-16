@@ -29,6 +29,9 @@ import { Footer } from "../../../shared/components/layout/Footer";
 import { validateFile } from "../../../shared/utils/imageValidation";
 import { useBlogActions, useBlogData } from "../../../shared/store/blogStore";
 import { useNavigate } from "react-router";
+import { useFormik } from "formik";
+import * as Yup from "yup";
+import { BLOG_STATUS } from "../../../shared/constants/constants";
 
 const CreateBlog = () => {
   const theme = useTheme();
@@ -47,6 +50,143 @@ const CreateBlog = () => {
   const { data: allCategories } = useGetAllCategory();
   const { data: allTags } = useGetAllTags();
 
+  const MIN_WORDS = 50;
+  const MAX_WORDS = 5000;
+  // Counts words in a Tiptap JSON structure
+  const countWordsInTiptap = (content) => {
+    if (!content?.content?.length) return 0;
+
+    const text = content.content
+      .map((item) =>
+        item?.content?.map((textNode) => textNode?.text || "").join(" ")
+      )
+      .join(" ");
+
+    return text.trim().split(/\s+/).filter(Boolean).length;
+  };
+
+  // Custom validator for Tiptap content
+  const validateTiptapContent = (value) => {
+    if (!value || value.type !== "doc" || !Array.isArray(value.content)) {
+      return false;
+    }
+    const wordCount = countWordsInTiptap(value);
+    return wordCount >= MIN_WORDS && wordCount <= MAX_WORDS;
+  };
+
+  // Blog form validation schema
+  const validationSchema = Yup.object({
+    status: Yup.string()
+      .required("status is required")
+      .oneOf(Object.values(BLOG_STATUS), "Invalid status"),
+    title: Yup.string()
+      .trim()
+      .when("status", {
+        is: (status) =>
+          [BLOG_STATUS.PUBLISHED, BLOG_STATUS.SCHEDULED].includes(status),
+        then: (schema) =>
+          schema
+            .required("Title is required")
+            .min(5, "title must be at least 5 characters")
+            .max(150, "title must be at most 150 characters"),
+        otherwise: (schema) => schema,
+      }),
+    description: Yup.string()
+      .trim()
+      .when("status", {
+        is: (status) =>
+          [BLOG_STATUS.PUBLISHED, BLOG_STATUS.SCHEDULED].includes(status),
+        then: (schema) =>
+          schema
+            .required("Description is required")
+            .min(5, "description must be at least 5 characters")
+            .max(200, "description must be at most 200 characters"),
+        otherwise: (schema) => schema,
+      }),
+    content: Yup.object().when("status", {
+      is: (status) =>
+        [BLOG_STATUS.PUBLISHED, BLOG_STATUS.SCHEDULED].includes(status),
+      then: (schema) =>
+        schema
+          .required("Content is required")
+          .test(
+            "is-valid-tiptap",
+            `Content must be a valid Tiptap document with ${MIN_WORDS}–${MAX_WORDS} words`,
+            validateTiptapContent
+          ),
+      otherwise: (schema) => schema,
+    }),
+
+    coverImage: Yup.object()
+      .nullable()
+      .when("status", {
+        is: (status) =>
+          [BLOG_STATUS.PUBLISHED, BLOG_STATUS.SCHEDULED].includes(status),
+        then: (schema) =>
+          schema.required("Cover image is required").shape({
+            url: Yup.string()
+              .required("Cover image is required")
+              .url("Must be a valid URL"),
+            public_id: Yup.string().required(
+              "Cover image public ID is required"
+            ),
+          }),
+        otherwise: (schema) => schema,
+      }),
+    category: Yup.object().when("status", {
+      is: (status) =>
+        [BLOG_STATUS.PUBLISHED, BLOG_STATUS.SCHEDULED].includes(status),
+      then: (schema) => schema.required("Category is required"),
+      otherwise: (schema) => schema,
+    }),
+
+    // Tags validation - optional but must be valid if provided
+    tags: Yup.array()
+      .of(
+        Yup.object({
+          _id: Yup.string().required("Tag ID is required"),
+          name: Yup.string().required("Tag name is required"),
+        })
+      )
+      .max(10, "Maximum 10 tags allowed"),
+
+    scheduleDateAndTime: Yup.date().when("status", {
+      is: (status) => status === BLOG_STATUS.SCHEDULED,
+      then: (schema) =>
+        schema
+          .required("Schedule date and time is required")
+          .min(new Date(), "Schedule date must be in the future"),
+      otherwise: (schema) => schema,
+    }),
+  });
+
+  // Initialize formik with blog store values
+  const formik = useFormik({
+    initialValues: blog,
+    validationSchema,
+    enableReinitialize: true,
+    validateOnChange: false,
+    validateOnBlur: true,
+    onSubmit: (values) => {
+      handleSubmit(values);
+    },
+  });
+
+  const coverImageError =
+    formik.touched.coverImage && formik.errors.coverImage
+      ? formik.errors.coverImage
+      : null;
+
+  // Sync formik values with blog store
+  useEffect(() => {
+    // Only update store if values actually changed
+    if (JSON.stringify(formik.values) !== JSON.stringify(blog)) {
+      setBlogData(formik.values);
+    }
+  }, [formik.values, setBlogData]);
+
+  console.log("dsfadsfsda", formik.errors);
+
   useEffect(() => {
     return () => {
       if (previewUrl && previewUrl.startsWith("blob:")) {
@@ -60,11 +200,9 @@ const CreateBlog = () => {
     event.stopPropagation();
 
     setPreviewUrl(null);
-    setBlogData({
-      coverImage: {
-        url: "",
-        public_id: "",
-      },
+    formik.setFieldValue("coverImage", {
+      url: "",
+      public_id: "",
     });
   };
 
@@ -116,11 +254,9 @@ const CreateBlog = () => {
             URL.revokeObjectURL(previewUrl);
           }
 
-          setBlogData({
-            coverImage: {
-              url: imageInfo.url,
-              public_id: imageInfo.public_id,
-            },
+          formik.setFieldValue("coverImage", {
+            url: imageInfo.url,
+            public_id: imageInfo.public_id,
           });
 
           setPreviewUrl(null);
@@ -133,11 +269,9 @@ const CreateBlog = () => {
           setIsUploading(false);
           setUploadProgress(0);
           setPreviewUrl(null);
-          setBlogData({
-            coverImage: {
-              url: "",
-              public_id: "",
-            },
+          formik.setFieldValue("coverImage", {
+            url: "",
+            public_id: "",
           });
           abortControllerRef.current = null;
         },
@@ -153,11 +287,9 @@ const CreateBlog = () => {
       setIsUploading(false);
       setUploadProgress(0);
       setPreviewUrl(null);
-      setBlogData({
-        coverImage: {
-          url: "",
-          public_id: "",
-        },
+      formik.setFieldValue("coverImage", {
+        url: "",
+        public_id: "",
       });
     }
     setUploadError(null);
@@ -169,11 +301,14 @@ const CreateBlog = () => {
     setUploadError(null);
   };
 
-  const handlePublish = () => {
+  const handleSubmit = () => {
     // Here you would typically make an API call to create/update the blog
     console.log("Publishing blog:", blog);
     // After successful submission
-    navigate("/");
+  };
+
+  const handleEditorChange = (content) => {
+    formik.setFieldValue("content", content);
   };
 
   return (
@@ -215,6 +350,7 @@ const CreateBlog = () => {
                 </Typography>
 
                 <TextareaAutosize
+                  name="title"
                   minRows={1}
                   placeholder="Enter blog title..."
                   maxLength={150}
@@ -225,15 +361,24 @@ const CreateBlog = () => {
                     padding: "10px 14px",
                     borderRadius: 8,
                     outline: "none",
-                    border: `0.1px solid ${theme.palette.divider}`,
+                    border: `0.1px solid ${
+                      formik.touched.title && formik.errors.title
+                        ? theme.palette.error.main
+                        : theme.palette.divider
+                    }`,
                     resize: "none",
                     fontFamily: theme.typography.fontFamily,
                     backgroundColor: theme.palette.background.paper,
                   }}
-                  value={blog.title}
-                  onChange={(e) => setBlogData({ title: e.target.value })}
-                  name="title"
+                  value={formik.values.title}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
                 />
+                {formik.touched.title && formik.errors.title && (
+                  <Typography color="error" variant="caption">
+                    {formik.errors.title}
+                  </Typography>
+                )}
               </Box>
 
               <Box>
@@ -244,7 +389,7 @@ const CreateBlog = () => {
                 <TextareaAutosize
                   aria-label="short-description"
                   minRows={3}
-                  name="shortDescription"
+                  name="description"
                   placeholder="Enter description here..."
                   maxLength={200}
                   style={{
@@ -253,16 +398,24 @@ const CreateBlog = () => {
                     padding: "10px 14px",
                     borderRadius: 8,
                     outline: "none",
-                    border: `1px solid ${theme.palette.divider}`,
+                    border: `1px solid ${
+                      formik.touched.description && formik.errors.description
+                        ? theme.palette.error.main
+                        : theme.palette.divider
+                    }`,
                     resize: "none",
                     fontFamily: theme.typography.fontFamily,
                     backgroundColor: theme.palette.background.paper,
                   }}
-                  value={blog?.shortDescription || ""}
-                  onChange={(e) =>
-                    setBlogData({ shortDescription: e.target.value })
-                  }
+                  value={formik.values.description}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
                 />
+                {formik.touched.description && formik.errors.description && (
+                  <Typography color="error" variant="caption">
+                    {formik.errors.description}
+                  </Typography>
+                )}
               </Box>
 
               <Box>
@@ -274,7 +427,9 @@ const CreateBlog = () => {
                   onClick={handleClick}
                   sx={{
                     border: "2px dashed",
-                    borderColor: theme.palette.divider,
+                    borderColor: coverImageError
+                      ? theme.palette.error.main
+                      : theme.palette.divider,
                     borderRadius: 0.9,
                     cursor: "pointer",
                     display: "flex",
@@ -286,7 +441,9 @@ const CreateBlog = () => {
                     overflow: "hidden",
                     aspectRatio: "16/9",
                     "&:hover": {
-                      borderColor: theme.palette.text.primary,
+                      borderColor: coverImageError
+                        ? theme.palette.error.main
+                        : theme.palette.text.primary,
                     },
                   }}
                   role="button"
@@ -320,7 +477,7 @@ const CreateBlog = () => {
                         }}
                       />
 
-                      {blog?.coverImage?.url && (
+                      {formik.values.coverImage?.url && (
                         <IconButton
                           onClick={handleDeleteImage}
                           sx={{
@@ -431,6 +588,12 @@ const CreateBlog = () => {
                     onChange={handleFileChange}
                   />
                 </Box>
+                {coverImageError && (
+                  <Typography color="error" variant="caption">
+                    {formik.errors.coverImage.url ||
+                      formik.errors.coverImage.public_id}
+                  </Typography>
+                )}
               </Box>
             </Box>
 
@@ -441,9 +604,15 @@ const CreateBlog = () => {
                 <span style={{ color: theme.palette.error.main }}>*</span>
               </Typography>
               <TiptapEditor
-                initialContent={blog?.content}
-                onChange={(content) => setBlogData({ content })}
+                initialContent={formik.values.content}
+                onChange={handleEditorChange}
+                isError={formik.touched.content && formik.errors.content}
               />
+              {formik.touched.content && formik.errors.content && (
+                <Typography color="error" variant="caption">
+                  {formik.errors.content}
+                </Typography>
+              )}
             </Box>
 
             {/* Metadata Section */}
@@ -461,13 +630,13 @@ const CreateBlog = () => {
                   <Autocomplete
                     disablePortal
                     id="category"
-                    // name="category"
+                    name="category"
                     options={allCategories?.data || []}
                     getOptionLabel={(option) => option.name}
                     onChange={(event, value) => {
-                      setBlogData({ category: value });
+                      formik.setFieldValue("category", value);
                     }}
-                    value={blog?.category || null}
+                    value={formik.values.category}
                     sx={{
                       width: "100%",
                       backgroundColor: theme.palette.background.paper,
@@ -477,6 +646,13 @@ const CreateBlog = () => {
                         {...params}
                         placeholder="Select category"
                         name="category"
+                        error={
+                          formik.touched.category &&
+                          Boolean(formik.errors.category)
+                        }
+                        helperText={
+                          formik.touched.category && formik.errors.category
+                        }
                       />
                     )}
                   />
@@ -493,10 +669,10 @@ const CreateBlog = () => {
                     name="tags"
                     options={allTags?.data || []}
                     getOptionLabel={(option) => option.name}
-                    value={blog?.tags || []}
+                    value={formik.values.tags}
                     onChange={(event, value) => {
                       if (value.length <= 10) {
-                        setBlogData({ tags: value });
+                        formik.setFieldValue("tags", value);
                       }
                     }}
                     filterSelectedOptions
@@ -522,9 +698,9 @@ const CreateBlog = () => {
                       id="status-select"
                       name="status"
                       fullWidth
-                      value={blog?.status || "draft"}
+                      value={formik.values.status}
                       label="Status"
-                      onChange={(e) => setBlogData({ status: e.target.value })}
+                      onChange={formik.handleChange}
                     >
                       <MenuItem value="draft">Draft</MenuItem>
                       <MenuItem value="published">Published</MenuItem>
@@ -532,15 +708,21 @@ const CreateBlog = () => {
                     </Select>
                   </FormControl>
 
-                  {blog?.status === "scheduled" && (
+                  {formik.values.status === "scheduled" && (
                     <TextField
                       id="schedule-date"
                       label="Schedule Date"
                       name="scheduleDateAndTime"
                       type="datetime-local"
-                      value={blog?.scheduleDateAndTime || ""}
-                      onChange={(e) =>
-                        setBlogData({ scheduleDateAndTime: e.target.value })
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      error={
+                        formik.touched.scheduleDateAndTime &&
+                        Boolean(formik.errors.scheduleDateAndTime)
+                      }
+                      helperText={
+                        formik.touched.scheduleDateAndTime &&
+                        formik.errors.scheduleDateAndTime
                       }
                       slotProps={{
                         inputLabel: { shrink: true },
@@ -563,7 +745,7 @@ const CreateBlog = () => {
             >
               <Button
                 variant="contained"
-                onClick={handlePublish}
+                onClick={formik.handleSubmit}
                 startIcon={<Save size={18} />} // Replace with appropriate icon if needed
                 sx={{
                   textTransform: "capitalize",

@@ -5,6 +5,8 @@ import { immer } from "zustand/middleware/immer";
 import { BLOG_STATUS } from "../../shared/constants/constants";
 
 const INITIAL_BLOG_STATE = Object.freeze({
+  _id: null,
+  slug: null,
   title: "",
   coverImage: {
     url: "",

@@ -15,7 +15,7 @@ import {
   Typography,
   useTheme,
 } from "@mui/material";
-import { ImageUp, Save, Trash2 } from "lucide-react";
+import { Calendar, ImageUp, Save, Send, Trash2 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import TiptapEditor from "../components/editor/TiptapEditor";
@@ -23,6 +23,8 @@ import BlogHeader from "../components/BlogHeader";
 import {
   useGetAllCategory,
   useGetAllTags,
+  usePublishBlog,
+  useUpdateBlog,
   useUploadImage,
 } from "../hooks/use-blog";
 import { Footer } from "../../../shared/components/layout/Footer";
@@ -32,6 +34,7 @@ import { useNavigate } from "react-router";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { BLOG_STATUS } from "../../../shared/constants/constants";
+import _, { debounce } from "lodash";
 
 const CreateBlog = () => {
   const theme = useTheme();
@@ -43,15 +46,26 @@ const CreateBlog = () => {
   const [uploadError, setUploadError] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [lastSaved, setLastSaved] = useState(null);
 
   const { setBlogData } = useBlogActions();
   const blog = useBlogData();
-  const { mutate: uploadImage } = useUploadImage();
-  const { data: allCategories } = useGetAllCategory();
-  const { data: allTags } = useGetAllTags();
+  const { mutate: uploadImage } = useUploadImage({
+    staleTime: 60 * 60 * 1000, // 1 hour
+    gcTime: 65 * 60 * 1000, // 1 hour 5 minutes
+  });
+  const { data: allCategories } = useGetAllCategory({
+    staleTime: 60 * 60 * 1000, // 1 hour
+    gcTime: 65 * 60 * 1000, // 1 hour 5 minutes
+  });
 
+  const { data: allTags } = useGetAllTags();
+  const { mutate: publishBlog, isPending: isPublishing } = usePublishBlog();
+  const { mutate: updateBlog, isPending: isUpdating } = useUpdateBlog();
+  const isSaving = isPublishing || isUpdating;
   const MIN_WORDS = 50;
   const MAX_WORDS = 5000;
+  const DEBOUNCE_TIME = 5000; // 5 seconds in milliseconds
   // Counts words in a Tiptap JSON structure
   const countWordsInTiptap = (content) => {
     if (!content?.content?.length) return 0;
@@ -67,18 +81,51 @@ const CreateBlog = () => {
 
   // Custom validator for Tiptap content
   const validateTiptapContent = (value) => {
+    // Check if content is completely empty or not a valid Tiptap document
     if (!value || value.type !== "doc" || !Array.isArray(value.content)) {
       return false;
     }
+
+    // Check if content exists but is essentially empty (no text content)
     const wordCount = countWordsInTiptap(value);
-    return wordCount >= MIN_WORDS && wordCount <= MAX_WORDS;
+
+    // If wordCount is 0, the document exists but has no text content
+    if (wordCount === 0) {
+      return {
+        isValid: false,
+        error: "Content is required",
+      };
+    }
+
+    // If content has words but doesn't meet min word count
+    if (wordCount < MIN_WORDS) {
+      return {
+        isValid: false,
+        error: `Content must have at least ${MIN_WORDS} words (currently ${wordCount})`,
+      };
+    }
+
+    // If content exceeds max word count
+    if (wordCount > MAX_WORDS) {
+      return {
+        isValid: false,
+        error: `Content exceeds maximum of ${MAX_WORDS} words (currently ${wordCount})`,
+      };
+    }
+
+    // Content is valid
+    return {
+      isValid: true,
+      wordCount,
+    };
   };
 
   // Blog form validation schema
   const validationSchema = Yup.object({
     status: Yup.string()
-      .required("status is required")
+      .required("Status is required")
       .oneOf(Object.values(BLOG_STATUS), "Invalid status"),
+
     title: Yup.string()
       .trim()
       .when("status", {
@@ -87,10 +134,11 @@ const CreateBlog = () => {
         then: (schema) =>
           schema
             .required("Title is required")
-            .min(5, "title must be at least 5 characters")
-            .max(150, "title must be at most 150 characters"),
-        otherwise: (schema) => schema,
+            .min(5, "Title must be at least 5 characters")
+            .max(150, "Title must be at most 150 characters"),
+        otherwise: (schema) => schema.notRequired(),
       }),
+
     description: Yup.string()
       .trim()
       .when("status", {
@@ -99,48 +147,61 @@ const CreateBlog = () => {
         then: (schema) =>
           schema
             .required("Description is required")
-            .min(5, "description must be at least 5 characters")
-            .max(200, "description must be at most 200 characters"),
-        otherwise: (schema) => schema,
+            .min(5, "Description must be at least 5 characters")
+            .max(200, "Description must be at most 200 characters"),
+        otherwise: (schema) => schema.notRequired(),
       }),
-    content: Yup.object().when("status", {
+
+    content: Yup.mixed().when("status", {
       is: (status) =>
         [BLOG_STATUS.PUBLISHED, BLOG_STATUS.SCHEDULED].includes(status),
       then: (schema) =>
         schema
           .required("Content is required")
-          .test(
-            "is-valid-tiptap",
-            `Content must be a valid Tiptap document with ${MIN_WORDS}–${MAX_WORDS} words`,
-            validateTiptapContent
-          ),
+          .test("is-valid-tiptap", function (value) {
+            // Custom error message based on validation result
+            const validation = validateTiptapContent(value);
+
+            // If validation returns a boolean (false), use generic message
+            if (validation === false) {
+              return this.createError({
+                message: "Content is required",
+              });
+            }
+
+            // If validation returns an object with error
+            if (validation && !validation.isValid) {
+              return this.createError({
+                message: validation.error,
+              });
+            }
+
+            // If validation passes
+            return true;
+          }),
       otherwise: (schema) => schema,
     }),
 
-    coverImage: Yup.object()
-      .nullable()
-      .when("status", {
-        is: (status) =>
-          [BLOG_STATUS.PUBLISHED, BLOG_STATUS.SCHEDULED].includes(status),
-        then: (schema) =>
-          schema.required("Cover image is required").shape({
-            url: Yup.string()
-              .required("Cover image is required")
-              .url("Must be a valid URL"),
-            public_id: Yup.string().required(
-              "Cover image public ID is required"
-            ),
-          }),
-        otherwise: (schema) => schema,
-      }),
+    coverImage: Yup.mixed().when("status", {
+      is: (status) =>
+        [BLOG_STATUS.PUBLISHED, BLOG_STATUS.SCHEDULED].includes(status),
+      then: () =>
+        Yup.object({
+          url: Yup.string()
+            .required("Cover image URL is required")
+            .url("Must be a valid URL"),
+          public_id: Yup.string().required("Cover image public ID is required"),
+        }).required("Cover image is required"),
+      otherwise: () => Yup.mixed().notRequired(),
+    }),
+
     category: Yup.object().when("status", {
       is: (status) =>
         [BLOG_STATUS.PUBLISHED, BLOG_STATUS.SCHEDULED].includes(status),
       then: (schema) => schema.required("Category is required"),
-      otherwise: (schema) => schema,
+      otherwise: (schema) => schema.notRequired(),
     }),
 
-    // Tags validation - optional but must be valid if provided
     tags: Yup.array()
       .of(
         Yup.object({
@@ -156,7 +217,7 @@ const CreateBlog = () => {
         schema
           .required("Schedule date and time is required")
           .min(new Date(), "Schedule date must be in the future"),
-      otherwise: (schema) => schema,
+      otherwise: (schema) => schema.notRequired(),
     }),
   });
 
@@ -186,6 +247,61 @@ const CreateBlog = () => {
   }, [formik.values, setBlogData]);
 
   console.log("dsfadsfsda", formik.errors);
+
+  const hasFormChanged = (currentValues) => {
+    console.log("currentValues", currentValues);
+    console.log("blog", blog);
+    return !_.isEqual(currentValues, blog);
+  };
+  // Auto-save draft implementation with debounce
+  // Use a longer debounce time (5 seconds) for lengthy content to avoid too many API calls
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const debouncedSaveDraft = useCallback(
+    debounce((data) => {
+      if (data.status === BLOG_STATUS.DRAFT && hasFormChanged(data)) {
+        if (data?._id) {
+          console.log("Saving draft", data);
+          updateBlog(
+            { id: data?._id, blogData: data },
+            {
+              onSuccess: (response) => {
+                setLastSaved(new Date());
+                if (response.data?.slug !== data.slug) {
+                  setBlogData({ slug: response.data?.slug });
+                }
+              },
+            }
+          );
+        } else {
+          console.log("creating draft", data);
+          publishBlog(data, {
+            onSuccess: (response) => {
+              setLastSaved(new Date());
+              if (response.data?._id && response.data?.slug) {
+                setBlogData({
+                  _id: response.data._id,
+                  slug: response.data.slug,
+                });
+              }
+              setLastSaved(new Date());
+            },
+          });
+        }
+      }
+    }, DEBOUNCE_TIME), // 5 second debounce for content changes
+    [blog]
+  );
+
+  // Trigger auto-save when values change and status is draft
+  useEffect(() => {
+    if (formik.values.status === BLOG_STATUS.DRAFT) {
+      debouncedSaveDraft(formik.values);
+    }
+
+    return () => {
+      debouncedSaveDraft.cancel();
+    };
+  }, [formik.values, debouncedSaveDraft]);
 
   useEffect(() => {
     return () => {
@@ -311,6 +427,34 @@ const CreateBlog = () => {
     formik.setFieldValue("content", content);
   };
 
+  // Get button text based on status
+  const getButtonText = (status) => {
+    switch (status) {
+      case BLOG_STATUS.DRAFT:
+        return "Save as Draft";
+      case BLOG_STATUS.PUBLISHED:
+        return "Publish";
+      case BLOG_STATUS.SCHEDULED:
+        return "Schedule";
+      default:
+        return "Save";
+    }
+  };
+
+  // Get button icon based on status
+  const getButtonIcon = (status) => {
+    switch (status) {
+      case BLOG_STATUS.DRAFT:
+        return <Save size={18} />;
+      case BLOG_STATUS.PUBLISHED:
+        return <Send size={18} />;
+      case BLOG_STATUS.SCHEDULED:
+        return <Calendar size={18} />;
+      default:
+        return <Save size={18} />;
+    }
+  };
+
   return (
     <AnimatePresence>
       <motion.div
@@ -329,6 +473,11 @@ const CreateBlog = () => {
         >
           <BlogHeader />
           <Box
+            component="form"
+            onSubmit={(e) => {
+              e.preventDefault();
+              formik.handleSubmit();
+            }}
             sx={{
               flex: 1,
               p: 2,
@@ -341,6 +490,33 @@ const CreateBlog = () => {
               gap: 2,
             }}
           >
+            {/* Auto-save indicator for draft mode */}
+            {formik.values.status === BLOG_STATUS.DRAFT && (
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "flex-end",
+                  alignItems: "center",
+                  gap: 1,
+                  mb: 1,
+                }}
+              >
+                {isSaving ? (
+                  <>
+                    <CircularProgress size={16} />
+                    <Typography variant="caption" color="text.secondary">
+                      Saving draft...
+                    </Typography>
+                  </>
+                ) : (
+                  lastSaved && (
+                    <Typography variant="caption" color="text.secondary">
+                      Last saved: {new Date(lastSaved).toLocaleTimeString()}
+                    </Typography>
+                  )
+                )}
+              </Box>
+            )}
             {/* Left Side - Content Creation */}
             <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
               <Box>
@@ -461,11 +637,11 @@ const CreateBlog = () => {
                       {uploadError}
                     </Alert>
                   )}
-                  {previewUrl || blog?.coverImage?.url ? (
+                  {previewUrl || formik.values.coverImage?.url ? (
                     <>
                       <Box
                         component="img"
-                        src={previewUrl || blog?.coverImage?.url}
+                        src={previewUrl || formik.values.coverImage?.url}
                         alt="Blog cover"
                         sx={{
                           position: "absolute",
@@ -685,6 +861,10 @@ const CreateBlog = () => {
                         {...params}
                         placeholder="Select up to 10 tags"
                         name="tags"
+                        error={
+                          formik.touched.tags && Boolean(formik.errors.tags)
+                        }
+                        helperText={formik.touched.tags && formik.errors.tags}
                       />
                     )}
                   />
@@ -700,11 +880,19 @@ const CreateBlog = () => {
                       fullWidth
                       value={formik.values.status}
                       label="Status"
-                      onChange={formik.handleChange}
+                      onChange={(e) => {
+                        // Cancel any pending auto-save when status changes
+                        debouncedSaveDraft.cancel();
+                        formik.handleChange(e);
+                      }}
                     >
-                      <MenuItem value="draft">Draft</MenuItem>
-                      <MenuItem value="published">Published</MenuItem>
-                      <MenuItem value="scheduled">Scheduled</MenuItem>
+                      <MenuItem value={BLOG_STATUS.DRAFT}>Draft</MenuItem>
+                      <MenuItem value={BLOG_STATUS.PUBLISHED}>
+                        Published
+                      </MenuItem>
+                      <MenuItem value={BLOG_STATUS.SCHEDULED}>
+                        Scheduled
+                      </MenuItem>
                     </Select>
                   </FormControl>
 
@@ -745,8 +933,7 @@ const CreateBlog = () => {
             >
               <Button
                 variant="contained"
-                onClick={formik.handleSubmit}
-                startIcon={<Save size={18} />} // Replace with appropriate icon if needed
+                startIcon={getButtonIcon(formik.values.status)}
                 sx={{
                   textTransform: "capitalize",
                   py: "4px",
@@ -757,8 +944,9 @@ const CreateBlog = () => {
                 size="small"
                 color="secondary"
                 disableElevation
+                disabled={isSaving}
               >
-                Publish
+                {isSaving ? "Saving..." : getButtonText(formik.values.status)}
               </Button>
             </Box>
           </Box>

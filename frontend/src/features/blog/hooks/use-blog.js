@@ -53,7 +53,7 @@ export const useUploadImage = (options = {}) => {
 export const usePublishBlog = (options = {}) => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ blogData }) => publishBlog({ blogData }),
+    mutationFn: publishBlog,
     ...options,
     onSuccess: (data) => {
       queryClient.invalidateQueries(QUERY_KEYS.BLOGS);

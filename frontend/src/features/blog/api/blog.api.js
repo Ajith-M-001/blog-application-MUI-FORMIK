@@ -56,7 +56,7 @@ export const getAllCategory = async ({ signal }) => {
   return response.data;
 };
 
-export const publishBlog = async ({ blogData }) => {
+export const publishBlog = async (blogData) => {
   const response = await axiosInstance.post(
     API_ENDPOINTS.blogs.publish,
     blogData

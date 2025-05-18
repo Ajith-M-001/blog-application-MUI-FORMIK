@@ -42,6 +42,10 @@ const CreateBlog = () => {
   const inputRef = useRef(null);
   const abortControllerRef = useRef(null);
 
+  const renderCount = useRef(0);
+  renderCount.current += 1;
+  console.log(`CreateBlog render count: ${renderCount.current}`);
+
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadError, setUploadError] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
@@ -50,16 +54,16 @@ const CreateBlog = () => {
 
   const { setBlogData } = useBlogActions();
   const blog = useBlogData();
-  const { mutate: uploadImage } = useUploadImage({
-    staleTime: 60 * 60 * 1000, // 1 hour
-    gcTime: 65 * 60 * 1000, // 1 hour 5 minutes
-  });
+  const { mutate: uploadImage } = useUploadImage();
   const { data: allCategories } = useGetAllCategory({
     staleTime: 60 * 60 * 1000, // 1 hour
     gcTime: 65 * 60 * 1000, // 1 hour 5 minutes
   });
 
-  const { data: allTags } = useGetAllTags();
+  const { data: allTags } = useGetAllTags({
+    staleTime: 60 * 60 * 1000, // 1 hour
+    gcTime: 65 * 60 * 1000, // 1 hour 5 minutes
+  });
   const { mutate: publishBlog, isPending: isPublishing } = usePublishBlog();
   const { mutate: updateBlog, isPending: isUpdating } = useUpdateBlog();
   const isSaving = isPublishing || isUpdating;
@@ -244,9 +248,9 @@ const CreateBlog = () => {
     if (JSON.stringify(formik.values) !== JSON.stringify(blog)) {
       setBlogData(formik.values);
     }
-  }, [formik.values, setBlogData]);
+  }, [formik.values, setBlogData, blog]);
 
-  console.log("dsfadsfsda", formik.errors);
+  console.log("formik.errors", formik.errors);
 
   const hasFormChanged = (currentValues) => {
     console.log("currentValues", currentValues);
@@ -668,8 +672,9 @@ const CreateBlog = () => {
                             },
                           }}
                           aria-label="Delete cover image"
+                          data-testid="delete-cover-image-button"
                         >
-                          <Trash2 />
+                          <Trash2 aria-hidden="true" size={20} />
                         </IconButton>
                       )}
 
@@ -886,13 +891,12 @@ const CreateBlog = () => {
                         formik.handleChange(e);
                       }}
                     >
-                      <MenuItem value={BLOG_STATUS.DRAFT}>Draft</MenuItem>
-                      <MenuItem value={BLOG_STATUS.PUBLISHED}>
-                        Published
-                      </MenuItem>
-                      <MenuItem value={BLOG_STATUS.SCHEDULED}>
-                        Scheduled
-                      </MenuItem>
+                      {Object.entries(BLOG_STATUS).map(([key, value]) => (
+                        <MenuItem key={key} value={value}>
+                          {key.charAt(0).toUpperCase() +
+                            key.slice(1).toLowerCase()}
+                        </MenuItem>
+                      ))}
                     </Select>
                   </FormControl>
 

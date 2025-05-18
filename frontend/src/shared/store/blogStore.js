@@ -16,7 +16,7 @@ const INITIAL_BLOG_STATE = Object.freeze({
   category: null,
   tags: [],
   description: "",
-  status: BLOG_STATUS.DRAFT,
+  status: BLOG_STATUS.PUBLISHED,
   scheduleDateAndTime: "",
   readingTime: {
     minutes: 0,

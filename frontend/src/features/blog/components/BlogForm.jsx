@@ -15,7 +15,7 @@ import {
 } from "@mui/material";
 import { useFormik } from "formik";
 import { ImageUp, Trash2 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as Yup from "yup";
 import {
   useGetAllCategory,
@@ -26,6 +26,106 @@ import { validateFile } from "../../../shared/utils/imageValidation";
 import { useBlogActions, useBlogData } from "../../../shared/store/blogStore";
 import { BLOG_STATUS } from "../../../shared/constants/constants";
 import TiptapEditor from "./editor/TiptapEditor";
+import { debounce } from "lodash";
+
+function extractTextFromDoc(node) {
+  if (!node) return "";
+  if (node.type === "text") return node.text || "";
+  return (node.content || []).map(extractTextFromDoc).join(" ");
+}
+
+// Validation schema
+const validationSchema = Yup.object({
+  status: Yup.string()
+    .required("Status is required")
+    .oneOf(Object.values(BLOG_STATUS), "Invalid status"),
+
+  title: Yup.string()
+    .trim()
+    .when("status", {
+      is: (status) =>
+        [BLOG_STATUS.PUBLISHED, BLOG_STATUS.SCHEDULED].includes(status),
+      then: (schema) =>
+        schema
+          .required("Title is required")
+          .min(5, "Title must be at least 5 characters")
+          .max(150, "Title must be at most 150 characters"),
+      otherwise: (schema) => schema.notRequired(),
+    }),
+
+  description: Yup.string()
+    .trim()
+    .when("status", {
+      is: (status) =>
+        [BLOG_STATUS.PUBLISHED, BLOG_STATUS.SCHEDULED].includes(status),
+      then: (schema) =>
+        schema
+          .required("Description is required")
+          .min(10, "Description must be at least 10 characters")
+          .max(300, "Description must be at most 300 characters"),
+      otherwise: (schema) => schema.notRequired(),
+    }),
+
+  coverImage: Yup.object().when("status", {
+    is: (status) =>
+      [BLOG_STATUS.PUBLISHED, BLOG_STATUS.SCHEDULED].includes(status),
+    then: () =>
+      Yup.object({
+        url: Yup.string()
+          .required("Cover image URL is required")
+          .url("Must be a valid URL"),
+        public_id: Yup.string().required("Cover image public ID is required"),
+      }).required("Cover image is required"),
+    otherwise: () => Yup.object().notRequired(),
+  }),
+
+  content: Yup.object().when("status", {
+    is: (status) =>
+      [BLOG_STATUS.PUBLISHED, BLOG_STATUS.SCHEDULED].includes(status),
+    then: (schema) =>
+      schema
+        .required("Content is required")
+        .test(
+          "wordCount",
+          "Content must be between 50 and 5000 words",
+          (value) => {
+            if (!value) return false;
+            const text = extractTextFromDoc(value);
+            const words = text.trim().split(/\s+/).filter(Boolean).length;
+            return words >= 50 && words <= 5000;
+          }
+        ),
+    otherwise: (schema) => schema.nullable().notRequired(),
+  }),
+  category: Yup.object().when("status", {
+    is: (status) =>
+      [BLOG_STATUS.PUBLISHED, BLOG_STATUS.SCHEDULED].includes(status),
+    then: (schema) =>
+      schema.required("Category is required").shape({
+        id: Yup.string().required("Category ID is required"),
+        name: Yup.string().required("Category name is required"),
+      }),
+    otherwise: (schema) => schema.notRequired(),
+  }),
+
+  tags: Yup.array()
+    .of(
+      Yup.object({
+        _id: Yup.string().required("Tag ID is required"),
+        name: Yup.string().required("Tag name is required"),
+      })
+    )
+    .max(10, "Maximum 10 tags allowed"),
+
+  scheduleDateAndTime: Yup.date().when("status", {
+    is: (status) => status === BLOG_STATUS.SCHEDULED,
+    then: (schema) =>
+      schema
+        .required("Schedule date and time is required")
+        .min(new Date(), "Schedule date must be in the future"),
+    otherwise: (schema) => schema.notRequired(),
+  }),
+});
 
 const BlogForm = () => {
   const theme = useTheme();
@@ -39,6 +139,17 @@ const BlogForm = () => {
   const blog = useBlogData();
   const { setBlogData } = useBlogActions();
 
+  const formik = useFormik({
+    initialValues: blog,
+    validationSchema,
+    enableReinitialize: true,
+    validateOnChange: false,
+    validateOnBlur: true,
+    onSubmit: (values) => {
+      console.log("Form submitted:", values);
+    },
+  });
+
   const { mutate: uploadImage, isPending: isUploading } = useUploadImage();
   const { data: allCategories } = useGetAllCategory({
     staleTime: 60 * 60 * 1000, // 1 hour
@@ -50,202 +161,143 @@ const BlogForm = () => {
     gcTime: 65 * 60 * 1000, // 1 hour 5 minutes
   });
 
-  // Validation schema
-  const validationSchema = Yup.object({
-    status: Yup.string()
-      .required("Status is required")
-      .oneOf(Object.values(BLOG_STATUS), "Invalid status"),
-
-    title: Yup.string()
-      .trim()
-      .when("status", {
-        is: (status) =>
-          [BLOG_STATUS.PUBLISHED, BLOG_STATUS.SCHEDULED].includes(status),
-        then: (schema) =>
-          schema
-            .required("Title is required")
-            .min(5, "Title must be at least 5 characters")
-            .max(150, "Title must be at most 150 characters"),
-        otherwise: (schema) => schema.notRequired(),
-      }),
-
-    description: Yup.string()
-      .trim()
-      .when("status", {
-        is: (status) =>
-          [BLOG_STATUS.PUBLISHED, BLOG_STATUS.SCHEDULED].includes(status),
-        then: (schema) =>
-          schema
-            .required("Description is required")
-            .min(10, "Description must be at least 10 characters")
-            .max(300, "Description must be at most 300 characters"),
-        otherwise: (schema) => schema.notRequired(),
-      }),
-
-    coverImage: Yup.object().when("status", {
-      is: (status) =>
-        [BLOG_STATUS.PUBLISHED, BLOG_STATUS.SCHEDULED].includes(status),
-      then: () =>
-        Yup.object({
-          url: Yup.string()
-            .required("Cover image URL is required")
-            .url("Must be a valid URL"),
-          public_id: Yup.string().required("Cover image public ID is required"),
-        }).required("Cover image is required"),
-      otherwise: () => Yup.object().notRequired(),
-    }),
-
-    content: Yup.object().when("status", {
-      is: (status) =>
-        [BLOG_STATUS.PUBLISHED, BLOG_STATUS.SCHEDULED].includes(status),
-      then: (schema) => schema.required("Content is required"),
-      otherwise: (schema) => schema.nullable().notRequired(),
-    }),
-    category: Yup.object().when("status", {
-      is: (status) =>
-        [BLOG_STATUS.PUBLISHED, BLOG_STATUS.SCHEDULED].includes(status),
-      then: (schema) =>
-        schema.required("Category is required").shape({
-          id: Yup.string().required("Category ID is required"),
-          name: Yup.string().required("Category name is required"),
-        }),
-      otherwise: (schema) => schema.notRequired(),
-    }),
-
-    tags: Yup.array()
-      .of(
-        Yup.object({
-          _id: Yup.string().required("Tag ID is required"),
-          name: Yup.string().required("Tag name is required"),
-        })
-      )
-      .max(10, "Maximum 10 tags allowed"),
-
-    scheduleDateAndTime: Yup.date().when("status", {
-      is: (status) => status === BLOG_STATUS.SCHEDULED,
-      then: (schema) =>
-        schema
-          .required("Schedule date and time is required")
-          .min(new Date(), "Schedule date must be in the future"),
-      otherwise: (schema) => schema.notRequired(),
-    }),
-  });
-
-  const handleEditorChange = (content) => {
-    formik.setFieldValue("content", content);
-  };
-
-  const handleCancelUpload = (event) => {
-    event.preventDefault();
-    event.stopPropagation();
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-      abortControllerRef.current = null;
-    }
-    setUploadProgress(0);
-    setPreviewUrl(null);
-    formik.setFieldValue("coverImage", {
-      url: "",
-      publicId: "",
-    });
-    if (inputRef.current) {
-      inputRef.current.value = "";
-    }
-    setUploadError(null);
-  };
-
-  const handleClearError = (event) => {
-    event.preventDefault();
-    event.stopPropagation();
-    setUploadError(null);
-  };
-
-  const handleDeleteImage = (event) => {
-    event.preventDefault();
-    event.stopPropagation();
-
-    setPreviewUrl(null);
-    formik.setFieldValue("coverImage", {
-      url: "",
-      publicId: "",
-    });
-  };
-
-  const formik = useFormik({
-    initialValues: blog,
-    validationSchema,
-    onSubmit: (values) => {
-      console.log("Form submitted:", values);
+  const handleCancelUpload = useCallback(
+    (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+        abortControllerRef.current = null;
+      }
+      setUploadProgress(0);
+      setPreviewUrl(null);
+      formik.setFieldValue("coverImage", {
+        url: "",
+        publicId: "",
+      });
+      if (inputRef.current) {
+        inputRef.current.value = "";
+      }
+      setUploadError(null);
     },
-  });
+    [formik]
+  );
+
+  // Memoize category and tag options
+  const categoryOptions = useMemo(
+    () => allCategories?.data || [],
+    [allCategories]
+  );
+  const tagOptions = useMemo(() => allTags?.data || [], [allTags]);
+
+  const handleClearError = useCallback((event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setUploadError(null);
+  }, []);
+
+  const handleDeleteImage = useCallback(
+    (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      setPreviewUrl(null);
+      formik.setFieldValue("coverImage", {
+        url: "",
+        publicId: "",
+      });
+    },
+    [formik]
+  );
 
   const handleClick = () => {
     inputRef.current?.click();
   };
 
-  const handleFileChange = (event) => {
-    event.preventDefault();
-    event.stopPropagation();
-    const file = event.target.files[0];
-    // Reset input value to allow selecting the same file again
-    event.target.value = null;
+  // Debounce store updates to reduce frequency
+  const debouncedSetBlogData = useCallback(
+    debounce((values) => {
+      setBlogData(values);
+    }, 500),
+    [setBlogData]
+  );
 
-    if (!file) return;
+  // Sync formik values with blog store
+  useEffect(() => {
+    debouncedSetBlogData(formik.values);
+    return () => debouncedSetBlogData.cancel();
+  }, [formik.values, debouncedSetBlogData]);
 
-    const validation = validateFile(file);
-    if (!validation.valid) {
-      setUploadError(validation.error);
-      return;
-    }
+  const handleEditorChange = useCallback(
+    ({ content, stats }) => {
+      formik.setFieldValue("content", content);
+      formik.setFieldValue("readingTime", {
+        minutes: stats.readingTime,
+        words: stats.wordCount,
+      });
+    },
+    [formik]
+  );
 
-    setUploadError(null);
-    const localPreviewUrl = URL.createObjectURL(file);
-    setPreviewUrl(localPreviewUrl);
+  const handleFileChange = useCallback(
+    (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      const file = event.target.files[0];
+      event.target.value = null;
 
-    // Create abort controller for this upload
-    abortControllerRef.current = new AbortController();
+      if (!file) return;
 
-    // Create form data for upload
-    const formData = new FormData();
-    formData.append("images", file);
-    // Upload to server
-    uploadImage(
-      {
-        formData,
-        onUploadProgress: (progress) => {
-          setUploadProgress(progress);
-        },
-        signal: abortControllerRef.current.signal,
-      },
-      {
-        onSuccess: (data) => {
-          const imageInfo = data.data[0];
-          if (previewUrl && previewUrl.startsWith("blob:")) {
-            URL.revokeObjectURL(previewUrl);
-          }
-
-          formik.setFieldValue("coverImage", {
-            url: imageInfo.url,
-            publicId: imageInfo.public_id,
-          });
-
-          setPreviewUrl(null);
-          setUploadProgress(0);
-          abortControllerRef.current = null;
-        },
-        onError: (error) => {
-          console.error("Upload error:", error);
-          setUploadProgress(0);
-          setPreviewUrl(null);
-          formik.setFieldValue("coverImage", {
-            url: "",
-            publicId: "",
-          });
-          abortControllerRef.current = null;
-        },
+      const validation = validateFile(file);
+      if (!validation.valid) {
+        setUploadError(validation.error);
+        return;
       }
-    );
-  };
+
+      setUploadError(null);
+      const localPreviewUrl = URL.createObjectURL(file);
+      setPreviewUrl(localPreviewUrl);
+
+      abortControllerRef.current = new AbortController();
+
+      const formData = new FormData();
+      formData.append("images", file);
+      uploadImage(
+        {
+          formData,
+          onUploadProgress: (progress) => {
+            setUploadProgress(progress);
+          },
+          signal: abortControllerRef.current.signal,
+        },
+        {
+          onSuccess: (data) => {
+            const imageInfo = data.data[0];
+            if (previewUrl && previewUrl.startsWith("blob:")) {
+              URL.revokeObjectURL(previewUrl);
+            }
+            formik.setFieldValue("coverImage", {
+              url: imageInfo.url,
+              publicId: imageInfo.public_id,
+            });
+            setPreviewUrl(null);
+            setUploadProgress(0);
+            abortControllerRef.current = null;
+          },
+          onError: (error) => {
+            console.error("Upload error:", error);
+            setUploadProgress(0);
+            setPreviewUrl(null);
+            formik.setFieldValue("coverImage", {
+              url: "",
+              publicId: "",
+            });
+            abortControllerRef.current = null;
+          },
+        }
+      );
+    },
+    [previewUrl, formik, uploadImage]
+  );
 
   useEffect(() => {
     return () => {
@@ -254,14 +306,6 @@ const BlogForm = () => {
       }
     };
   }, [previewUrl]);
-
-  // Sync formik values with blog store
-  useEffect(() => {
-    // Only update store if values actually changed
-    if (JSON.stringify(formik.values) !== JSON.stringify(blog)) {
-      setBlogData(formik.values);
-    }
-  }, [formik.values, setBlogData, blog]);
 
   const titleError = formik.touched.title && formik.errors.title;
   const descriptionError =
@@ -632,6 +676,7 @@ const BlogForm = () => {
           <TiptapEditor
             initialContent={formik.values.content}
             onChange={handleEditorChange}
+            readingTime={formik.values.readingTime}
             isError={formik.touched.content && formik.errors.content}
           />
           {formik.touched.content && formik.errors.content && (
@@ -655,12 +700,12 @@ const BlogForm = () => {
             disablePortal
             id="category"
             name="category"
-            options={allCategories?.data || []}
+            options={categoryOptions}
             getOptionLabel={(option) => option.name}
-            isOptionEqualToValue={(option, value) => option.id === value.id}
-            value={formik.values.category || null}
-            onChange={(event, value) => formik.setFieldValue("category", value)}
-            onBlur={() => formik.setFieldTouched("category", true)}
+            onChange={(event, value) => {
+              formik.setFieldValue("category", value);
+            }}
+            value={formik.values.category}
             sx={{
               width: "100%",
               backgroundColor: theme.palette.background.paper,
@@ -707,7 +752,7 @@ const BlogForm = () => {
             multiple
             id="tags"
             name="tags"
-            options={allTags?.data || []}
+            options={tagOptions}
             getOptionLabel={(option) => option.name}
             value={formik.values.tags || []}
             onChange={(event, value) => {
@@ -835,4 +880,4 @@ const BlogForm = () => {
   );
 };
 
-export default BlogForm;
+export default memo(BlogForm);

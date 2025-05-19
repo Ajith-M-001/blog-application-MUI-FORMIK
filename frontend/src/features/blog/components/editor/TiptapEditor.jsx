@@ -12,7 +12,6 @@ import PropTypes from "prop-types";
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import MenuBar from "./MenuBar";
 import { debounce } from "lodash";
-import { useBlogActions } from "../../../../shared/store/blogStore";
 
 const createEditorStyles = (theme) => `
   .tiptap-editor {
@@ -116,26 +115,22 @@ const TiptapEditor = ({
   showWordCount = true,
   showReadingTime = true,
   isError,
+  onChange,
+  readingTime,
 }) => {
   const theme = useTheme();
-  const [stats, setStats] = useState({ wordCount: 0, readingTime: 0 });
   const [isMounted, setIsMounted] = useState(false);
-  const { setBlogData } = useBlogActions();
-  // const blog = useBlogData();
+
+  console.log("initialContent", readingTime);
 
   const editorStyles = useMemo(() => createEditorStyles(theme), [theme]);
 
-  const updateBlogContent = useCallback(
-    debounce((content, wordCount, readingTime) => {
-      setBlogData({
-        content,
-        readingTime: {
-          minutes: readingTime,
-          words: wordCount,
-        },
-      });
+  // Debounce onChange to prevent excessive updates
+  const debouncedOnChange = useCallback(
+    debounce((content, stats) => {
+      onChange({ content, stats }); // Pass both content and stats
     }, 300),
-    [setBlogData]
+    [onChange]
   );
 
   // Separate function to calculate stats to optimize editor update event
@@ -190,6 +185,11 @@ const TiptapEditor = ({
     content: initialContent,
     editorProps,
     parseOptions: { preserveWhitespace: "full" },
+    onUpdate: ({ editor }) => {
+      const text = editor.getText();
+      const newStats = calculateStats(text);
+      debouncedOnChange(editor.getJSON(), newStats);
+    },
   });
 
   useEffect(() => {
@@ -197,43 +197,21 @@ const TiptapEditor = ({
   }, [editor]);
 
   // Editor update effect - optimize with refs to reduce unnecessary work
+  // Update editor content when initialContent changes
   useEffect(() => {
-    if (!editor) return;
+    if (!editor || !initialContent) return;
+    const currentContent = JSON.stringify(editor.getJSON());
+    const newContent = JSON.stringify(initialContent);
+    if (currentContent !== newContent) {
+      editor.commands.setContent(initialContent, false);
+    }
+  }, [editor, initialContent, calculateStats]);
 
-    // Initial stats calculation
-    const text = editor.getText();
-    const newStats = calculateStats(text);
-    setStats(newStats);
-
-    // Set initial formik values
-    updateBlogContent(
-      editor.getJSON(),
-      newStats.wordCount,
-      newStats.readingTime
-    );
-
-    // Editor update handler - separate UI updates from formik updates
-    const handleUpdate = () => {
-      const text = editor.getText();
-      const newStats = calculateStats(text);
-
-      // Update UI stats immediately (lightweight operation)
-      setStats(newStats);
-
-      // Debounce heavier operations
-      updateBlogContent(
-        editor.getJSON(),
-        newStats.wordCount,
-        newStats.readingTime
-      );
-    };
-
-    editor.on("update", handleUpdate);
-
+  useEffect(() => {
     return () => {
-      editor.off("update", handleUpdate);
+      debouncedOnChange.cancel();
     };
-  }, [editor, calculateStats, updateBlogContent]);
+  }, [debouncedOnChange]);
 
   if (!isMounted || !editor) return null;
 
@@ -271,13 +249,13 @@ const TiptapEditor = ({
                 color="text.secondary"
                 sx={{ mr: 2 }}
               >
-                {stats.wordCount} {stats.wordCount === 1 ? "word" : "words"}
+                {readingTime.words} {readingTime.words === 1 ? "word" : "words"}
               </Typography>
             )}
             {showReadingTime && (
               <Typography variant="caption" color="text.secondary">
-                {stats.readingTime} {stats.readingTime === 1 ? "min" : "mins"}{" "}
-                read
+                {readingTime.minutes}{" "}
+                {readingTime.minutes === 1 ? "min" : "mins"} read
               </Typography>
             )}
           </Box>
@@ -292,6 +270,8 @@ TiptapEditor.propTypes = {
   showWordCount: PropTypes.bool,
   showReadingTime: PropTypes.bool,
   isError: PropTypes.bool,
+  onChange: PropTypes.func,
+  readingTime: PropTypes.object,
 };
 
 export default memo(TiptapEditor);

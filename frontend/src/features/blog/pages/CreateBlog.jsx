@@ -30,7 +30,7 @@ import {
 import { Footer } from "../../../shared/components/layout/Footer";
 import { validateFile } from "../../../shared/utils/imageValidation";
 import { useBlogActions, useBlogData } from "../../../shared/store/blogStore";
-import { useNavigate } from "react-router";
+// import { useNavigate } from "react-router";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { BLOG_STATUS } from "../../../shared/constants/constants";
@@ -38,7 +38,7 @@ import _, { debounce } from "lodash";
 
 const CreateBlog = () => {
   const theme = useTheme();
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
   const inputRef = useRef(null);
   const abortControllerRef = useRef(null);
 

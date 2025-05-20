@@ -249,13 +249,13 @@ const TiptapEditor = ({
                 color="text.secondary"
                 sx={{ mr: 2 }}
               >
-                {readingTime.words} {readingTime.words === 1 ? "word" : "words"}
+                {readingTime?.words} {readingTime?.words === 1 ? "word" : "words"}
               </Typography>
             )}
             {showReadingTime && (
               <Typography variant="caption" color="text.secondary">
-                {readingTime.minutes}{" "}
-                {readingTime.minutes === 1 ? "min" : "mins"} read
+                {readingTime?.minutes}{" "}
+                {readingTime?.minutes === 1 ? "min" : "mins"} read
               </Typography>
             )}
           </Box>

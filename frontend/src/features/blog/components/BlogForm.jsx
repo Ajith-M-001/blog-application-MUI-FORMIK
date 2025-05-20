@@ -20,13 +20,16 @@ import * as Yup from "yup";
 import {
   useGetAllCategory,
   useGetAllTags,
+  useGetBlogBySlug,
+  usePublishBlog,
+  useUpdateBlog,
   useUploadImage,
 } from "../hooks/use-blog";
 import { validateFile } from "../../../shared/utils/imageValidation";
 import { useBlogActions, useBlogData } from "../../../shared/store/blogStore";
 import { BLOG_STATUS } from "../../../shared/constants/constants";
 import TiptapEditor from "./editor/TiptapEditor";
-import { debounce } from "lodash";
+import { debounce, isEqual } from "lodash";
 
 function extractTextFromDoc(node) {
   if (!node) return "";
@@ -127,6 +130,34 @@ const validationSchema = Yup.object({
   }),
 });
 
+// Utility to check if form has meaningful data
+const hasMeaningfulData = (values) => {
+  return (
+    values.title?.trim() ||
+    values.description?.trim() ||
+    values.content ||
+    values.coverImage?.url ||
+    values.category ||
+    values.tags?.length > 0
+  );
+};
+
+const haveValuesChanged = (formikValues, fetchedBlog) => {
+  if (!fetchedBlog) return true; // New blog, always save if meaningful data exists
+  const fetchedValues = {
+    title: fetchedBlog.title || "",
+    description: fetchedBlog.description || "",
+    content: fetchedBlog.content || null,
+    coverImage: fetchedBlog.coverImage || { url: "", publicId: "" },
+    category: fetchedBlog.category || null,
+    tags: fetchedBlog.tags || [],
+    status: fetchedBlog.status || "draft",
+    scheduleDateAndTime: fetchedBlog.scheduleDateAndTime || "",
+    readingTime: fetchedBlog.readingTime || { minutes: 0, words: 0 },
+  };
+  return !isEqual(formikValues, fetchedValues);
+};
+
 const BlogForm = () => {
   const theme = useTheme();
   const inputRef = useRef(null);
@@ -138,6 +169,20 @@ const BlogForm = () => {
 
   const blog = useBlogData();
   const { setBlogData } = useBlogActions();
+
+  const { data: fetchedBlog, isLoading: isBlogLoading } = useGetBlogBySlug(
+    blog?.slug,
+    {
+      enabled: !!blog?.slug,
+    }
+  );
+
+  const { mutate: publishBlog } = usePublishBlog({
+    onSuccess: (response) => {
+      console.log("Blog published successfully:", response);
+    },
+  });
+  const { mutate: updateBlog } = useUpdateBlog();
 
   const formik = useFormik({
     initialValues: blog,
@@ -213,19 +258,38 @@ const BlogForm = () => {
     inputRef.current?.click();
   };
 
-  // Debounce store updates to reduce frequency
-  const debouncedSetBlogData = useCallback(
-    debounce((values) => {
-      setBlogData(values);
-    }, 500),
-    [setBlogData]
+  const handleAutoSave = useCallback((values) => {
+    if (
+      values.status === BLOG_STATUS.DRAFT &&
+      hasMeaningfulData(values) && // Check if there are meaningful data
+      haveValuesChanged(values, fetchedBlog)
+    ) {
+      if (blog?._id) {
+        updateBlog({ id: fetchedBlog?.data?._id, blogData: values });
+      } else {
+        publishBlog(values);
+      }
+    }
+  }, []);
+
+  // Dynamic debounce based on word count
+  const debouncedAutoSave = useMemo(
+    () =>
+      debounce(
+        handleAutoSave,
+        formik.values.readingTime.words >= 1000 ? 5000 : 3000
+      ),
+    [handleAutoSave, formik.values.readingTime.words]
   );
 
-  // Sync formik values with blog store
+  // Sync form state and trigger auto-save
   useEffect(() => {
-    debouncedSetBlogData(formik.values);
-    return () => debouncedSetBlogData.cancel();
-  }, [formik.values, debouncedSetBlogData]);
+    setBlogData(formik.values);
+    if (formik.values.status === BLOG_STATUS.DRAFT) {
+      debouncedAutoSave(formik.values);
+    }
+    return () => debouncedAutoSave.cancel();
+  }, [formik.values, setBlogData, debouncedAutoSave]);
 
   const handleEditorChange = useCallback(
     ({ content, stats }) => {

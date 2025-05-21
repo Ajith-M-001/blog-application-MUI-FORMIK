@@ -1,4 +1,7 @@
 function generateSlug(text) {
+  if (!text) {
+    return "";
+  }
   return text
     .toString()
     .toLowerCase()

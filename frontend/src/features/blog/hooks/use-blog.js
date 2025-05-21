@@ -72,7 +72,7 @@ export const useGetAllBlogs = (options = {}) => {
 
 export const useGetBlogBySlug = (slug, options = {}) => {
   return useQuery({
-    queryKey: [QUERY_KEYS.BLOG, slug],
+    queryKey: QUERY_KEYS.BLOG(slug),
     queryFn: ({ signal }) => getBlogBySlug({ slug, signal }),
     ...options,
   });

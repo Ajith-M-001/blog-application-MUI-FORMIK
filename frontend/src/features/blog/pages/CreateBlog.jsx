@@ -287,7 +287,6 @@ const CreateBlog = () => {
                   slug: response.data.slug,
                 });
               }
-              setLastSaved(new Date());
             },
           });
         }

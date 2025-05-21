@@ -298,11 +298,14 @@ export const updateBlog = transactionHandler(
 
     await redisService.clearCacheByPattern("blogs:*");
 
-    await Blog.findByIdAndUpdate(id, updateObject, { new: true, session });
+    const updatedBlog = await Blog.findByIdAndUpdate(id, updateObject, {
+      new: true,
+      session,
+    });
 
     return res
       .status(200)
-      .json(ApiResponse.success("Blog updated successfully", 200));
+      .json(ApiResponse.success("Blog updated successfully", updatedBlog, 200));
   }
 );
 

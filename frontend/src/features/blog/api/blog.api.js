@@ -72,9 +72,12 @@ export const getAllBlogs = async ({ signal }) => {
 };
 
 export const getBlogBySlug = async ({ slug, signal }) => {
-  const response = await axiosInstance.get(API_ENDPOINTS.blogs.slug(slug), {
-    signal,
-  });
+  const response = await axiosInstance.get(
+    API_ENDPOINTS.blogs.getBySlug(slug),
+    {
+      signal,
+    }
+  );
   return response.data;
 };
 

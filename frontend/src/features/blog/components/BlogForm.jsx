@@ -30,6 +30,7 @@ import { useBlogActions, useBlogData } from "../../../shared/store/blogStore";
 import { BLOG_STATUS } from "../../../shared/constants/constants";
 import TiptapEditor from "./editor/TiptapEditor";
 import { debounce, isEqual } from "lodash";
+import { useNavigate } from "react-router";
 
 function extractTextFromDoc(node) {
   if (!node) return "";
@@ -77,7 +78,7 @@ const validationSchema = Yup.object({
         url: Yup.string()
           .required("Cover image URL is required")
           .url("Must be a valid URL"),
-        public_id: Yup.string().required("Cover image public ID is required"),
+        publicId: Yup.string().required("Cover image public ID is required"),
       }).required("Cover image is required"),
     otherwise: () => Yup.object().notRequired(),
   }),
@@ -105,7 +106,7 @@ const validationSchema = Yup.object({
       [BLOG_STATUS.PUBLISHED, BLOG_STATUS.SCHEDULED].includes(status),
     then: (schema) =>
       schema.required("Category is required").shape({
-        id: Yup.string().required("Category ID is required"),
+        _id: Yup.string().required("Category ID is required"),
         name: Yup.string().required("Category name is required"),
       }),
     otherwise: (schema) => schema.notRequired(),
@@ -162,6 +163,7 @@ const BlogForm = () => {
   const theme = useTheme();
   const inputRef = useRef(null);
   const abortControllerRef = useRef(null);
+  const navigate = useNavigate();
 
   const [previewUrl, setPreviewUrl] = useState(null);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -177,11 +179,9 @@ const BlogForm = () => {
     }
   );
 
-  const { mutate: publishBlog } = usePublishBlog({
-    onSuccess: (response) => {
-      console.log("Blog published successfully:", response);
-    },
-  });
+  console.log("fetchedBlog", !!blog?.slug);
+
+  const { mutate: publishBlog } = usePublishBlog();
   const { mutate: updateBlog } = useUpdateBlog();
 
   const formik = useFormik({
@@ -191,7 +191,22 @@ const BlogForm = () => {
     validateOnChange: false,
     validateOnBlur: true,
     onSubmit: (values) => {
-      console.log("Form submitted:", values);
+      if (values._id) {
+        updateBlog(
+          { id: values._id, blogData: values },
+          {
+            onSuccess: () => {
+              navigate("/");
+            },
+          }
+        );
+      } else {
+        publishBlog(values, {
+          onSuccess: () => {
+            navigate("/");
+          },
+        });
+      }
     },
   });
 
@@ -261,13 +276,32 @@ const BlogForm = () => {
   const handleAutoSave = useCallback((values) => {
     if (
       values.status === BLOG_STATUS.DRAFT &&
+      values.title?.trim() && // Check if title is not empty
       hasMeaningfulData(values) && // Check if there are meaningful data
       haveValuesChanged(values, fetchedBlog)
     ) {
-      if (blog?._id) {
-        updateBlog({ id: fetchedBlog?.data?._id, blogData: values });
+      if (values._id) {
+        updateBlog(
+          { id: values._id, blogData: values },
+          {
+            onSuccess: (response) => {
+              if (response.data?.slug !== values.slug) {
+                setBlogData({ slug: response.data?.slug });
+              }
+            },
+          }
+        );
       } else {
-        publishBlog(values);
+        publishBlog(values, {
+          onSuccess: (response) => {
+            if (response.data?._id && response.data?.slug) {
+              setBlogData({
+                _id: response.data._id,
+                slug: response.data.slug,
+              });
+            }
+          },
+        });
       }
     }
   }, []);

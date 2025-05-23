@@ -293,7 +293,7 @@ export const updateBlog = transactionHandler(
       status === BLOG_STATUS.PUBLISHED &&
       blog.status !== BLOG_STATUS.PUBLISHED
     ) {
-      updateData.publishedAt = new Date();
+      updateObject.publishedAt = new Date();
     }
 
     await redisService.clearCacheByPattern("blogs:*");

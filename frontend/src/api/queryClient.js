@@ -4,7 +4,7 @@ import { showToast } from "../shared/utils/toast";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      refetchOnWindowFocus: false,
+      refetchOnWindowFocus: true,
       refetchOnMount: true,
       refetchOnReconnect: true,
       retry: (failureCount, error) => {

@@ -4,6 +4,23 @@ import { memo, useState, Fragment } from "react";
 import { Eye, EyeClosed } from "lucide-react";
 import { calculatePasswordStrength, strengthLevels } from "../../utils/passwordStrength";
 
+/**
+ * CustomTextField component is a Formik-integrated wrapper around Material-UI's TextField.
+ * It handles various field types like 'text', 'email', and 'password'.
+ * For password fields, it includes a visibility toggle and a password strength indicator
+ * that appears on focus.
+ *
+ * @component
+ * @param {object} props - The component props.
+ * @param {string} props.label - The label for the text field.
+ * @param {string} props.name - The name of the field (used by Formik for state and validation).
+ * @param {'text' | 'email' | 'password' | 'number'} [props.fieldType="text"] - The type of input field.
+ * // Other standard TextField props can also be passed.
+ * @returns {JSX.Element} The rendered custom text field with Formik integration and additional features.
+ * @example
+ * <CustomTextField fieldType="email" name="email" label="Email Address" />
+ * <CustomTextField fieldType="password" name="password" label="Password" />
+ */
 const CustomTextField = memo(
   ({ label, name, fieldType = "text", ...props }) => {
     const [field, meta] = useField(name);
@@ -16,12 +33,22 @@ const CustomTextField = memo(
     const strength = calculatePasswordStrength(password || '');
     const currentStrengthLevelDetails = strengthLevels[strength.level];
 
+    /**
+     * Handles the focus event for the text field.
+     * If it's a password field, sets `isPasswordFocused` to true to show the strength indicator.
+     */
     const handleFocus = () => {
       if (isPasswordField) {
         setIsPasswordFocused(true);
       }
     };
 
+    /**
+     * Handles the blur event for the text field.
+     * If it's a password field, sets `isPasswordFocused` to false to hide the strength indicator.
+     * Critically, it also calls Formik's `field.onBlur(e)` to trigger validation and touched state.
+     * @param {React.FocusEvent<HTMLInputElement>} e - The blur event.
+     */
     const handleBlur = (e) => { // Pass the event 'e'
       if (isPasswordField) {
         setIsPasswordFocused(false);

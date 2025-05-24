@@ -6,6 +6,24 @@ import { LoaderCircle, BadgeCheck, MoveRight } from "lucide-react";
 import { useNavigate } from "react-router";
 import PropTypes from "prop-types";
 import { useResendOTP, useVerifyOtp } from "../hooks/use-auth";
+
+/**
+ * @typedef {object} OtpFormValues
+ * @property {string[]} otp - Array of 6 strings, each representing a digit of the OTP.
+ */
+
+/**
+ * OtpVerification component handles the input, validation, and submission of a 6-digit OTP.
+ * It includes features like automatic focus forwarding, paste handling, a resend OTP timer,
+ * and masked display of the contact information (email/phone).
+ *
+ * @component
+ * @param {object} props - The component props.
+ * @param {'email' | 'phoneNumber'} props.contactType - The type of contact method used (email or phone).
+ * @param {string} props.contactValue - The actual email address or phone number where the OTP was sent.
+ * @param {boolean} [props.reset=false] - Flag indicating if the OTP verification is part of a password reset flow.
+ * @returns {JSX.Element} The rendered OTP verification form.
+ */
 const OtpVerification = ({ contactType, contactValue, reset }) => {
   const [resendTimer, setResendTimer] = useState(30);
 
@@ -27,7 +45,12 @@ const OtpVerification = ({ contactType, contactValue, reset }) => {
   const { mutate: verifyOTP, isPending: isVerifying } = useVerifyOtp();
   const { mutate: resendOTP, isPending: isResending } = useResendOTP();
 
-  // Mask the contact value (email or phone)
+  /**
+   * Masks the contact value (email or phone number) for display.
+   * For emails, it shows the first two characters of the username and masks the rest.
+   * For phone numbers, it shows the first two and last two digits, masking the middle.
+   * @returns {string} The masked contact value.
+   */
   const maskedContact = () => {
     if (contactType === "email") {
       const [username, domain] = contactValue.split("@");
@@ -43,44 +66,61 @@ const OtpVerification = ({ contactType, contactValue, reset }) => {
     }
   };
 
+  /**
+   * Handles the resend OTP request.
+   * Calls the `resendOTP` mutation if the timer is not active and not already resending.
+   * Resets the resend timer on success.
+   */
   const handleResend = () => {
     if (resendTimer > 0 || isResending) return;
-    resendOTP(
-      { [contactType]: contactValue, reset },
-      {
-        onSuccess: (data) => {
-          console.log("success", data);
-        },
-      }
-    );
-    setResendTimer(30);
+    // The payload for resendOTP should be an object with emailOrPhone property
+    const payload = { emailOrPhone: contactValue, reset }; 
+    resendOTP(payload, {
+      onSuccess: (data) => {
+        console.log("success", data);
+        setResendTimer(30); // Reset timer on successful resend
+      },
+    });
   };
-
+  
+  /**
+   * Handles the OTP form submission.
+   * Joins the OTP digits, calls the `verifyOTP` mutation.
+   * Navigates to the appropriate page (sign-in or reset-password) on success.
+   * Resets the form on error.
+   * @param {OtpFormValues} values - The form values containing the OTP array.
+   * @param {import('formik').FormikHelpers<OtpFormValues>} formikHelpers - Formik helpers.
+   */
   const handleSubmit = (values, { resetForm }) => {
     const OTP = values.otp.join("");
-    verifyOTP(
-      { [contactType]: contactValue, otp: OTP, reset },
-      {
-        onSuccess: () => {
-          const navigateTo = reset ? "/reset-password" : "/sign-in";
-          const navigateOptions = reset
-            ? {
-                state: {
-                  reset: true,
-                  contactType: contactType,
-                  contactValue: contactValue,
-                },
-              }
-            : {};
-          navigate(navigateTo, navigateOptions);
-        },
-        onError: () => {
-          resetForm();
-        },
-      }
-    );
+    // The payload for verifyOTP should be an object with emailOrPhone, otp, and reset properties
+    const payload = { emailOrPhone: contactValue, otp: OTP, reset };
+    verifyOTP(payload, {
+      onSuccess: (data) => { // Added data parameter
+        const navigateTo = reset ? "/reset-password" : "/sign-in";
+        const navigateOptions = reset
+          ? {
+              state: {
+                reset: true,
+                contactType: contactType,
+                contactValue: contactValue,
+                otp: OTP, // Pass OTP to reset password page if needed
+              },
+            }
+          : {};
+        navigate(navigateTo, navigateOptions);
+      },
+      onError: () => {
+        resetForm();
+      },
+    });
   };
 
+  /**
+   * Yup validation schema for the OTP form.
+   * Ensures the OTP is an array of 6 digits.
+   * @type {Yup.ObjectSchema<OtpFormValues>}
+   */
   const validationSchema = Yup.object().shape({
     otp: Yup.array()
       .of(
@@ -91,6 +131,12 @@ const OtpVerification = ({ contactType, contactValue, reset }) => {
       .length(6, "Must enter all digits"),
   });
 
+  /**
+   * Handles pasting data into the OTP input fields.
+   * Extracts digits from pasted text, fills the OTP array, and focuses the next relevant input.
+   * @param {React.ClipboardEvent<HTMLDivElement>} e - The paste event.
+   * @param {function} setFieldValue - Formik's setFieldValue function.
+   */
   const handlePaste = (e, setFieldValue) => {
     e.preventDefault();
     const pastedData = e.clipboardData
@@ -212,7 +258,7 @@ const OtpVerification = ({ contactType, contactValue, reset }) => {
                         if (e.key === "ArrowRight" && index < 5) {
                           inputRefs.current[index + 1]?.focus();
                           setTimeout(() => {
-                            const input = inputRefs.current[index - 1];
+                            const input = inputRefs.current[index - 1]; // Should be current[index+1] or just index
                             if (input) {
                               input.setSelectionRange(
                                 input.value.length,

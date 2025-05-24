@@ -3,6 +3,33 @@ import { Box, Autocomplete, TextField, InputAdornment } from "@mui/material";
 import { useField, useFormikContext } from "formik";
 import PropTypes from "prop-types";
 
+/**
+ * @typedef {object} CountryOption
+ * @property {string} code - The country code (e.g., "US").
+ * @property {string} name - The name of the country (e.g., "United States").
+ * @property {string} dial_code - The international dial code (e.g., "+1").
+ * @property {number} [maxLength] - Optional max length for phone numbers in this country.
+ */
+
+/**
+ * @typedef {object} CountryPhoneSelectorFormValues
+ * @property {CountryOption | null} country - The selected country object.
+ * @property {string} phoneNumber - The entered phone number.
+ */
+
+/**
+ * CountryPhoneSelector component provides a country selection dropdown (Autocomplete)
+ * and a phone number input field. It integrates with Formik for field values and validation.
+ *
+ * @component
+ * @param {object} props - The component props.
+ * @param {CountryOption[]} props.countries - Array of country objects to populate the selector.
+ * @param {boolean} [props.hide=false] - If true, hides the country selector dropdown (phone input still visible).
+ * @param {boolean} [props.disabled=true] - If true, phone number input is disabled until a country is selected. Set to false to always enable.
+ * @returns {JSX.Element} The rendered country phone selector.
+ * @example
+ * <CountryPhoneSelector countries={allCountries} />
+ */
 const CountryPhoneSelector = ({ countries, hide, disabled = true }) => {
   const { values, setFieldValue } = useFormikContext();
   const [countryField, countryMeta] = useField("country");
@@ -11,6 +38,12 @@ const CountryPhoneSelector = ({ countries, hide, disabled = true }) => {
   // Memoize options and avoid recreating on each render
   const filteredCountries = useMemo(() => countries || [], [countries]);
 
+  /**
+   * Callback for when the selected country changes.
+   * Updates Formik's 'country' field and resets 'phoneNumber'.
+   * @param {React.SyntheticEvent} _ - The event source of the callback.
+   * @param {CountryOption | null} newValue - The newly selected country object.
+   */
   const handleCountryChange = useCallback(
     (_, newValue) => {
       setFieldValue("country", newValue);
@@ -19,6 +52,11 @@ const CountryPhoneSelector = ({ countries, hide, disabled = true }) => {
     [setFieldValue]
   );
 
+  /**
+   * Callback for when the phone number input changes.
+   * Allows only digits and updates Formik's 'phoneNumber' field.
+   * @param {React.ChangeEvent<HTMLInputElement>} e - The change event.
+   */
   const handlePhoneNumberChange = useCallback(
     (e) => {
       const input = e.target.value;
@@ -29,6 +67,13 @@ const CountryPhoneSelector = ({ countries, hide, disabled = true }) => {
     [setFieldValue]
   );
 
+  /**
+   * Custom renderer for options in the Autocomplete dropdown.
+   * Displays the country flag, name, and dial code.
+   * @param {object} props - Props to apply to the list item.
+   * @param {CountryOption} option - The country option to render.
+   * @returns {JSX.Element} The rendered list item.
+   */
   const renderCountryOption = useCallback(
     (props, option) => (
       <Box component="li" {...props}>

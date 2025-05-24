@@ -4,6 +4,18 @@ import { useLocation } from "react-router";
 import { AnimatePresence, motion } from "motion/react";
 import { OtpVerification } from "../components/OtpVerification";
 
+/**
+ * OtpVerificationPage component.
+ * This page serves as a wrapper for the `OtpVerification` component.
+ * It retrieves `contactType`, `contactValue`, and `reset` status from the
+ * `react-router` location state to configure the OTP input form.
+ *
+ * @component
+ * @returns {JSX.Element} The rendered OTP verification page.
+ * @example
+ * // Typically navigated to with state:
+ * // navigate("/otp-verification", { state: { contactType: "email", contactValue: "user@example.com", reset: false } });
+ */
 const OtpVerificationPage = () => {
   const [mounted, setMounted] = useState(false);
   const location = useLocation();
@@ -14,6 +26,12 @@ const OtpVerificationPage = () => {
     location.state?.contactValue ||
     (contactType === "email" ? "user456@example.com" : "+1234567890");
 
+  /**
+   * useEffect hook to set `mounted` state to true after component mounts.
+   * This can be used to delay rendering of child components that might rely on browser APIs
+   * or to trigger animations once the page is ready.
+   * Here, it ensures `OtpVerification` component is rendered only client-side.
+   */
   useEffect(() => {
     setMounted(true);
   }, []);

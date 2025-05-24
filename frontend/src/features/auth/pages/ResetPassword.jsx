@@ -7,6 +7,19 @@ import * as Yup from "yup";
 import { useResetPassword, useResetPasswordWithOTP } from "../hooks/use-auth";
 import { FormField } from "../../../shared/components/MUI.Components/FormField";
 
+/**
+ * @typedef {object} ResetPasswordFormValues
+ * @property {boolean} fromOTPVerification - Flag indicating if navigating from OTP flow.
+ * @property {string} password - The new password.
+ * @property {string} confirmPassword - Confirmation of the new password.
+ * @property {string} [currentPassword] - User's current password (if not from OTP flow).
+ */
+
+/**
+ * Yup validation schema for the Reset Password form.
+ * Conditionally requires `currentPassword` if not part of OTP verification flow.
+ * @type {Yup.ObjectSchema<ResetPasswordFormValues>}
+ */
 const resetPasswordSchema = Yup.object().shape({
   password: Yup.string()
     .required("Password is required")
@@ -16,11 +29,22 @@ const resetPasswordSchema = Yup.object().shape({
     .required("Confirm Password is required"),
   currentPassword: Yup.string().when("fromOTPVerification", {
     is: false,
-    then: () => Yup.string().required("Current Password is required"),
-    otherwise: () => Yup.string().notRequired(),
+    then: (schema) => schema.required("Current Password is required"), // Corrected: Added schema argument
+    otherwise: (schema) => schema.notRequired(), // Corrected: Added schema argument
   }),
+  fromOTPVerification: Yup.boolean(), // Added to schema for completeness
 });
 
+/**
+ * ResetPassword component page.
+ * Allows users to set a new password.
+ * It handles two scenarios:
+ * 1. Resetting password after OTP verification (unauthenticated).
+ * 2. Changing password when already logged in (authenticated - requires current password).
+ * The mode is determined by `isFromOTPVerification` flag from location state.
+ * @component
+ * @returns {JSX.Element} The rendered Reset Password page.
+ */
 const ResetPassword = () => {
   const location = useLocation();
   const isFromOTPVerification = location.state?.reset || false;
@@ -33,6 +57,11 @@ const ResetPassword = () => {
     isPending: resetPasswordWithOTPPending,
   } = useResetPasswordWithOTP();
 
+  /**
+   * Initial values for the Formik form.
+   * `fromOTPVerification` is set based on router location state.
+   * @type {ResetPasswordFormValues}
+   */
   const initialValues = {
     fromOTPVerification: isFromOTPVerification,
     password: "",
@@ -49,24 +78,44 @@ const ResetPassword = () => {
     },
   };
 
+  /**
+   * Handles the form submission for resetting/changing the password.
+   * Calls either `resetPasswordWithOTP` or `resetPassword` mutation based on
+   * whether the flow is from OTP verification or an authenticated change.
+   * On success, navigates to the Sign In page.
+   * @param {ResetPasswordFormValues} values - The validated form values.
+   */
   const handleSubmit = (values) => {
     console.log("values", values);
-    const payload = !isFromOTPVerification
-      ? values
-      : { ...values, ...location.state };
+    // Construct payload, ensuring contactValue and contactType are passed for OTP flow
+    const payload = isFromOTPVerification
+      ? { 
+          emailOrPhone: location.state?.contactValue, 
+          otp: location.state?.otp, // Assuming OTP is passed in state from OTP page
+          newPassword: values.password,
+          confirmPassword: values.confirmPassword,
+          // fromOTPVerification is implicitly handled by the endpoint choice
+        }
+      : { // For authenticated password change
+          oldPassword: values.currentPassword,
+          newPassword: values.password,
+          confirmPassword: values.confirmPassword,
+        };
     console.log("payload", payload);
 
-    isFromOTPVerification
-      ? resetPasswordWithOTP(payload, {
-          onSuccess: () => {
-            navigate("/sign-in");
-          },
-        })
-      : resetPassword(values, {
-          onSuccess: () => {
-            navigate("/sign-in");
-          },
-        });
+    if (isFromOTPVerification) {
+      resetPasswordWithOTP(payload, {
+        onSuccess: () => {
+          navigate("/sign-in");
+        },
+      });
+    } else {
+      resetPassword(payload, { // Use the modified payload for authenticated reset
+        onSuccess: () => {
+          navigate("/sign-in");
+        },
+      });
+    }
   };
 
   return (

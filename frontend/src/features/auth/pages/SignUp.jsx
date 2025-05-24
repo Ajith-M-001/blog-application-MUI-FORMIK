@@ -19,7 +19,25 @@ import { FormField } from "../../../shared/components/MUI.Components/FormField";
 import { useGetAllCountry, useSignUpUser } from "../hooks/use-auth";
 import CountryPhoneSelector from "../../../shared/components/MUI.Components/CountryPhoneSelector";
 
-// Validation schema with conditional validation for email/phone
+/**
+ * @typedef {object} SignUpFormValues
+ * @property {string} firstName - User's first name.
+ * @property {string} lastName - User's last name.
+ * @property {string} [email] - User's email address (if using email for signup).
+ * @property {string} [phoneNumber] - User's phone number (if using phone for signup).
+ * @property {object} [country] - User's selected country object (if using phone for signup).
+ * @property {string} country.code - Country code e.g. 'US'.
+ * @property {string} password - User's chosen password.
+ * @property {string} confirmPassword - Confirmation of the password.
+ * @property {boolean} useEmail - Flag to determine if email or phone is used for signup.
+ */
+
+/**
+ * Yup validation schema for the Sign Up form.
+ * Defines rules for each field, including conditional validation for email/phone.
+ *
+ * @type {Yup.ObjectSchema<SignUpFormValues>}
+ */
 const SignUpSchema = Yup.object().shape({
   firstName: Yup.string()
     .min(3, "Too Short!")
@@ -33,20 +51,20 @@ const SignUpSchema = Yup.object().shape({
     .required("Last Name is required"),
   email: Yup.string().when("useEmail", {
     is: true,
-    then: () =>
-      Yup.string()
+    then: (schema) => // Changed to use schema argument
+      schema
         .email("Invalid email address")
         .required("Email is required")
         .matches(
           /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
           "Invalid email format"
         ),
-    otherwise: () => Yup.string().notRequired(),
+    otherwise: (schema) => schema.notRequired(), // Changed to use schema argument
   }),
   phoneNumber: Yup.string().when("useEmail", {
     is: false,
-    then: () =>
-      Yup.string()
+    then: (schema) => // Changed to use schema argument
+      schema
         .required("Phone number is required")
         .test("is-mobile", "Invalid mobile number", function (value) {
           const country = this.parent.country;
@@ -64,12 +82,12 @@ const SignUpSchema = Yup.object().shape({
             return false;
           }
         }),
-    otherwise: () => Yup.string().notRequired(),
+    otherwise: (schema) => schema.notRequired(), // Changed to use schema argument
   }),
   country: Yup.object().when("useEmail", {
     is: false,
-    then: () => Yup.object().required("Please Select Country"),
-    otherwise: () => Yup.object().notRequired(),
+    then: (schema) => schema.required("Please Select Country"), // Changed to use schema argument
+    otherwise: (schema) => schema.notRequired(), // Changed to use schema argument
   }),
   password: Yup.string()
     .required("Password is required")
@@ -78,13 +96,21 @@ const SignUpSchema = Yup.object().shape({
       /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
       "Password must include uppercase, lowercase, number, and special character"
     ),
-
   confirmPassword: Yup.string()
     .required("Confirm Password is required")
     .oneOf([Yup.ref("password"), null], "Passwords must match"),
   useEmail: Yup.boolean(),
 });
 
+/**
+ * SignUp component page.
+ * Handles user registration with options for email/phone and Google OAuth.
+ *
+ * @component
+ * @returns {JSX.Element} The rendered SignUp page.
+ * @example
+ * <SignUp />
+ */
 const SignUp = () => {
   const { mutate: SignUpUser, isPending: signUpPending } = useSignUpUser();
   const { data: allCountries } = useGetAllCountry({
@@ -95,6 +121,11 @@ const SignUp = () => {
 
   const navigate = useNavigate();
   const theme = useTheme();
+
+  /**
+   * Initial values for the Formik form.
+   * @type {SignUpFormValues}
+   */
   const initialValues = {
     firstName: "",
     lastName: "",
@@ -106,10 +137,23 @@ const SignUp = () => {
     useEmail: true, // Default to email input
   };
 
+  /**
+   * Handles the Google Sign-In process by redirecting the user.
+   * Constructs the Google OAuth URL and navigates the window to it.
+   */
   const handleGoogleSignIn = () => {
+    // Consider moving the base URL to a configuration file or environment variable.
     window.location.href = `http://localhost:3000/api/v1/users/auth/google`;
   };
 
+  /**
+   * Handles the form submission for user registration.
+   * Calls the `SignUpUser` mutation from `useSignUpUser` hook.
+   * On successful registration, navigates to the OTP verification page,
+   * passing necessary state for the OTP component.
+   *
+   * @param {SignUpFormValues} values - The validated form values.
+   */
   const handleSubmit = (values) => {
     SignUpUser(values, {
       onSuccess: (data) => {
@@ -117,13 +161,15 @@ const SignUp = () => {
           state: {
             contactType: values.useEmail ? "email" : "phoneNumber",
             contactValue: values.useEmail
-              ? data?.data?.user?.email
-              : data?.data?.user?.phoneNumber,
+              ? data?.data?.user?.email // Optional chaining for safety
+              : data?.data?.user?.phoneNumber, // Optional chaining for safety
           },
         });
       },
     });
   };
+
+  // ... rest of the component JSX
   return (
     <AnimatePresence>
       <Box
@@ -180,7 +226,7 @@ const SignUp = () => {
                 <Formik
                   initialValues={initialValues}
                   validationSchema={SignUpSchema}
-                  onSubmit={(values) => handleSubmit(values)}
+                  onSubmit={handleSubmit} // Corrected: Pass the function reference
                 >
                   {({ dirty, isValid, values, setFieldValue, resetForm }) => (
                     <Form>
@@ -446,3 +492,4 @@ const SignUp = () => {
 };
 
 export default SignUp;
+```

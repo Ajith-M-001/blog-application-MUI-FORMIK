@@ -22,36 +22,67 @@ import { useForgotPassword } from "../hooks/use-auth";
 import { FormField } from "../../../shared/components/MUI.Components/FormField";
 import CountryPhoneSelector from "../../../shared/components/MUI.Components/CountryPhoneSelector";
 
+/**
+ * @typedef {object} ForgotPasswordFormValues
+ * @property {boolean} useEmail - Flag to determine if email or phone is used.
+ * @property {string} [email] - User's email address (if using email).
+ * @property {string} [phoneNumber] - User's phone number (if using phone).
+ * @property {object} [country] - User's selected country object (if using phone).
+ */
+
+/**
+ * Yup validation schema for the Forgot Password form.
+ * @type {Yup.ObjectSchema<ForgotPasswordFormValues>}
+ */
 const resetSchema = Yup.object().shape({
   useEmail: Yup.boolean(),
   email: Yup.string().when("useEmail", {
     is: true,
-    then: () =>
-      Yup.string().required("Email is required").email("Invalid email"),
-    otherwise: () => Yup.string(),
+    then: (schema) => // Corrected: Added schema argument
+      schema.required("Email is required").email("Invalid email"),
+    otherwise: (schema) => schema.notRequired(), // Corrected: Added schema argument and changed to notRequired
   }),
   phoneNumber: Yup.string().when("useEmail", {
     is: false,
-    then: () => Yup.string().required("Phone number is required"),
-    otherwise: () => Yup.string(),
+    then: (schema) => schema.required("Phone number is required"), // Corrected: Added schema argument
+    otherwise: (schema) => schema.notRequired(), // Corrected: Added schema argument
   }),
+  // country field can be added here if needed for validation with phoneNumber
 });
 
+/**
+ * ForgotPassword component page.
+ * Allows users to request a password reset OTP by providing their email or phone number.
+ * @component
+ * @returns {JSX.Element} The rendered Forgot Password page.
+ */
 const ForgotPassword = () => {
   const { mutate: forgotPassword, isPending: isResetLoading } =
     useForgotPassword();
+
+  /**
+   * Initial values for the Formik form.
+   * @type {ForgotPasswordFormValues}
+   */
   const initialValues = {
     useEmail: true,
     email: "",
     phoneNumber: "",
+    country: null, // Added country to initialValues
   };
 
   const navigate = useNavigate();
 
+  /**
+   * Handles the form submission for forgot password requests.
+   * Calls the `forgotPassword` mutation. On success, navigates to the OTP verification page
+   * with necessary state for password reset flow.
+   * @param {ForgotPasswordFormValues} values - The validated form values.
+   */
   const handleSubmit = (values) => {
     let payload = values.useEmail
-      ? { email: values.email, reset: true }
-      : { phoneNumber: values.phoneNumber, reset: true };
+      ? { emailOrPhone: values.email, reset: true } // Changed to emailOrPhone
+      : { emailOrPhone: values.phoneNumber, country: values.country, reset: true }; // Changed to emailOrPhone, added country
 
     forgotPassword(payload, {
       onSuccess: () => {
@@ -131,7 +162,7 @@ const ForgotPassword = () => {
                           type="button"
                           variant="body2"
                           onClick={() => {
-                            resetForm();
+                            resetForm({ values: { ...initialValues, useEmail: false, email: '' } }); // Reset with new default
                             setFieldValue("useEmail", false);
                           }}
                           sx={{
@@ -150,14 +181,15 @@ const ForgotPassword = () => {
                   ) : (
                     // Phone number input with country code
                     <Grid2 size={{ xs: 12 }}>
-                      <CountryPhoneSelector disabled={false} hide={true} />
+                      {/* Assuming CountryPhoneSelector handles name="phoneNumber" and name="country" */}
+                      <CountryPhoneSelector disabled={false} hide={false} /> 
                       <Box sx={{ mt: 1 }}>
                         <MuiLink
                           component="button"
                           type="button"
                           variant="body2"
                           onClick={() => {
-                            resetForm();
+                            resetForm({ values: { ...initialValues, useEmail: true, phoneNumber: '', country: null } }); // Reset with new default
                             setFieldValue("useEmail", true);
                           }}
                           sx={{
@@ -182,6 +214,7 @@ const ForgotPassword = () => {
                       gap: 3,
                       flexDirection: "column",
                       width: "100%",
+                      ml: 2, // Added margin to align with Grid2 spacing
                     }}
                   >
                     <Button
@@ -192,14 +225,14 @@ const ForgotPassword = () => {
                       endIcon={
                         isResetLoading ? (
                           <LoaderCircle className="loader-circle" />
-                        ) : dirty || isValid ? (
+                        ) : isValid ? ( // Changed from dirty || isValid
                           <BadgeCheck />
                         ) : (
                           <MoveRight />
                         )
                       }
                     >
-                      {isResetLoading ? "Sending OTP..." : "send OTP"}
+                      {isResetLoading ? "Sending OTP..." : "Send OTP"}
                     </Button>
 
                     <Button

@@ -27,23 +27,35 @@ import { useSignInUser } from "../hooks/use-auth";
 import { FormField } from "../../../shared/components/MUI.Components/FormField";
 import { useUserActions } from "../../../shared/store/userStore";
 
+/**
+ * @typedef {object} SignInFormValues
+ * @property {string} [email] - User's email address (if using email for signin).
+ * @property {string} [phoneNumber] - User's phone number (if using phone for signin).
+ * @property {string} password - User's password.
+ * @property {boolean} useEmail - Flag to determine if email or phone is used for signin.
+ */
+
+/**
+ * Yup validation schema for the Sign In form.
+ * @type {Yup.ObjectSchema<SignInFormValues>}
+ */
 const SignInSchema = Yup.object().shape({
   email: Yup.string().when("useEmail", {
     is: true,
-    then: () =>
-      Yup.string()
+    then: (schema) => // Corrected: Added schema argument
+      schema
         .email("Invalid email address")
         .required("Email is required")
         .matches(
           /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
           "Invalid email format"
         ),
-    otherwise: () => Yup.string().notRequired(),
+    otherwise: (schema) => schema.notRequired(), // Corrected: Added schema argument
   }),
   phoneNumber: Yup.string().when("useEmail", {
     is: false,
-    then: () => Yup.string().required("Phone number is required"),
-    otherwise: () => Yup.string().notRequired(),
+    then: (schema) => schema.required("Phone number is required"), // Corrected: Added schema argument
+    otherwise: (schema) => schema.notRequired(), // Corrected: Added schema argument
   }),
   password: Yup.string()
     .required("Password is required")
@@ -55,6 +67,13 @@ const SignInSchema = Yup.object().shape({
   useEmail: Yup.boolean(),
 });
 
+/**
+ * SignIn component page.
+ * Handles user authentication via email/password, phone/password, or Google OAuth.
+ * Displays error messages from Google OAuth failures if redirected with `auth=google_auth_failed` URL parameter.
+ * @component
+ * @returns {JSX.Element} The rendered SignIn page.
+ */
 const SignIn = () => {
   const theme = useTheme();
   const navigate = useNavigate();
@@ -64,6 +83,10 @@ const SignIn = () => {
 
   const { setIsAuthenticated } = useUserActions();
 
+  /**
+   * useEffect hook to display a toast message if Google authentication fails.
+   * Checks for 'auth=google_auth_failed' in URL parameters on component mount.
+   */
   useEffect(() => {
     if (authMessage === "google_auth_failed") {
       setIsAuthenticated(false);
@@ -73,10 +96,20 @@ const SignIn = () => {
     }
   }, [authMessage, setIsAuthenticated]);
 
+  /**
+   * Handles the Google Sign-In process by redirecting the user.
+   */
   const handleGoogleSignIn = () => {
     window.location.href = `http://localhost:3000/api/v1/users/auth/google`;
   };
 
+  /**
+   * Handles the form submission for user sign-in.
+   * Calls the `signInUser` mutation. On success, sets authentication state,
+   * resets the form, and navigates to the home page.
+   * @param {SignInFormValues} values - The validated form values.
+   * @param {import('formik').FormikHelpers<SignInFormValues>} formikHelpers - Formik helpers.
+   */
   const HandleSubmit = (values, { resetForm }) => {
     console.log(values);
     signInUser(values, {
@@ -88,6 +121,10 @@ const SignIn = () => {
     });
   };
 
+  /**
+   * Initial values for the Formik form.
+   * @type {SignInFormValues}
+   */
   const initialValues = {
     email: "",
     password: "",

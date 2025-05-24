@@ -1,9 +1,10 @@
 const USER_URL = "/users";
 const COUNTRY_URL = "/countries";
+const API_BASE_URL = "/api"; // Assuming /api is a common base for new top-level endpoints
 
 /**
  * @typedef {object} UserEndpoints
- * @property {string} signUp - Endpoint for user registration.
+ * @property {string} signUp - Endpoint for user registration (specific to /users flow).
  * @property {string} signIn - Endpoint for user login.
  * @property {string} check - Endpoint for checking user authentication status.
  * @property {string} signOut - Endpoint for user logout.
@@ -22,13 +23,18 @@ const COUNTRY_URL = "/countries";
  */
 
 /**
+ * @typedef {object} RegistrationEndpoints
+ * @property {string} submit - Endpoint for submitting new user registration data.
+ */
+
+/**
  * Collection of API endpoint paths used throughout the application.
- * Grouped by resource type (e.g., users, countries).
- * @type {{users: UserEndpoints, countries: CountryEndpoints}}
+ * Grouped by resource type (e.g., users, countries, registration).
+ * @type {{users: UserEndpoints, countries: CountryEndpoints, registration: RegistrationEndpoints}}
  */
 export const API_ENDPOINTS = {
   users: {
-    signUp: `${USER_URL}/sign-up`,
+    signUp: `${USER_URL}/sign-up`, // This seems to be the existing one.
     signIn: `${USER_URL}/sign-in`,
     check: `${USER_URL}/check`,
     signOut: `${USER_URL}/sign-out`,
@@ -42,5 +48,9 @@ export const API_ENDPOINTS = {
   },
   countries: {
     all: `${COUNTRY_URL}/all`,
+  },
+  // New endpoint for the RegisterForm submission
+  registration: {
+    submit: `${API_BASE_URL}/register`,
   },
 };

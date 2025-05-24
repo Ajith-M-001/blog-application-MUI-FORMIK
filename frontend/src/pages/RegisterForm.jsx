@@ -1,9 +1,12 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Box, Container, Paper, Typography, Grid, Button, Link as MuiLink, CircularProgress } from '@mui/material';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { Formik, Form } from 'formik';
 import * as Yup from 'yup';
 import { motion } from 'framer-motion';
+import { useMutation } from '@tanstack/react-query';
+import { submitRegistration } from '../features/auth/api/auth.api';
+import { showToast } from '../shared/utils/toast';
 import MUITextInput from '../component/MUITextInput';
 import PasswordField from '../component/PasswordField';
 
@@ -31,13 +34,60 @@ const validationSchema = Yup.object({
     .required("Required"),
 });
 
+/**
+ * RegisterForm component page.
+ * Provides a modern, responsive split-screen registration form.
+ * Features include:
+ * - Split-screen layout (welcome message on left, form on right).
+ * - Framer Motion animations for smooth transitions.
+ * - Formik for form state management.
+ * - Yup for validation (first name, last name, email, strong password, confirm password).
+ * - Custom PasswordField component with visibility toggle.
+ * - Handles form submission via an API call using TanStack Query (React Query).
+ * - Displays success/error feedback using toast notifications.
+ *
+ * @component
+ * @returns {JSX.Element} The rendered RegisterForm page.
+ */
 const RegisterForm = () => {
-  // Placeholder for onSubmit, to be detailed in a later step
-  const handleSubmit = (values, { setSubmitting }) => {
-    console.log("Form Values:", values);
-    setTimeout(() => { // Simulate API call
-      setSubmitting(false);
-    }, 2000);
+  const navigate = useNavigate();
+
+  const registrationMutation = useMutation({
+    mutationFn: submitRegistration,
+    onSuccess: (data) => {
+      showToast("Registration successful! Please check your email to verify.", { type: 'success' });
+      // For now, let's navigate to sign-in as a placeholder action.
+      // Actual navigation might depend on application flow (e.g., to an OTP page or directly to sign-in).
+      // navigate('/sign-in'); 
+    },
+    onError: (error) => {
+      const errorMessage = error?.response?.data?.message || error?.message || "Registration failed. Please try again.";
+      showToast(errorMessage, { type: 'error' });
+    },
+  });
+
+  /**
+   * Handles the asynchronous submission of the registration form.
+   * It calls the `mutateAsync` function from the `registrationMutation` (useMutation hook)
+   * to send the form data to the backend API.
+   * On successful submission, it resets the form.
+   * Success and error feedback (toasts) are handled by the `onSuccess` and `onError`
+   * callbacks defined in the `useMutation` options.
+   *
+   * @async
+   * @param {object} values - The validated form values from Formik.
+   * @param {import('formik').FormikHelpers<object>} formikHelpers - Formik helpers, including `resetForm`.
+   */
+  const handleSubmit = async (values, { resetForm }) => {
+    try {
+      await registrationMutation.mutateAsync(values);
+      // onSuccess in useMutation handles success toast.
+      resetForm(); // Reset form on successful submission.
+    } catch (error) {
+      // onError in useMutation handles error toast.
+      // Error is already logged by useMutation's onError, but can log here too if needed.
+      console.error("Registration submission error:", error);
+    }
   };
 
   return (
@@ -67,7 +117,7 @@ const RegisterForm = () => {
                   validationSchema={validationSchema}
                   onSubmit={handleSubmit}
                 >
-                  {({ isSubmitting }) => (
+                  {() => ( 
                     <Form>
                       <Grid container spacing={2}>
                         <Grid item xs={12} sm={6}>
@@ -92,10 +142,10 @@ const RegisterForm = () => {
                           fullWidth
                           variant="contained"
                           color="primary"
-                          disabled={isSubmitting}
-                          sx={{ py: 1.5, '&:hover': { backgroundColor: 'primary.dark' } }} // Using theme color
+                          disabled={registrationMutation.isPending}
+                          sx={{ py: 1.5, '&:hover': { backgroundColor: 'primary.dark' } }}
                         >
-                          {isSubmitting ? <CircularProgress size={24} color="inherit" /> : "Create Account"}
+                          {registrationMutation.isPending ? <CircularProgress size={24} color="inherit" /> : "Create Account"}
                         </Button>
                       </Box>
                       <Box textAlign="center">

@@ -185,3 +185,27 @@ export const getAllCountry = async ({ signal }) => {
   });
   return response.data;
 };
+
+/**
+ * Submits new user registration data to the /api/register endpoint.
+ * This is typically used by a general registration form, distinct from
+ * the /users/sign-up flow which might have different implications (e.g., immediate OTP).
+ * @async
+ * @param {object} formData - The registration form data.
+ * @param {string} formData.firstName - User's first name.
+ * @param {string} formData.lastName - User's last name.
+ * @param {string} formData.email - User's email address.
+ * @param {string} formData.password - User's password.
+ * // Potentially formData.confirmPassword might be sent or might be handled client-side only.
+ * // For now, assume the backend expects fields as per RegisterForm's initialValues.
+ * @returns {Promise<any>} A promise that resolves with the API response data.
+ * @throws {Error} If the API request fails.
+ * @see {@link API_ENDPOINTS.registration.submit}
+ */
+export const submitRegistration = async (formData) => {
+  const { data } = await axiosInstance.post(
+    API_ENDPOINTS.registration.submit,
+    formData
+  );
+  return data;
+};

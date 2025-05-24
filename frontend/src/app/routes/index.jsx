@@ -6,6 +6,10 @@ import { authRoutes } from "../../features/auth/routes/AuthRoutes";
 import { ErrorBoundary } from "../../shared/components/ErrorBoundary/ErrorBoundary";
 import { blogRoutes } from "../../features/blog/routes/blogRoutes";
 import Unauthorized from "../../pages/Unauthorized";
+import MyForm1 from "../../pages/MyForm1";
+import MyForm from "../../pages/Myform";
+import MyForm2 from "../../pages/MyForm2";
+import MyForm3 from "../../pages/MyForm3";
 
 // Lazy load public pages
 const Home = lazy(() => import("../../pages/Home"));
@@ -25,6 +29,7 @@ const AppRoutes = () => {
               <Route path="about" element={<About />} />
               <Route path="contact" element={<Contact />} />
 
+              <Route path="my-form" element={<MyForm2 />} />
               {/* Auth Routes */}
               {authRoutes}
 

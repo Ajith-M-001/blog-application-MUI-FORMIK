@@ -688,7 +688,7 @@ const Header = () => {
             {navItems.map((item, index) => (
               <ListItem
                 button
-                key={item}
+                key={item.label}
                 component={motion.li}
                 initial={{ x: 20, opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}

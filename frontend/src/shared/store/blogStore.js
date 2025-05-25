@@ -4,7 +4,7 @@ import { devtools, persist } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 import { BLOG_STATUS } from "../../shared/constants/constants";
 
-const INITIAL_BLOG_STATE = Object.freeze({
+const INITIAL_BLOG_STATE = {
   _id: null,
   slug: null,
   title: "",
@@ -22,7 +22,7 @@ const INITIAL_BLOG_STATE = Object.freeze({
     minutes: 0,
     words: 0,
   },
-});
+};
 
 const useBlogStore = create(
   devtools(

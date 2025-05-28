@@ -9,8 +9,10 @@ import {
   useGetAllCategory,
   useGetAllTags,
   useGetBlogBySlug,
+  usePublishBlog,
+  useUpdateBlog,
 } from "../hooks/use-blog";
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BLOG_STATUS } from "../../../shared/constants/constants";
 import { debounce, isEqual } from "lodash";
 import * as Yup from "yup";
@@ -27,6 +29,9 @@ const BlogValidationSchema = Yup.object({
 });
 
 const BlogForm = () => {
+  const [isSaving, setIsSaving] = useState(false);
+  const [lastSavedAt, setLastSavedAt] = useState(null);
+  const [error, setError] = useState(null);
   const renderCount = useRef(0);
   renderCount.current += 1;
 
@@ -37,6 +42,8 @@ const BlogForm = () => {
   const isEditMode = Boolean(slug);
   const blog = useBlogData();
   const { setBlogData } = useBlogActions();
+
+  const lastSavedBlog = useRef(blog);
   const { data: fetchedBlog } = useGetBlogBySlug(slug, {
     enabled: isEditMode,
   });
@@ -49,6 +56,9 @@ const BlogForm = () => {
     staleTime: Infinity,
     gcTime: Infinity,
   });
+
+  const { mutate: publishBlog, isPending: isPublishing } = usePublishBlog();
+  const { mutate: updateBlog, isPending: isUpdating } = useUpdateBlog();
 
   const debouncedSetBlogData = useCallback(
     debounce((nextValues) => {
@@ -87,11 +97,67 @@ const BlogForm = () => {
     }
   }, [isEditMode, fetchedBlog, setBlogData, blog]);
 
+  const debouncedAutoSave = useCallback(
+    debounce((nextValues, setFieldValue) => {
+      if (nextValues.status !== BLOG_STATUS.DRAFT) return;
+
+      if (lastSavedBlog.current && isEqual(lastSavedBlog.current, nextValues)) {
+        return;
+      }
+
+      if (nextValues.title.trim() === "") return;
+
+      setIsSaving(true);
+      setError(null);
+
+      if (nextValues._id) {
+        console.log("update blog", nextValues);
+        updateBlog({ id: nextValues._id, blogData: nextValues }, {
+          onSuccess: (response) => {
+            setIsSaving(false);
+            setLastSavedAt(Date.now());
+            lastSavedBlog.current = nextValues;
+            if(response.data?.slug !== nextValues.slug) {
+              setFieldValue("slug", response.data.slug);
+            }
+          },
+          onError: (error) => {
+            setIsSaving(false);
+            setError(error);
+          },
+          onSettled: () => {
+            setIsSaving(false);
+          },
+        })
+      } else {
+        console.log("create blog", nextValues);
+        publishBlog(nextValues, {
+          onSuccess: (response) => {
+            setIsSaving(false);
+            setLastSavedAt(Date.now());
+            lastSavedBlog.current = nextValues;
+            console.log("response", response);
+            setFieldValue("slug", response.data.slug);
+            setFieldValue("_id", response.data._id);
+          },
+          onError: (error) => {
+            setIsSaving(false);
+            setError(error);
+          },
+          onSettled: () => {
+            setIsSaving(false);
+          },
+        });
+      }
+    }, 3000) // 3000ms debounce time
+  );
+
   const handleFormChange = useCallback(
-    (values) => {
+    (values, setFieldValue) => {
       debouncedSetBlogData(values);
+      debouncedAutoSave(values, setFieldValue);
     },
-    [debouncedSetBlogData]
+    [debouncedSetBlogData, debouncedAutoSave]
   );
 
   const handleSubmit = (values) => {
@@ -172,9 +238,10 @@ const BlogForm = () => {
                 touched,
                 handleChange,
                 handleBlur,
+                setFieldValue,
               }) => {
                 if (!isEqual(values, blog)) {
-                  handleFormChange(values);
+                  handleFormChange(values, setFieldValue);
                 }
 
                 return (

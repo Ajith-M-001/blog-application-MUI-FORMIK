@@ -14,6 +14,7 @@ import User from "./model/user.schema.js";
 import cron from "node-cron";
 import { configurePassport } from "./config/passport.js";
 import ConfigRedisClient from "./config/redis.config.js";
+import publishScheduledBlogs from "./publishScheduledBlogs.js";
 dotenv.config();
 
 const app = express();
@@ -79,6 +80,15 @@ const startServer = async () => {
         console.error("Error cleaning up inactive accounts:", error);
       }
     });
+
+    // Cron job to publish scheduled blogs (new)
+    cron.schedule("* * * * *", async () => {
+      console.log("Checking for scheduled blogs to publish...");
+      await publishScheduledBlogs();
+    });
+
+    // Run immediately on startup to catch any overdue scheduled blogs
+    await publishScheduledBlogs();
     app.listen(PORT, () => {
       console.log(`server is running on the PORT http://localhost:${PORT}`);
     });

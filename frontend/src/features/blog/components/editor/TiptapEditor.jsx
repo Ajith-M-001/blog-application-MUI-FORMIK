@@ -9,7 +9,7 @@ import Underline from "@tiptap/extension-underline";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import PropTypes from "prop-types";
-import { memo, useCallback, useEffect, useMemo, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import MenuBar from "./MenuBar";
 import { debounce } from "lodash";
 
@@ -118,10 +118,15 @@ const TiptapEditor = ({
   onChange,
   readingTime,
 }) => {
+  const onChangeRef = useRef(onChange);
+  useEffect(() => {
+    onChangeRef.current = onChange;
+  }, [onChange]);
+
   const theme = useTheme();
   const [isMounted, setIsMounted] = useState(false);
 
-  console.log("initialContent", readingTime);
+  console.log("initialContent", initialContent);
 
   const editorStyles = useMemo(() => createEditorStyles(theme), [theme]);
 
@@ -186,9 +191,18 @@ const TiptapEditor = ({
     editorProps,
     parseOptions: { preserveWhitespace: "full" },
     onUpdate: ({ editor }) => {
-      const text = editor.getText();
-      const newStats = calculateStats(text);
-      debouncedOnChange(editor.getJSON(), newStats);
+      const jsonContent = editor.getJSON();
+      const textContent = editor.getText();
+
+      // Calculate stats synchronously (no debounce needed)
+      const words = textContent.trim().split(/\s+/).filter(Boolean).length;
+      const minutes = Math.ceil(words / 200);
+      const stats = { words, minutes };
+
+      // Immediately call the onChange callback with both content formats
+      if (onChangeRef.current) {
+        onChangeRef.current(jsonContent, stats);
+      }
     },
   });
 
@@ -249,7 +263,8 @@ const TiptapEditor = ({
                 color="text.secondary"
                 sx={{ mr: 2 }}
               >
-                {readingTime?.words} {readingTime?.words === 1 ? "word" : "words"}
+                {readingTime?.words}{" "}
+                {readingTime?.words === 1 ? "word" : "words"}
               </Typography>
             )}
             {showReadingTime && (

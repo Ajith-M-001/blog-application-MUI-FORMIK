@@ -98,7 +98,7 @@ export const validatePublishBlog = [
     .isURL()
     .withMessage("Cover image must be a valid URL"),
 
-  body("coverImage.publicId")
+  body("coverImage.public_id")
     .if((_, { req }) => isPublishedOrScheduled(req.body.status))
     .notEmpty()
     .withMessage("Cover image public ID is required")

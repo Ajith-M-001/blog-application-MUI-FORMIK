@@ -83,9 +83,8 @@ export const useUpdateBlog = (options = {}) => {
   return useMutation({
     mutationFn: ({ id, blogData }) => updateBlog({ id, blogData }),
     ...options,
-    onSuccess: (data) => {
+    onSuccess: () => {
       queryClient.invalidateQueries(QUERY_KEYS.BLOGS);
-      showToast(data?.message, { type: "success" });
     },
   });
 };

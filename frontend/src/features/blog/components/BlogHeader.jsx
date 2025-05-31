@@ -1,6 +1,7 @@
 import { memo, useState, useCallback } from "react";
 import {
   alpha,
+  AppBar,
   Avatar,
   Box,
   Button,
@@ -14,6 +15,7 @@ import {
 } from "@mui/material";
 import {
   ArrowLeft,
+  CheckCircle,
   Eye,
   HelpCircle,
   LogOut,
@@ -26,12 +28,15 @@ import PropTypes from "prop-types";
 import { useSignOutUser } from "../../auth/hooks/use-auth";
 import { capitalizeFirstLetter } from "../../../shared/utils/capitalizeFirstLetter";
 import { useUserActions, useUserData } from "../../../shared/store/userStore";
+import { formatTimestamp } from "../utils/formatTimestamp ";
 
-const BlogHeader = ({ goToEdit }) => {
+const BlogHeader = ({ goToEdit, saveState, canPreview }) => {
   const theme = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const currentPath = location.pathname.replace(/^\/+/, "");
+
+  console.log("currentPath", saveState);
 
   const { mutate: signOut, isPending: isSignOutPending } = useSignOutUser();
 
@@ -81,13 +86,12 @@ const BlogHeader = ({ goToEdit }) => {
   }, [navigate]);
 
   return (
-    <Box
-      position="sticky"
-      top={0}
+    <AppBar
+      position="fixed"
       zIndex={100}
       sx={{
-        backdropFilter: "blur(10px)",
-        borderBottom: `1px solid ${alpha(theme.palette.divider, 0.6)}`,
+        // backdropFilter: "blur(10px)",
+        // borderBottom: `1px solid ${alpha(theme.palette.divider, 0.6)}`,
         backgroundColor: theme.palette.background.paper,
       }}
     >
@@ -133,23 +137,26 @@ const BlogHeader = ({ goToEdit }) => {
         </Box>
 
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-          {currentPath === "create-blog" && (
-            <Button
-              variant="contained"
-              onClick={handlePreview}
-              startIcon={<Eye size={18} />}
-              sx={{
-                textTransform: "capitalize",
-                py: "4px",
-                fontSize: "0.8rem",
-                fontWeight: "400",
-              }}
-              size="small"
-              color="secondary"
-              disableElevation
-            >
-              Preview
-            </Button>
+          {currentPath === "create-blog1" && (
+            <>
+              <Button
+                variant="contained"
+                onClick={handlePreview}
+                disabled={!canPreview}
+                startIcon={<Eye size={18} />}
+                sx={{
+                  textTransform: "capitalize",
+                  py: "4px",
+                  fontSize: "0.8rem",
+                  fontWeight: "400",
+                }}
+                size="small"
+                color="secondary"
+                disableElevation
+              >
+                Preview
+              </Button>
+            </>
           )}
 
           {currentPath === "preview-blog" && (
@@ -276,12 +283,16 @@ const BlogHeader = ({ goToEdit }) => {
           </Menu>
         </Box>
       </Stack>
-    </Box>
+    </AppBar>
   );
 };
 
 BlogHeader.propTypes = {
   goToEdit: PropTypes.func.isRequired,
+  currentPath: PropTypes.string.isRequired,
+  handlePreview: PropTypes.func.isRequired,
+  saveState: PropTypes.object.isRequired,
+  canPreview: PropTypes.bool.isRequired,
 };
 
 export default memo(BlogHeader);

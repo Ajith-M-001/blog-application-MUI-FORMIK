@@ -10,7 +10,7 @@ const INITIAL_BLOG_STATE = {
   title: "",
   coverImage: {
     url: "",
-    publicId: "",
+    public_id: "",
   },
   content: null,
   category: null,

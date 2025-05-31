@@ -1,8 +1,8 @@
-import { Box, Button, Grid2, TextField, Typography } from "@mui/material";
+import { Box, Button, Grid2, Typography, useTheme } from "@mui/material";
 import { AnimatePresence, motion } from "motion/react";
 import BlogHeader from "../components/BlogHeader";
 import { Footer } from "../../../shared/components/layout/Footer";
-import { useParams } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import { Formik } from "formik";
 import { useBlogActions, useBlogData } from "../../../shared/store/blogStore";
 import {
@@ -22,13 +22,163 @@ import MUISelect from "../../../components/MUI/MUISelect";
 import MUIDateTimePicker from "../../../components/MUI/MUIDateTimePicker";
 import dayjs from "dayjs";
 import CoverImageUpload from "../components/CoverImageUpload";
+import TiptapEditor from "../components/editor/TiptapEditor";
 
+const MIN_WORDS = 50;
+const MAX_WORDS = 5000;
+// Counts words in a Tiptap JSON structure
+const countWordsInTiptap = (content) => {
+  if (!content?.content?.length) return 0;
+
+  const text = content.content
+    .map((item) =>
+      item?.content?.map((textNode) => textNode?.text || "").join(" ")
+    )
+    .join(" ");
+
+  return text.trim().split(/\s+/).filter(Boolean).length;
+};
+
+// Custom validator for Tiptap content
+const validateTiptapContent = (value) => {
+  // Check if content is completely empty or not a valid Tiptap document
+  if (!value || value.type !== "doc" || !Array.isArray(value.content)) {
+    return false;
+  }
+
+  // Check if content exists but is essentially empty (no text content)
+  const wordCount = countWordsInTiptap(value);
+
+  // If wordCount is 0, the document exists but has no text content
+  if (wordCount === 0) {
+    return {
+      isValid: false,
+      error: "Content is required",
+    };
+  }
+
+  // If content has words but doesn't meet min word count
+  if (wordCount < MIN_WORDS) {
+    return {
+      isValid: false,
+      error: `Content must have at least ${MIN_WORDS} words (currently ${wordCount})`,
+    };
+  }
+
+  // If content exceeds max word count
+  if (wordCount > MAX_WORDS) {
+    return {
+      isValid: false,
+      error: `Content exceeds maximum of ${MAX_WORDS} words (currently ${wordCount})`,
+    };
+  }
+
+  // Content is valid
+  return {
+    isValid: true,
+    wordCount,
+  };
+};
+// Blog form validation schema
 const BlogValidationSchema = Yup.object({
   status: Yup.string()
     .required("Status is required")
     .oneOf(Object.values(BLOG_STATUS), "Invalid status"),
-});
 
+  title: Yup.string()
+    .trim()
+    .when("status", {
+      is: (status) =>
+        [BLOG_STATUS.PUBLISHED, BLOG_STATUS.SCHEDULED].includes(status),
+      then: (schema) =>
+        schema
+          .required("Title is required")
+          .min(5, "Title must be at least 5 characters")
+          .max(150, "Title must be at most 150 characters"),
+      otherwise: (schema) => schema.notRequired(),
+    }),
+
+  description: Yup.string()
+    .trim()
+    .when("status", {
+      is: (status) =>
+        [BLOG_STATUS.PUBLISHED, BLOG_STATUS.SCHEDULED].includes(status),
+      then: (schema) =>
+        schema
+          .required("Description is required")
+          .min(5, "Description must be at least 5 characters")
+          .max(200, "Description must be at most 200 characters"),
+      otherwise: (schema) => schema.notRequired(),
+    }),
+
+  content: Yup.mixed().when("status", {
+    is: (status) =>
+      [BLOG_STATUS.PUBLISHED, BLOG_STATUS.SCHEDULED].includes(status),
+    then: (schema) =>
+      schema
+        .required("Content is required")
+        .test("is-valid-tiptap", function (value) {
+          // Custom error message based on validation result
+          const validation = validateTiptapContent(value);
+
+          // If validation returns a boolean (false), use generic message
+          if (validation === false) {
+            return this.createError({
+              message: "Content is required",
+            });
+          }
+
+          // If validation returns an object with error
+          if (validation && !validation.isValid) {
+            return this.createError({
+              message: validation.error,
+            });
+          }
+
+          // If validation passes
+          return true;
+        }),
+    otherwise: (schema) => schema,
+  }),
+
+  coverImage: Yup.mixed().when("status", {
+    is: (status) =>
+      [BLOG_STATUS.PUBLISHED, BLOG_STATUS.SCHEDULED].includes(status),
+    then: () =>
+      Yup.object({
+        url: Yup.string()
+          .required("Cover image URL is required")
+          .url("Must be a valid URL"),
+        public_id: Yup.string().required("Cover image public ID is required"),
+      }).required("Cover image is required"),
+    otherwise: () => Yup.mixed().notRequired(),
+  }),
+
+  category: Yup.object().when("status", {
+    is: (status) =>
+      [BLOG_STATUS.PUBLISHED, BLOG_STATUS.SCHEDULED].includes(status),
+    then: (schema) => schema.required("Category is required"),
+    otherwise: (schema) => schema.notRequired(),
+  }),
+
+  tags: Yup.array()
+    .of(
+      Yup.object({
+        _id: Yup.string().required("Tag ID is required"),
+        name: Yup.string().required("Tag name is required"),
+      })
+    )
+    .max(10, "Maximum 10 tags allowed"),
+
+  scheduleDateAndTime: Yup.date().when("status", {
+    is: (status) => status === BLOG_STATUS.SCHEDULED,
+    then: (schema) =>
+      schema
+        .required("Schedule date and time is required")
+        .min(new Date(), "Schedule date must be in the future"),
+    otherwise: (schema) => schema.notRequired(),
+  }),
+});
 const BlogForm = () => {
   const [saveState, setSaveState] = useState({
     isSaving: false,
@@ -37,6 +187,10 @@ const BlogForm = () => {
   });
   const renderCount = useRef(0);
   renderCount.current += 1;
+
+  const navigate = useNavigate();
+
+  const theme = useTheme();
 
   useEffect(() => {
     console.log("BlogForm render count:", renderCount.current);
@@ -60,8 +214,8 @@ const BlogForm = () => {
     gcTime: Infinity,
   });
 
-  const { mutate: publishBlog, isPending: isPublishing } = usePublishBlog();
-  const { mutate: updateBlog, isPending: isUpdating } = useUpdateBlog();
+  const { mutate: publishBlog } = usePublishBlog();
+  const { mutate: updateBlog } = useUpdateBlog();
 
   const debouncedSetBlogData = useCallback(
     debounce((nextValues) => {
@@ -102,9 +256,19 @@ const BlogForm = () => {
 
   const debouncedAutoSave = useCallback(
     debounce((nextValues, setFieldValue) => {
+      const omitFields = ["slug", "_id"];
+      const sanitizeForCompare = (obj) => {
+        const copy = { ...obj };
+        omitFields.forEach((field) => delete copy[field]);
+        return copy;
+      };
+
+      const currentSanitized = sanitizeForCompare(nextValues);
+      const lastSanitized = sanitizeForCompare(lastSavedBlog.current);
+
       if (nextValues.status !== BLOG_STATUS.DRAFT) return;
 
-      if (lastSavedBlog.current && isEqual(lastSavedBlog.current, nextValues)) {
+      if (lastSavedBlog.current && isEqual(currentSanitized, lastSanitized)) {
         return;
       }
 
@@ -113,10 +277,11 @@ const BlogForm = () => {
       setSaveState((prev) => ({ ...prev, isSaving: true, error: null }));
 
       const onSuccess = (response) => {
+        console.log("onSuccess", response);
         setSaveState((prev) => ({
           ...prev,
           isSaving: false,
-          lastSavedAt: Date.now(),
+          lastSavedAt: response?.data?.updatedAt,
         }));
         lastSavedBlog.current = nextValues;
 
@@ -170,7 +335,23 @@ const BlogForm = () => {
   );
 
   const handleSubmit = (values) => {
-    console.log("Form submitted with values:", values);
+    if (values?._id) {
+      updateBlog(
+        { id: values._id, blogData: values },
+        {
+          onSuccess: () => {
+            navigate("/");
+          },
+        }
+      );
+    } else {
+      console.log("create blog", values);
+      publishBlog(values, {
+        onSuccess: () => {
+          navigate("/");
+        },
+      });
+    }
   };
 
   const getCategoryOptionLabel = useCallback((option) => option.name || "", []);
@@ -205,15 +386,12 @@ const BlogForm = () => {
           data-testid={isEditMode ? "edit-blog-page" : "create-blog-page"}
           sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}
         >
-          <header role="banner">
-            <BlogHeader />
-          </header>
           <Box
             component="main"
             role="main"
             data-testid="blog-form-container"
             sx={{
-              flex: 1,
+              mt: 14,
               width: "100%",
               maxWidth: "1100px",
               mx: "auto",
@@ -254,151 +432,190 @@ const BlogForm = () => {
                 }
 
                 return (
-                  <Box
-                    component={"form"}
-                    onSubmit={handleSubmit}
-                    sx={{
-                      display: "flex",
-                      flexDirection: "column",
-                    }}
-                    data-testid="blog-form"
-                    role="form"
-                    aria-labelledby="blog-form-label"
-                  >
-                    <Grid2 container spacing={2}>
-                      <Grid2 size={{ xs: 12 }}>
-                        <MUITextareaAutosize
-                          id="title"
-                          name="title"
-                          label="Blog Title"
-                          required
-                          placeholder="Enter blog title"
-                          minRows={1}
-                          maxLength={150}
-                          value={values.title}
-                          error={errors.title}
-                          touched={touched.title}
-                          onChange={handleChange}
-                          onBlur={handleBlur}
-                          fontSize="1.8rem"
-                          fontWeight={600}
-                        />
-                      </Grid2>
-                      <Grid2 size={{ xs: 12 }}>
-                        <MUITextareaAutosize
-                          id="description"
-                          name="description"
-                          label="Description"
-                          required
-                          placeholder="Enter description here..."
-                          minRows={3}
-                          maxLength={300}
-                          value={values.description}
-                          error={errors.description}
-                          touched={touched.description}
-                          onChange={handleChange}
-                          onBlur={handleBlur}
-                        />
-                      </Grid2>
-                      <Grid2 size={{ xs: 12 }}>
-                        <CoverImageUpload
-                          id="coverImage"
-                          name="coverImage"
-                          label="cover Image"
-                          testId="cover-image-upload"
-                          required={true}
-                          setFieldValue={setFieldValue}
-                          value={values.coverImage}
-                          error={errors.coverImage}
-                          touched={touched.coverImage}
-                        />
-                      </Grid2>
-                      <Grid2 size={{ xs: 12 }}>
-                        <MUIAutocomplete
-                          id="category"
-                          name="category"
-                          label="Category"
-                          required
-                          options={categoryOptions}
-                          getOptionLabel={getCategoryOptionLabel}
-                          maxSelectedOptions={1}
-                          placeholder="Select a category"
-                          value={values.category}
-                          onChange={handleChange}
-                          onBlur={handleBlur}
-                          touched={touched.category}
-                          error={errors.category}
-                        />
-                      </Grid2>
-                      <Grid2 size={{ xs: 12 }}>
-                        <MUIAutocomplete
-                          id="tags"
-                          name="tags"
-                          label="Tags"
-                          multiple
-                          options={tagOptions}
-                          getOptionLabel={getTagsOptionLabel}
-                          maxSelectedOptions={10}
-                          placeholder="Select tags"
-                          value={values.tags}
-                          onChange={handleChange}
-                          onBlur={handleBlur}
-                          touched={touched.tags}
-                          error={errors.tags}
-                        />
-                      </Grid2>
-                      <Grid2 size={{ xs: 12 }}>
-                        <MUISelect
-                          id="status"
-                          name="status"
-                          label="Status"
-                          required
-                          value={values.status}
-                          error={errors.status}
-                          touched={touched.status}
-                          onChange={(e) => {
-                            const newStatus = e.target.value;
-                            handleChange(e);
-                            if (newStatus !== BLOG_STATUS.SCHEDULED) {
-                              handleChange({
-                                target: {
-                                  name: "scheduleDateAndTime",
-                                  value: "",
-                                },
-                              });
-                            }
-                          }}
-                          onBlur={handleBlur}
-                          options={statusOptions}
-                        />
-
-                        {values.status === BLOG_STATUS.SCHEDULED && (
-                          <MUIDateTimePicker
-                            id="scheduleDateAndTime"
-                            name="scheduleDateAndTime"
-                            label="Scheduled Date & Time"
+                  <>
+                    <header role="banner">
+                      <BlogHeader
+                        saveState={saveState}
+                        canPreview={
+                          [
+                            BLOG_STATUS.PUBLISHED,
+                            BLOG_STATUS.SCHEDULED,
+                          ].includes(values.status) &&
+                          Object.keys(errors).length === 0 &&
+                          Object.keys(touched).length > 0
+                        }
+                      />
+                    </header>
+                    <Box
+                      component={"form"}
+                      onSubmit={handleSubmit}
+                      sx={{
+                        display: "flex",
+                        flexDirection: "column",
+                      }}
+                      data-testid="blog-form"
+                      role="form"
+                      aria-labelledby="blog-form-label"
+                    >
+                      <Grid2 container spacing={2}>
+                        <Grid2 size={{ xs: 12 }}>
+                          <MUITextareaAutosize
+                            id="title"
+                            name="title"
+                            label="Blog Title"
                             required
-                            value={values.scheduleDateAndTime}
-                            error={errors.scheduleDateAndTime}
-                            touched={touched.scheduleDateAndTime}
+                            placeholder="Enter blog title"
+                            minRows={1}
+                            maxLength={150}
+                            value={values.title}
+                            error={errors.title}
+                            touched={touched.title}
                             onChange={handleChange}
                             onBlur={handleBlur}
-                            minDateTime={dayjs(new Date())} // ✅ Disable past date and time
+                            fontSize="1.8rem"
+                            fontWeight={600}
                           />
-                        )}
-                      </Grid2>
-                    </Grid2>
+                        </Grid2>
+                        <Grid2 size={{ xs: 12 }}>
+                          <MUITextareaAutosize
+                            id="description"
+                            name="description"
+                            label="Description"
+                            required
+                            placeholder="Enter description here..."
+                            minRows={3}
+                            maxLength={300}
+                            value={values.description}
+                            error={errors.description}
+                            touched={touched.description}
+                            onChange={handleChange}
+                            onBlur={handleBlur}
+                          />
+                        </Grid2>
+                        <Grid2 size={{ xs: 12 }}>
+                          <CoverImageUpload
+                            id="coverImage"
+                            name="coverImage"
+                            label="cover Image"
+                            testId="cover-image-upload"
+                            required={true}
+                            setFieldValue={setFieldValue}
+                            value={values.coverImage}
+                            error={errors.coverImage}
+                            touched={touched.coverImage}
+                          />
+                        </Grid2>
+                        <Grid2 size={{ xs: 12 }}>
+                          <Typography variant="h6" gutterBottom>
+                            Content{" "}
+                            <span style={{ color: theme.palette.error.main }}>
+                              *
+                            </span>
+                          </Typography>
+                          {console.log("values.content", values)}
+                          <TiptapEditor
+                            initialContent={values.content}
+                            onChange={(content, stats) => {
+                              // Update both content and readingTime fields
+                              setFieldValue("content", content);
+                              setFieldValue("readingTime", stats);
+                            }}
+                            isError={touched.content && errors.content}
+                            readingTime={values.readingTime}
+                          />
+                          {touched.content && errors.content && (
+                            <Typography color="error" variant="caption">
+                              {errors.content}
+                            </Typography>
+                          )}
+                        </Grid2>
+                        <Grid2 size={{ xs: 12 }}>
+                          <MUIAutocomplete
+                            id="category"
+                            name="category"
+                            label="Category"
+                            required
+                            options={categoryOptions}
+                            getOptionLabel={getCategoryOptionLabel}
+                            maxSelectedOptions={1}
+                            placeholder="Select a category"
+                            value={values.category}
+                            onChange={handleChange}
+                            onBlur={handleBlur}
+                            touched={touched.category}
+                            error={errors.category}
+                          />
+                        </Grid2>
+                        <Grid2 size={{ xs: 12 }}>
+                          <MUIAutocomplete
+                            id="tags"
+                            name="tags"
+                            label="Tags"
+                            multiple
+                            options={tagOptions}
+                            getOptionLabel={getTagsOptionLabel}
+                            maxSelectedOptions={10}
+                            placeholder="Select tags"
+                            value={values.tags}
+                            onChange={handleChange}
+                            onBlur={handleBlur}
+                            touched={touched.tags}
+                            error={errors.tags}
+                          />
+                        </Grid2>
+                        <Grid2 size={{ xs: 12 }}>
+                          <MUISelect
+                            id="status"
+                            name="status"
+                            label="Status"
+                            required
+                            value={values.status}
+                            error={errors.status}
+                            touched={touched.status}
+                            onChange={(e) => {
+                              const newStatus = e.target.value;
+                              handleChange(e);
+                              if (newStatus !== BLOG_STATUS.SCHEDULED) {
+                                handleChange({
+                                  target: {
+                                    name: "scheduleDateAndTime",
+                                    value: "",
+                                  },
+                                });
+                              }
+                            }}
+                            onBlur={handleBlur}
+                            options={statusOptions}
+                          />
 
-                    <Button
-                      type="submit"
-                      variant="contained"
-                      color="primary"
-                      sx={{ mt: 2 }}
-                      data-testid="submit-blog-button"
-                    >
-                      {isEditMode ? "Update Blog" : "Submit Blog"}
-                    </Button>
-                  </Box>
+                          {values.status === BLOG_STATUS.SCHEDULED && (
+                            <MUIDateTimePicker
+                              id="scheduleDateAndTime"
+                              name="scheduleDateAndTime"
+                              label="Scheduled Date & Time"
+                              required
+                              value={values.scheduleDateAndTime}
+                              error={errors.scheduleDateAndTime}
+                              touched={touched.scheduleDateAndTime}
+                              onChange={handleChange}
+                              onBlur={handleBlur}
+                              minDateTime={dayjs(new Date())} // ✅ Disable past date and time
+                            />
+                          )}
+                        </Grid2>
+                      </Grid2>
+
+                      <Button
+                        type="submit"
+                        variant="contained"
+                        color="primary"
+                        sx={{ mt: 2 }}
+                        data-testid="submit-blog-button"
+                      >
+                        {isEditMode ? "Update Blog" : "Submit Blog"}
+                      </Button>
+                    </Box>
+                  </>
                 );
               }}
             </Formik>

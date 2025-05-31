@@ -109,7 +109,9 @@ export const getAllBlog = asyncHandler(async (req, res) => {
 
   // Use 'let' for blogs to allow modifications below
   let blogs = await Blog.find(query)
-    .select("title description author createdAt category coverImage slug")
+    .select(
+      "title description author createdAt category coverImage slug status scheduleDateAndTime readingTime"
+    )
     .sort({ createdAt: -1, _id: -1 }) // Compound sort is great for pagination
     .populate("author", "username avatar")
     .populate("category", "name")

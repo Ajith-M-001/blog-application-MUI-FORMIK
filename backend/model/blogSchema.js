@@ -8,7 +8,7 @@ const blogSchema = new mongoose.Schema(
     description: { type: String, trim: true },
     coverImage: {
       url: { type: String },
-      publicId: { type: String },
+      public_id: { type: String },
     },
     author: {
       type: mongoose.Schema.Types.ObjectId,

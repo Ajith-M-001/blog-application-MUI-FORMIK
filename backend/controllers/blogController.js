@@ -130,8 +130,6 @@ export const getAllBlog = asyncHandler(async (req, res) => {
     blogs = blogs.slice(0, Number(limit));
   }
 
-  console.log("Processed blogs", blogs);
-
   // Compute next cursor only if there's a next page
   const nextCursor = hasNextPage
     ? `${blogs[blogs.length - 1].createdAt.getTime()}_${

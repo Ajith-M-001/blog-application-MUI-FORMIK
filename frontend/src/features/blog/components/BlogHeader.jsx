@@ -137,7 +137,7 @@ const BlogHeader = ({ goToEdit, saveState, canPreview }) => {
         </Box>
 
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-          {currentPath === "create-blog1" && (
+          {currentPath === "create-blog" && (
             <>
               <Button
                 variant="contained"

@@ -116,7 +116,7 @@ const Header = () => {
 
   const handleCreatePost = () => {
     clearBlogData();
-    navigate("/create-blog1");
+    navigate("/create-blog");
   };
 
   const handleUserMenuOpen = (event) => {

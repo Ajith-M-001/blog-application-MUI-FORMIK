@@ -19,3 +19,45 @@ export const blogRoutes = (
     </Route>
   </>
 );
+
+// import { lazy } from "react";
+// import { Route } from "react-router";
+// import ProtectedRoute from "../../../app/routes/ProtectedRoute";
+// import { GUARD_TYPE } from "../../../shared/constants/constants";
+
+// // Lazy load components
+// const BlogForm = lazy(() => import("../pages/BlogForm"));
+// const CreateBlog = lazy(() => import("../pages/CreateBlog"));
+// const PreviewBlog = lazy(() => import("../pages/PreviewBlog"));
+
+// export const blogRoutes = [
+//   {
+//     path: "edit-blog/:slug",
+//     element: <BlogForm />,
+//     guard: { type: GUARD_TYPE.AUTH, redirectTo: "/" },
+//   },
+//   {
+//     path: "create-blog",
+//     element: <BlogForm />,
+//     guard: { type: GUARD_TYPE.AUTH, redirectTo: "/" },
+//   },
+//   {
+//     path: "preview-blog",
+//     element: <PreviewBlog />,
+//     guard: { type: GUARD_TYPE.AUTH, redirectTo: "/" },
+//   },
+// ];
+
+// // Render routes with ProtectedRoute
+// export const renderBlogRoutes = () =>
+//   blogRoutes.map(({ path, element, guard }) => (
+//     <Route
+//       key={path}
+//       path={path}
+//       element={
+//         <ProtectedRoute type={guard.type} redirectTo={guard.redirectTo}>
+//           {element}
+//         </ProtectedRoute>
+//       }
+//     />
+//   ));

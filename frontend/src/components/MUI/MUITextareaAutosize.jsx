@@ -41,7 +41,7 @@ const MUITextareaAutosize = ({
         variant="h6"
         gutterBottom
         component="label"
-        htmlFor={"title"}
+        htmlFor={id}
         sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
         {...labelProps}
       >

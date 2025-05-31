@@ -1,10 +1,12 @@
 import express from "express";
-import "dotenv/config";
+import dotenv from "dotenv";
 import connectDB from "./config/database.js";
 import userRoutes from "./routes/userRoutes.js";
 import countryRoute from "./routes/countriesRoute.js";
 import blogRoutes from "./routes/blogRoute.js";
 import CategoryRoutes from "./routes/categoryRoutes.js";
+import TagRoutes from "./routes/tagRoutes.js";
+import uploadRoutes from "./routes/uploadRoutes.js";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import { errorHandler, notFound } from "./middleware/errorMiddleware.js";
@@ -12,6 +14,8 @@ import User from "./model/user.schema.js";
 import cron from "node-cron";
 import { configurePassport } from "./config/passport.js";
 import ConfigRedisClient from "./config/redis.config.js";
+import publishScheduledBlogs from "./publishScheduledBlogs.js";
+dotenv.config();
 
 const app = express();
 
@@ -47,6 +51,8 @@ app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/countries", countryRoute);
 app.use("/api/v1/blogs", blogRoutes);
 app.use("/api/v1/categories", CategoryRoutes);
+app.use("/api/v1/tags", TagRoutes);
+app.use("/api/v1", uploadRoutes);
 
 // Handle 404 errors for non-existent routes
 app.use(notFound);
@@ -74,6 +80,15 @@ const startServer = async () => {
         console.error("Error cleaning up inactive accounts:", error);
       }
     });
+
+    // Cron job to publish scheduled blogs (new)
+    cron.schedule("* * * * *", async () => {
+      console.log("Checking for scheduled blogs to publish...");
+      await publishScheduledBlogs();
+    });
+
+    // Run immediately on startup to catch any overdue scheduled blogs
+    await publishScheduledBlogs();
     app.listen(PORT, () => {
       console.log(`server is running on the PORT http://localhost:${PORT}`);
     });

@@ -5,14 +5,22 @@ import { generateSlug } from "../utils/generateSlug.js";
 import Blog from "../model/blogSchema.js";
 import userModel from "../model/user.schema.js";
 import dotenv from "dotenv";
-import { BLOG_STATUS } from "../../common/constants/constants.js";
+import { BLOG_STATUS } from "../constants/constants.js";
 dotenv.config({
   path: "../.env",
 });
 
-const NUM_BLOGS = 200;
+const NUM_BLOGS = 20;
 
-const CATEGORIES = ["67f33e3d5f86d1ad63887b55"];
+const CATEGORIES = ["67f86526ae30e34c865f4b66"];
+
+const technologyTagIds = [
+  "67f8688bd6ddda6cb26dfcb9",
+  "67f86896d6ddda6cb26dfcbe",
+  "67f868a7d6ddda6cb26dfcc3",
+  "67f868b7d6ddda6cb26dfcc8",
+  "67f868ddd6ddda6cb26dfccf",
+];
 
 const generateBlog = async (userId) => {
   const title = faker.lorem.sentence();
@@ -50,11 +58,17 @@ const generateBlog = async (userId) => {
     words: faker.number.int({ min: 200, max: 5000 }),
   };
 
+  const numberOfTags = faker.number.int({
+    min: 1,
+    max: technologyTagIds.length,
+  });
+  const tags = faker.helpers.shuffle(technologyTagIds).slice(0, numberOfTags);
+
   return {
     title,
     content,
     category: faker.helpers.arrayElement(CATEGORIES),
-    tags: [],
+    tags,
     description,
     coverImage: {
       url: `https://picsum.photos/seed/${faker.string.alphanumeric(8)}/800/600`,

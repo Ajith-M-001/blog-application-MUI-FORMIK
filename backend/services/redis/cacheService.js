@@ -68,4 +68,16 @@ export const redisService = {
       return null;
     }
   },
+
+  // In cacheService.js
+  async clearCacheByPattern(pattern) {
+    try {
+      const keys = await ConfigRedisClient.keys(pattern);
+      if (keys.length > 0) {
+        await ConfigRedisClient.del(keys);
+      }
+    } catch (error) {
+      console.error(`Redis CLEAR CACHE Error for pattern "${pattern}":`, error);
+    }
+  },
 };

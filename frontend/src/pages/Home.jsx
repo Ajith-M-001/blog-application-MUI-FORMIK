@@ -1,12 +1,11 @@
 import { Typography, useTheme } from "@mui/material";
-import { useGetUserDetails } from "../hooks/api/Users";
-import useStore from "../store/zustand.store";
-import { useShallow } from "zustand/react/shallow";
 import { lazy, Suspense, useEffect, useState } from "react";
-import { showToast } from "../utils/toast";
+import { showToast } from "../shared/utils/toast";
+import { useIsAuthenticated, useUserActions } from "../shared/store/userStore";
+import { useGetUserDetails } from "../features/auth/hooks/use-auth";
 
 const VerificationDrawer = lazy(() =>
-  import("../components/Drawer/VerificationDrawer")
+  import("../features/auth/components/VerificationDrawer")
 );
 
 const Home = () => {
@@ -16,13 +15,9 @@ const Home = () => {
 
   console.log("Auth message", authMessage);
   // Get Zustand store actions
-  const { isAuthenticated, setUser, setIsAuthenticated } = useStore(
-    useShallow((state) => ({
-      isAuthenticated: state.isAuthenticated,
-      setUser: state.setUser,
-      setIsAuthenticated: state.setIsAuthenticated,
-    }))
-  );
+  const isAuthenticated = useIsAuthenticated();
+
+  const { setUserData, setIsAuthenticated } = useUserActions();
 
   const theme = useTheme();
 
@@ -48,7 +43,7 @@ const Home = () => {
 
   useEffect(() => {
     if (isUserSuccess && user?.data) {
-      setUser(user?.data);
+      setUserData(user?.data);
       setIsAuthenticated(true);
     }
 

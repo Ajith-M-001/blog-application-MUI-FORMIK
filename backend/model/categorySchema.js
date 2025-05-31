@@ -1,5 +1,4 @@
 import mongoose from "mongoose";
-import { generateSlug } from "../utils/generateSlug.js";
 
 const categorySchema = new mongoose.Schema(
   {

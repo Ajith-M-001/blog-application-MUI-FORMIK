@@ -7,11 +7,11 @@ import { generateOTP } from "../utils/otpUtils.js";
 import { sendOTPViaEmail } from "../services/emailService.js";
 import { sendOTPViaSMS } from "../services/smsServices.js";
 import { v4 as uuidv4 } from "uuid";
-import { SESSION_PREFERENCE } from "../../common/constants/constants.js";
 import { authConfig } from "../config/auth.config.js";
 import { getMaxAgeFromExpiresIn } from "../utils/getMaxAgeFromExpiresIn.js";
 import { redisService } from "../services/redis/cacheService.js";
 import { generateUniqueUsername } from "../utils/generateUniqueUsername.js";
+import { SESSION_PREFERENCE } from "../constants/constants.js";
 
 // Create cookie options for the access token
 const accessTokenCookieOptions = {
@@ -46,25 +46,52 @@ export const signUpUser = transactionHandler(
 
     const existingUser = await User.findOne({
       $or: queryConditions,
-    }).session(session);
+    })
+      .select("+authProviders")
+      .session(session);
 
+    // Check if user already exists
     if (existingUser) {
       const conflictMessages = [];
 
+      // Check for email conflict
       if (email && existingUser.email === email.toLowerCase()) {
         conflictMessages.push(`User with email ${email} already exists.`);
+
+        // Check if the existing user has authProviders (like Google, Facebook, etc.)
+        if (
+          existingUser.authProviders &&
+          existingUser.authProviders.length > 0
+        ) {
+          const providerTypes = existingUser.authProviders.map(
+            (provider) => provider.providerType
+          );
+          return res
+            .status(400)
+            .json(
+              ApiResponse.error(
+                `This email is already associated with ${providerTypes.join(
+                  " and "
+                )}. Please sign in using ${providerTypes.join(" or ")}.`,
+                400
+              )
+            );
+        }
       }
 
+      // Check for phone number conflict
       if (phoneNumber && existingUser.phoneNumber === phoneNumber) {
         conflictMessages.push(
           `User with phone number ${phoneNumber} already exists.`
         );
       }
 
-      // Return conflict response with 409 status code
-      return res
-        .status(409)
-        .json(ApiResponse.error(conflictMessages.join(" and "), 409));
+      // Return conflict response with 409 status code if there are conflicts
+      if (conflictMessages.length > 0) {
+        return res
+          .status(409)
+          .json(ApiResponse.error(conflictMessages.join(" and "), 409));
+      }
     }
 
     const username = await generateUniqueUsername(firstName, session);
@@ -88,6 +115,7 @@ export const signUpUser = transactionHandler(
     // Save the new user to the database
     const savedUser = await newUser.save({ session });
 
+    // Send OTP via email or SMS
     if (email) {
       await sendOTPViaEmail(savedUser.email, "Your Verification OTP", otp);
     } else if (phoneNumber) {
@@ -123,7 +151,7 @@ export const signInUser = asyncHandler(async (req, res) => {
   let user;
   if (email) {
     user = await User.findOne({ email: email.toLowerCase() }).select(
-      "+password +refreshTokens"
+      "+password +refreshTokens +authProviders"
     );
   } else {
     user = await User.findOne({ phoneNumber }).select(
@@ -133,6 +161,22 @@ export const signInUser = asyncHandler(async (req, res) => {
 
   if (!user) {
     return res.status(404).json(ApiResponse.notFound("invalid credentials"));
+  }
+
+  if (user && user.authProviders && user.authProviders.length > 0) {
+    const providerTypes = user.authProviders.map(
+      (provider) => provider.providerType
+    );
+    return res
+      .status(400)
+      .json(
+        ApiResponse.error(
+          `This account is associated with ${providerTypes.join(
+            " and "
+          )}. Please sign in using ${providerTypes.join(" or ")}.`,
+          400
+        )
+      );
   }
 
   const isPasswordMAtched = await bcrypt.compare(password, user.password);
@@ -391,19 +435,6 @@ export const resendOtp = asyncHandler(async (req, res, next) => {
     return res.status(404).json(ApiResponse.notFound("User not found"));
   }
 
-  if (reset) {
-    if (user.forgotPasswordExpires > new Date()) {
-      return res
-        .status(400)
-        .json(ApiResponse.error("OTP has already been sent", 400));
-    }
-  } else {
-    if (user.verificationCodeExpires > new Date()) {
-      return res
-        .status(400)
-        .json(ApiResponse.error("OTP has already been sent", 400));
-    }
-  }
   const otp = generateOTP();
   const otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
 
@@ -536,15 +567,8 @@ export const forgotPassword = transactionHandler(async (req, res, next) => {
     "+forgotPasswordCode +forgotPasswordExpires"
   );
 
-  console.log("user", user.forgotPasswordExpires, new Date());
   if (!user) {
     return res.status(404).json(ApiResponse.notFound("User not found"));
-  }
-
-  if (user.forgotPasswordExpires > new Date()) {
-    return res
-      .status(400)
-      .json(ApiResponse.error("OTP has already been sent", 400));
   }
 
   const otp = generateOTP();
@@ -720,6 +744,7 @@ export const resetPasswordWithOTP = asyncHandler(async (req, res, next) => {
 });
 
 export const handleGoogleAuthCallback = asyncHandler(async (req, res, next) => {
+  console.log("working");
   const user = req.user;
   const sessionId = uuidv4();
   const tokens = await generateToken(user, sessionId);
@@ -746,6 +771,7 @@ export const handleGoogleAuthCallback = asyncHandler(async (req, res, next) => {
     lastActive: Date.now(),
     expiresAt: refreshTokenExpiry,
   };
+  console.log("newSession", newSession);
   if (user.sessionPreference === SESSION_PREFERENCE.SINGLE) {
     user.refreshTokens = [newSession];
   } else if (user.sessionPreference === SESSION_PREFERENCE.MULTIPLE) {

@@ -64,9 +64,10 @@ export const publishBlog = async (blogData) => {
   return response.data;
 };
 
-export const getAllBlogs = async ({ signal }) => {
+export const getAllBlogs = async ({ signal, params = {} }) => {
   const response = await axiosInstance.get(API_ENDPOINTS.blogs.all, {
     signal,
+    params,
   });
   return response.data;
 };

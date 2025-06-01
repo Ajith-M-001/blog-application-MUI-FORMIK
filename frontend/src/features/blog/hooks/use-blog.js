@@ -62,10 +62,10 @@ export const usePublishBlog = (options = {}) => {
   });
 };
 
-export const useGetAllBlogs = (options = {}) => {
+export const useGetAllBlogs = (options = {}, params = {}) => {
   return useQuery({
-    queryKey: QUERY_KEYS.BLOGS,
-    queryFn: ({ signal }) => getAllBlogs({ signal }),
+    queryKey: [QUERY_KEYS.BLOGS, params],
+    queryFn: ({ signal }) => getAllBlogs({ signal, params }),
     ...options,
   });
 };

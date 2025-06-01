@@ -31,12 +31,22 @@ const BlogPostSkeleton = () => {
                   mb: 0.5,
                 }}
               >
-                <Skeleton variant="rectangular" width={80} height={30} />
-                <Skeleton variant="text" width={100} />
+                <Skeleton
+                  animation="wave"
+                  variant="rectangular"
+                  width={80}
+                  height={30}
+                />
+                <Skeleton animation="wave" variant="text" width={100} />
               </Box>
-              <Skeleton variant="text" width="80%" height={40} />
-              <Skeleton variant="text" width="95%" />
-              <Skeleton variant="text" width="90%" />
+              <Skeleton
+                animation="wave"
+                variant="text"
+                width="80%"
+                height={40}
+              />
+              <Skeleton animation="wave" variant="text" width="95%" />
+              <Skeleton animation="wave" variant="text" width="90%" />
               <Box
                 sx={{
                   display: "flex",
@@ -45,12 +55,16 @@ const BlogPostSkeleton = () => {
                   mt: 1,
                 }}
               >
-                <Skeleton variant="circular" width={40} height={40} />
-
+                <Skeleton
+                  animation="wave"
+                  variant="circular"
+                  width={40}
+                  height={40}
+                />
                 <Box>
                   <Box>
-                    <Skeleton variant="text" width={100} />
-                    <Skeleton variant="text" width={80} />
+                    <Skeleton animation="wave" variant="text" width={100} />
+                    <Skeleton animation="wave" variant="text" width={80} />
                   </Box>
                 </Box>
               </Box>
@@ -64,6 +78,7 @@ const BlogPostSkeleton = () => {
               }}
             >
               <Skeleton
+                animation="wave"
                 variant="rectangular"
                 width="100%"
                 height="80%"
@@ -71,7 +86,7 @@ const BlogPostSkeleton = () => {
               />
             </Grid2>
           </Grid2>
-          <Divider sx={{ my: 2, width: "98%", mx: "auto" }} />{" "}
+          <Divider sx={{ my: 2, width: "98%", mx: "auto" }} />
         </Box>
       ))}
     </Box>

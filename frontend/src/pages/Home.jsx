@@ -1,5 +1,7 @@
 import {
   Box,
+  Button,
+  CircularProgress,
   Divider,
   Grid2,
   Tab,
@@ -25,7 +27,10 @@ const Home = () => {
   const authMessage = urlParams.get("auth");
 
   const [cursor, setCursor] = useState(null);
-  const limit = 2;
+  const [allBlogs, setAllBlogs] = useState([]);
+  const [nextCursor, setNextCursor] = useState(null);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const limit = 10;
 
   const params = cursor ? { cursor, limit } : { limit };
 
@@ -34,11 +39,33 @@ const Home = () => {
     isLoading: isLatestBlogsLoading,
     isError: isLatestBlogsError,
     error: latestBlogsError,
+    refetch: refetchBlogs,
+    isFetching: isFetchingBlogs,
+    isRefetching: isRefetchingBlogs,
+    isPending: isPendingBlogs,
   } = useGetAllBlogs({ staleTime: 60 * 1000, gcTime: 65 * 1000 }, params);
 
   console.log("Auth message", latestBlogs?.data);
+  console.log("isLoading ", isLatestBlogsLoading);
+  console.log("isPending ", isPendingBlogs);
+  console.log("isFetching ", isFetchingBlogs);
+  console.log("isRefetching ", isRefetchingBlogs);
   // Get Zustand store actions
   const isAuthenticated = useIsAuthenticated();
+
+  useEffect(() => {
+    if (latestBlogs?.data) {
+      if (cursor === null) {
+        setAllBlogs(latestBlogs?.data?.blogs || []);
+      } else {
+        // Load more - append new blogs
+        setAllBlogs((prev) => [...prev, ...(latestBlogs.data.blogs || [])]);
+        setIsLoadingMore(false);
+      }
+
+      setNextCursor(latestBlogs?.data?.nextCursor || null);
+    }
+  }, [latestBlogs, cursor]);
 
   const { setUserData, setIsAuthenticated } = useUserActions();
 
@@ -90,6 +117,21 @@ const Home = () => {
     setTabIndex(newValue);
   };
 
+  // Handle load more functionality
+  const handleLoadMore = async () => {
+    if (nextCursor && !isLoadingMore) {
+      setIsLoadingMore(true);
+      setCursor(nextCursor);
+      try {
+        await refetchBlogs();
+      } catch (error) {
+        console.error("Error loading more blogs:", error);
+        showToast("Failed to load more blogs", { type: "error" });
+        setIsLoadingMore(false);
+      }
+    }
+  };
+
   return (
     <>
       <Grid2 container spacing={2} sx={{ height: "100%" }}>
@@ -109,11 +151,49 @@ const Home = () => {
           {tabIndex === 0 && (
             <Box>
               <BlogPost
-                blogs={latestBlogs?.data?.blogs}
-                isLoading={isLatestBlogsLoading}
+                blogs={allBlogs}
+                isLoading={isLatestBlogsLoading && cursor === null}
                 isError={isLatestBlogsError}
                 error={latestBlogsError}
               />
+              {/* Load More Button */}
+              {nextCursor && (
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "center",
+                    mt: 3,
+                    mb: 2,
+                  }}
+                >
+                  <Button
+                    variant="outlined"
+                    onClick={handleLoadMore}
+                    disabled={isLoadingMore}
+                    startIcon={isLoadingMore && <CircularProgress size={20} />}
+                    sx={{
+                      minWidth: 150,
+                      py: 1.5,
+                      px: 3,
+                      borderRadius: 2,
+                      textTransform: "none",
+                      fontSize: "1rem",
+                      fontWeight: 500,
+                    }}
+                  >
+                    {isLoadingMore ? "Loading..." : "Load More"}
+                  </Button>
+                </Box>
+              )}
+
+              {/* Show message when no more blogs */}
+              {!nextCursor && allBlogs.length > 0 && (
+                <Box sx={{ textAlign: "center", mt: 3, mb: 2 }}>
+                  <Typography variant="body2" color="text.secondary">
+                    You&apos;ve reached the end of the blogs
+                  </Typography>
+                </Box>
+              )}
             </Box>
           )}
           {tabIndex === 1 && (

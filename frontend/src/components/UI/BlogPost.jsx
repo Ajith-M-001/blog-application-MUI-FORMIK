@@ -19,7 +19,7 @@ import { useState } from "react";
 const BlogPostSkeleton = () => {
   return (
     <Box>
-      {[...Array(10)].map((_, index) => (
+      {[...Array(5)].map((_, index) => (
         <Box key={index} sx={{ p: 2, gap: 2 }}>
           <Grid2 container spacing={2}>
             <Grid2 size={{ xs: 12, lg: 8 }}>

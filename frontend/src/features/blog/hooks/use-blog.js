@@ -1,4 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { QUERY_KEYS } from "../keys/queryKey";
 import {
   deleteBlog,
@@ -66,6 +71,20 @@ export const useGetAllBlogs = (options = {}, params = {}) => {
   return useQuery({
     queryKey: [QUERY_KEYS.BLOGS, params],
     queryFn: ({ signal }) => getAllBlogs({ signal, params }),
+    ...options,
+  });
+};
+
+export const useInfiniteGetAllBlogs = (options = {}, params = {}) => {
+  return useInfiniteQuery({
+    queryKey: [QUERY_KEYS.INFINITE_BLOGS, params], // Include params in queryKey to ensure cache uniqueness
+    queryFn: ({ signal, pageParam }) =>
+      getAllBlogs({
+        signal,
+        params: { ...params, cursor: pageParam }, // Merge cursor with params
+      }),
+    initialPageParam: null,
+    getNextPageParam: (lastPage) => lastPage?.data?.nextCursor ?? undefined,
     ...options,
   });
 };

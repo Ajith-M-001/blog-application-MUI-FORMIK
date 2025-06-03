@@ -19,7 +19,7 @@ import { useState } from "react";
 const BlogPostSkeleton = () => {
   return (
     <Box>
-      {[...Array(10)].map((_, index) => (
+      {[...Array(5)].map((_, index) => (
         <Box key={index} sx={{ p: 2, gap: 2 }}>
           <Grid2 container spacing={2}>
             <Grid2 size={{ xs: 12, lg: 8 }}>
@@ -93,14 +93,15 @@ const BlogPost = ({ blogs = [], isLoading, isError, error }) => {
   if (isLoading) return <BlogPostSkeleton />;
   if (isError) return <Typography>Error: {error?.message}</Typography>;
 
+  // Optimize animations: reduce delay for large lists and reset index per page
   const cardVariants = {
     hidden: { opacity: 0, y: 20 },
     visible: (i) => ({
       opacity: 1,
       y: 0,
       transition: {
-        delay: i * 0.1,
-        duration: 0.4,
+        delay: blogs.length > 20 ? 0 : i * 0.05, // No delay if >20 blogs, else 0.05s per blog
+        duration: 0.2, // Reduced duration for faster rendering
       },
     }),
   };
@@ -115,9 +116,7 @@ const BlogPost = ({ blogs = [], isLoading, isError, error }) => {
           initial="hidden"
           animate="visible"
           whileHover={{ scale: 0.98 }}
-          style={{
-            marginBottom: "16px",
-          }}
+          style={{ marginBottom: "16px" }}
           role="article"
           aria-labelledby={`blog-title-${blog._id}`}
         >

@@ -1,5 +1,7 @@
 import {
   Box,
+  Button,
+  CircularProgress,
   Divider,
   Grid2,
   Tab,
@@ -11,9 +13,10 @@ import { lazy, Suspense, useEffect, useState } from "react";
 import { showToast } from "../shared/utils/toast";
 import { useIsAuthenticated, useUserActions } from "../shared/store/userStore";
 import { useGetUserDetails } from "../features/auth/hooks/use-auth";
-import { useGetAllBlogs } from "../features/blog/hooks/use-blog";
 import BlogPost from "../components/UI/BlogPost";
-
+import { useInView } from "react-intersection-observer";
+import { useInfiniteGetAllBlogs } from "../features/blog/hooks/use-blog";
+import { debounce } from "lodash";
 const VerificationDrawer = lazy(() =>
   import("../features/auth/components/VerificationDrawer")
 );
@@ -24,25 +27,17 @@ const Home = () => {
   const urlParams = new URLSearchParams(window.location.search);
   const authMessage = urlParams.get("auth");
 
-  const [cursor, setCursor] = useState(null);
-  const limit = 2;
+  const { ref, inView } = useInView({
+    threshold: 0, // Trigger when the element is fully in view
+    rootMargin: "100px", // Trigger 200px before the element is visible
+  });
 
-  const params = cursor ? { cursor, limit } : { limit };
-
-  const {
-    data: latestBlogs,
-    isLoading: isLatestBlogsLoading,
-    isError: isLatestBlogsError,
-    error: latestBlogsError,
-  } = useGetAllBlogs({ staleTime: 60 * 1000, gcTime: 65 * 1000 }, params);
-
-  console.log("Auth message", latestBlogs?.data);
   // Get Zustand store actions
   const isAuthenticated = useIsAuthenticated();
-
   const { setUserData, setIsAuthenticated } = useUserActions();
-
   const theme = useTheme();
+
+  const limit = 10;
 
   const {
     data: user,
@@ -54,6 +49,26 @@ const Home = () => {
     cacheTime: 1 * 70 * 60 * 1000,
     gcTime: 1 * 70 * 60 * 1000,
   });
+
+  const {
+    data: infiniteBlogs,
+    isFetching,
+    isFetchingNextPage,
+    fetchNextPage,
+    hasNextPage,
+    isError: isInfiniteBlogsError,
+    error: infiniteBlogsError,
+    refetch,
+  } = useInfiniteGetAllBlogs({}, { limit });
+
+  // Debounced fetchNextPage to prevent rapid calls
+  const debouncedFetchNextPage = debounce(fetchNextPage, 300);
+
+  useEffect(() => {
+    if (inView && hasNextPage && !isFetchingNextPage) {
+      debouncedFetchNextPage();
+    }
+  }, [inView, hasNextPage, isFetchingNextPage, debouncedFetchNextPage]);
 
   useEffect(() => {
     if (authMessage === "google_auth_success") {
@@ -90,6 +105,9 @@ const Home = () => {
     setTabIndex(newValue);
   };
 
+  const allBlogs =
+    infiniteBlogs?.pages.flatMap((page) => page.data.blogs) || [];
+
   return (
     <>
       <Grid2 container spacing={2} sx={{ height: "100%" }}>
@@ -109,11 +127,67 @@ const Home = () => {
           {tabIndex === 0 && (
             <Box>
               <BlogPost
-                blogs={latestBlogs?.data?.blogs}
-                isLoading={isLatestBlogsLoading}
-                isError={isLatestBlogsError}
-                error={latestBlogsError}
+                blogs={allBlogs}
+                isLoading={isFetching && !isFetchingNextPage}
+                isError={isInfiniteBlogsError}
+                error={infiniteBlogsError}
               />
+              {isInfiniteBlogsError && (
+                <Box sx={{ textAlign: "center", py: 2 }}>
+                  <Typography color="error">
+                    {infiniteBlogsError?.message}
+                  </Typography>
+                  <Button
+                    variant="contained"
+                    onClick={() => refetch()}
+                    sx={{ mt: 1 }}
+                  >
+                    Retry
+                  </Button>
+                </Box>
+              )}
+              <Box
+                ref={ref}
+                sx={{
+                  height: "20px",
+                  display: hasNextPage ? "block" : "none",
+                  textAlign: "center",
+                  py: 2,
+                }}
+              >
+                {isFetchingNextPage && (
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 2,
+                      justifyContent: "center",
+                      mb: 3,
+                      py: 2,
+                    }}
+                  >
+                    <CircularProgress
+                      color="primary"
+                      size={30}
+                      thickness={4}
+                      sx={{ color: theme.palette.primary.main }}
+                    />
+                    <Typography variant="body1" color="text.primary">
+                      Loading more blogs...
+                    </Typography>
+                  </Box>
+                )}
+              </Box>
+              {!hasNextPage && allBlogs.length > 0 && (
+                <Typography sx={{ textAlign: "center", py: 2 }}>
+                  No more blogs to load
+                </Typography>
+              )}
+              {!hasNextPage && allBlogs.length === 0 && (
+                <Typography sx={{ textAlign: "center", py: 2 }}>
+                  No blogs available
+                </Typography>
+              )}
             </Box>
           )}
           {tabIndex === 1 && (

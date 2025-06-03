@@ -77,7 +77,7 @@ export const getAllBlog = asyncHandler(async (req, res) => {
   const { cursor = null, limit = 10 } = req.query;
 
   console.log("cursor", cursor, limit);
-  let query = {};
+  let query = { status: "published" };
 
   // Handle cursor-based pagination
   if (cursor) {
@@ -112,7 +112,7 @@ export const getAllBlog = asyncHandler(async (req, res) => {
     .select(
       "title description blogActivity author createdAt category coverImage slug status scheduleDateAndTime readingTime"
     )
-    .sort({ createdAt: -1, _id: -1 }) // Compound sort is great for pagination
+    .sort({ createdAt: -1 })
     .populate("author", "username avatar")
     .populate("category", "name")
     .populate("tags", "name")

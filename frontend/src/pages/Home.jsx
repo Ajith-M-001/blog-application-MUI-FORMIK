@@ -13,13 +13,17 @@ import { lazy, Suspense, useEffect, useState } from "react";
 import { showToast } from "../shared/utils/toast";
 import { useIsAuthenticated, useUserActions } from "../shared/store/userStore";
 import { useGetUserDetails } from "../features/auth/hooks/use-auth";
-import BlogPost from "../components/UI/BlogPost";
 import { useInView } from "react-intersection-observer";
-import { useInfiniteGetAllBlogs } from "../features/blog/hooks/use-blog";
+import {
+  useGetPersonalizedBlogs,
+  useInfiniteGetAllBlogs,
+} from "../features/blog/hooks/use-blog";
 import { debounce } from "lodash";
 const VerificationDrawer = lazy(() =>
   import("../features/auth/components/VerificationDrawer")
 );
+
+const BlogPost = lazy(() => import("../components/UI/BlogPost"));
 
 const Home = () => {
   const [openDrawer, setOpenDrawer] = useState(false);
@@ -61,6 +65,8 @@ const Home = () => {
     refetch,
   } = useInfiniteGetAllBlogs({}, { limit });
 
+  const { data: personalizedBlogs } = useGetPersonalizedBlogs({}, { limit });
+  console.log("personalizedBlogs", personalizedBlogs);
   // Debounced fetchNextPage to prevent rapid calls
   const debouncedFetchNextPage = debounce(fetchNextPage, 300);
 
@@ -108,6 +114,8 @@ const Home = () => {
   const allBlogs =
     infiniteBlogs?.pages.flatMap((page) => page.data.blogs) || [];
 
+  const allPersonalizedBlogs =
+    personalizedBlogs?.pages.flatMap((page) => page.data.blogs) || [];
   return (
     <>
       <Grid2 container spacing={2} sx={{ height: "100%" }}>
@@ -192,9 +200,12 @@ const Home = () => {
           )}
           {tabIndex === 1 && (
             <Box>
-              <Typography variant="h6">For You</Typography>
-              {/* Replace with real personalized content */}
-              <Typography>Here are blogs curated just for you...</Typography>
+              <BlogPost
+                blogs={allPersonalizedBlogs}
+                isLoading={isFetching && !isFetchingNextPage}
+                isError={isInfiniteBlogsError}
+                error={infiniteBlogsError}
+              />
             </Box>
           )}
         </Grid2>

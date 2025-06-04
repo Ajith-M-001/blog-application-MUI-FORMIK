@@ -11,6 +11,7 @@ import {
   getAllCategory,
   getAllTags,
   getBlogBySlug,
+  getPersonalizedBlogs,
   publishBlog,
   updateBlog,
   uploadImages,
@@ -117,5 +118,19 @@ export const useDeleteBlog = (options = {}) => {
       queryClient.invalidateQueries(QUERY_KEYS.BLOGS);
       showToast(data?.message, { type: "success" });
     },
+  });
+};
+
+export const useGetPersonalizedBlogs = (options = {}, params = {}) => {
+  return useInfiniteQuery({
+    queryKey: QUERY_KEYS.PERSONALIZED_BLOGS,
+    queryFn: ({ signal, pageParam }) =>
+      getPersonalizedBlogs({
+        signal,
+        params: { ...params, cursor: pageParam }, // Merge cursor with params
+      }),
+    initialPageParam: null,
+    getNextPageParam: (lastPage) => lastPage?.data?.nextCursor ?? undefined,
+    ...options,
   });
 };

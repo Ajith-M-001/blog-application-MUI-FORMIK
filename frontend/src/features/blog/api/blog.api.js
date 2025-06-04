@@ -95,3 +95,10 @@ export const deleteBlog = async ({ id }) => {
   const response = await axiosInstance.delete(API_ENDPOINTS.blog.delete(id));
   return response.data;
 };
+
+export const getPersonalizedBlogs = async ({ signal }) => {
+  const response = await axiosInstance.get(API_ENDPOINTS.blogs.forYou, {
+    signal,
+  });
+  return response.data;
+};

@@ -14,7 +14,7 @@ import {
 import { motion } from "motion/react";
 import { Bookmark, Eye, Heart, MessageSquare, Timer } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import { useState } from "react";
+import { memo, useState } from "react";
 
 const BlogPostSkeleton = () => {
   return (
@@ -93,26 +93,12 @@ const BlogPost = ({ blogs = [], isLoading, isError, error }) => {
   if (isLoading) return <BlogPostSkeleton />;
   if (isError) return <Typography>Error: {error?.message}</Typography>;
 
-  // Optimize animations: reduce delay for large lists and reset index per page
-  const cardVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: (i) => ({
-      opacity: 1,
-      y: 0,
-      transition: {
-        delay: blogs.length > 20 ? 0 : i * 0.05, // No delay if >20 blogs, else 0.05s per blog
-        duration: 0.2, // Reduced duration for faster rendering
-      },
-    }),
-  };
-
   return (
     <Box>
       {blogs.map((blog, index) => (
         <motion.div
           key={blog._id}
           custom={index}
-          variants={cardVariants}
           initial="hidden"
           animate="visible"
           whileHover={{ scale: 0.98 }}
@@ -343,4 +329,4 @@ BlogPost.propTypes = {
   error: PropTypes.object,
 };
 
-export default BlogPost;
+export default memo(BlogPost);

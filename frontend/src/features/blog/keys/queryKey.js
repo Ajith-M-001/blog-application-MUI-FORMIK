@@ -7,4 +7,5 @@ export const QUERY_KEYS = {
   BLOGS: ["blogs"],
   BLOG: (slug) => ["blog", slug],
   INFINITE_BLOGS: ["infinite-blogs"],
+  PERSONALIZED_BLOGS: ["personalized-blogs"],
 };

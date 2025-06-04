@@ -9,6 +9,7 @@ export const API_ENDPOINTS = {
     getBySlug: (slug) => `${BLOGS_URL}/${slug}`,
     update: (id) => `${BLOGS_URL}/${id}`,
     delete: (id) => `${BLOGS_URL}/${id}`,
+    forYou: `${BLOGS_URL}/for_you`,
   },
   upload: {
     uploadImages: `/upload-images`,

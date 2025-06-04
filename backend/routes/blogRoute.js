@@ -2,6 +2,7 @@ import express from "express";
 import {
   publishBlog,
   getAllBlog,
+  getPersonalizedBlogs,
   getBlogBySlug,
   updateBlog,
   deleteBlog,
@@ -17,6 +18,7 @@ router.post(
   validatePublishBlog,
   publishBlog
 );
+router.get("/for_you", verifyAccessToken, getPersonalizedBlogs);
 router.get("/all", verifyAccessToken, getAllBlog);
 router.get("/:slug", verifyAccessToken, getBlogBySlug);
 router.put("/:id", verifyAccessToken, updateBlog);

@@ -12,6 +12,8 @@ import {
   getAllTags,
   getBlogBySlug,
   getPersonalizedBlogs,
+  getPopularCategory,
+  getTrendingBlogs,
   publishBlog,
   updateBlog,
   uploadImages,
@@ -123,7 +125,7 @@ export const useDeleteBlog = (options = {}) => {
 
 export const useGetPersonalizedBlogs = (options = {}, params = {}) => {
   return useInfiniteQuery({
-    queryKey: QUERY_KEYS.PERSONALIZED_BLOGS,
+    queryKey: [QUERY_KEYS.PERSONALIZED_BLOGS, params], // Include params in queryKey to ensure cache uniqueness
     queryFn: ({ signal, pageParam }) =>
       getPersonalizedBlogs({
         signal,
@@ -131,6 +133,22 @@ export const useGetPersonalizedBlogs = (options = {}, params = {}) => {
       }),
     initialPageParam: null,
     getNextPageParam: (lastPage) => lastPage?.data?.nextCursor ?? undefined,
+    ...options,
+  });
+};
+
+export const useGetTrendingBlogs = (options = {}, params = {}) => {
+  return useQuery({
+    queryKey: [QUERY_KEYS.TRENDING_BLOGS, params], // Include params in queryKey to ensure cache uniqueness
+    queryFn: ({ signal }) => getTrendingBlogs({ signal, params }),
+    ...options,
+  });
+};
+
+export const useGetPopularCategories = (options = {}) => {
+  return useQuery({
+    queryKey: QUERY_KEYS.POPULAR_CATEGORIES,
+    queryFn: ({ signal }) => getPopularCategory({ signal }),
     ...options,
   });
 };

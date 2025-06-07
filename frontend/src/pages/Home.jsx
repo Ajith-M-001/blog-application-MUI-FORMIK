@@ -1,29 +1,17 @@
-import {
-  Box,
-  Button,
-  CircularProgress,
-  Divider,
-  Grid2,
-  Tab,
-  Tabs,
-  Typography,
-  useTheme,
-} from "@mui/material";
+import { Box, Divider, Grid2, Tab, Tabs, useTheme } from "@mui/material";
 import { lazy, Suspense, useEffect, useState } from "react";
-import { showToast } from "../shared/utils/toast";
-import { useIsAuthenticated, useUserActions } from "../shared/store/userStore";
 import { useGetUserDetails } from "../features/auth/hooks/use-auth";
-import { useInView } from "react-intersection-observer";
-import {
-  useGetPersonalizedBlogs,
-  useInfiniteGetAllBlogs,
-} from "../features/blog/hooks/use-blog";
-import { debounce } from "lodash";
-import LatestBlogs from "../features/blog/pages/LatestBlogs";
-import ForYouBlogs from "../features/blog/pages/ForyouBlogs";
+import { useIsAuthenticated, useUserActions } from "../shared/store/userStore";
+import { showToast } from "../shared/utils/toast";
+import PopularCategory from "../features/blog/pages/PopularCategory";
 
 const VerificationDrawer = lazy(() =>
   import("../features/auth/components/VerificationDrawer")
+);
+const ForYouBlogs = lazy(() => import("../features/blog/pages/ForyouBlogs"));
+const LatestBlogs = lazy(() => import("../features/blog/pages/LatestBlogs"));
+const TrendingBlogs = lazy(() =>
+  import("../features/blog/pages/TrendingBlogs")
 );
 
 // Constants
@@ -109,7 +97,7 @@ const Home = () => {
   return (
     <>
       <Grid2 container spacing={2} sx={{ height: "100%" }}>
-        <Grid2 size={{ xs: 12, md: 7.8 }}>
+        <Grid2 size={{ xs: 12, md: 8.8 }}>
           <TabNavigation
             tabIndex={tabIndex}
             onTabChange={handleTabChange}
@@ -119,7 +107,11 @@ const Home = () => {
           {showForYouTab && <ForYouBlogs />}
         </Grid2>
         <Divider orientation="vertical" flexItem />
-        <Grid2 size={{ xs: 12, md: 4 }}>hello my name is john</Grid2>
+        <Grid2 size={{ xs: 12, md: 3 }}>
+          <TrendingBlogs />
+          <Divider flexItem my={6} />
+          <PopularCategory />
+        </Grid2>
       </Grid2>
 
       {openDrawer && (

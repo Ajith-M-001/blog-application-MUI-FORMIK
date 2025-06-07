@@ -48,7 +48,6 @@ const LatestBlogs = () => {
     allBlogs.length,
     isFetchingNextPage,
     virtualizer.getVirtualItems(),
-    virtualizer,
   ]);
 
   if (isFetching && !isFetchingNextPage && allBlogs.length === 0) {

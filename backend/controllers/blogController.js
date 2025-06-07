@@ -445,3 +445,42 @@ export const deleteBlog = transactionHandler(
       .json(ApiResponse.success("Blog deleted successfully", 200));
   }
 );
+
+export const getTrendingBlogs = asyncHandler(async (req, res, next) => {
+  const { limit = 5 } = req.query;
+  // Define a time window, e.g., last 7 days
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+  const cacheKey = `blogs:trending:limit=${limit}`;
+  const cachedBlogs = await redisService.get(cacheKey);
+
+  if (cachedBlogs) {
+    return res
+      .status(200)
+      .json(
+        ApiResponse.success("Trending Blogs (cached)", JSON.parse(cachedBlogs))
+      );
+  }
+
+  const trendingBlogs = await Blog.find({
+    status: BLOG_STATUS.PUBLISHED,
+    createdAt: { $gte: sevenDaysAgo },
+  })
+    .sort({
+      "blogActivity.total_views": -1, // Sort by most views
+      "blogActivity.total_likes": -1, // Optionally sort by likes
+      createdAt: -1, // Fallback to recency
+    })
+    .limit(Number(limit))
+    .select("title  blogActivity.total_views  createdAt  coverImage")
+    .lean();
+
+  await redisService.set(cacheKey, JSON.stringify(trendingBlogs), 600); // Cache for 10 mins
+
+  return res
+    .status(200)
+    .json(ApiResponse.success("Trending Blogs", trendingBlogs));
+});
+
+

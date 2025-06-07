@@ -96,8 +96,24 @@ export const deleteBlog = async ({ id }) => {
   return response.data;
 };
 
-export const getPersonalizedBlogs = async ({ signal }) => {
+export const getPersonalizedBlogs = async ({ signal, params }) => {
   const response = await axiosInstance.get(API_ENDPOINTS.blogs.forYou, {
+    signal,
+    params,
+  });
+  return response.data;
+};
+
+export const getTrendingBlogs = async ({ signal, params }) => {
+  const response = await axiosInstance.get(API_ENDPOINTS.blogs.trending, {
+    signal,
+    params,
+  });
+  return response.data;
+};
+
+export const getPopularCategory = async ({ signal }) => {
+  const response = await axiosInstance.get(API_ENDPOINTS.categories.popular, {
     signal,
   });
   return response.data;

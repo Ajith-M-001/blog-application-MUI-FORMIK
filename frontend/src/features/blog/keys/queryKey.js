@@ -1,5 +1,6 @@
 export const QUERY_KEYS = {
   CATEGORIES: ["categories"],
+  POPULAR_CATEGORIES: ["popular-categories"],
   TAGS: ["tags"],
   UPLOADS: ["uploads"],
 

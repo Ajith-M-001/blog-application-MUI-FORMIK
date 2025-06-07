@@ -10,6 +10,7 @@ export const API_ENDPOINTS = {
     update: (id) => `${BLOGS_URL}/${id}`,
     delete: (id) => `${BLOGS_URL}/${id}`,
     forYou: `${BLOGS_URL}/for_you`,
+    trending: `${BLOGS_URL}/trending`,
   },
   upload: {
     uploadImages: `/upload-images`,
@@ -17,6 +18,7 @@ export const API_ENDPOINTS = {
   },
   categories: {
     all: `${CATEGORIES_URL}/all`,
+    popular: `${CATEGORIES_URL}/popular`,
   },
   tags: {
     all: `${TAGS_URL}/all`,

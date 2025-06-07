@@ -12,18 +12,13 @@ import { formatDistanceToNow } from "date-fns";
 import { Bookmark, Eye, Heart, MessageSquare, Timer } from "lucide-react";
 import PropTypes from "prop-types";
 import { useState } from "react";
+import { formatViews } from "../../utils/formatViews";
 
 const BlogPost = ({ blog = {} }) => {
   const theme = useTheme();
 
   const [isLiked, setIsLiked] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
-
-  const formatNumber = (num) => {
-    if (num >= 1000000) return (num / 1000000).toFixed(1) + "M";
-    if (num >= 1000) return (num / 1000).toFixed(1) + "K";
-    return num;
-  };
 
   return (
     <Box>
@@ -114,7 +109,7 @@ const BlogPost = ({ blog = {} }) => {
                       <Eye size={20} />
                     </IconButton>
                     <Typography variant="body2">
-                      {formatNumber(blog.blogActivity.total_views)}
+                      {formatViews(blog.blogActivity.total_views)}
                     </Typography>
                   </Box>
                 </Tooltip>
@@ -148,7 +143,7 @@ const BlogPost = ({ blog = {} }) => {
                       />
                     </IconButton>
                     <Typography variant="body2">
-                      {formatNumber(blog.blogActivity.total_likes)}
+                      {formatViews(blog.blogActivity.total_likes)}
                     </Typography>
                   </Box>
                 </Tooltip>
@@ -167,7 +162,7 @@ const BlogPost = ({ blog = {} }) => {
                       <MessageSquare size={20} />
                     </IconButton>
                     <Typography variant="body2">
-                      {formatNumber(blog.blogActivity.total_comments)}
+                      {formatViews(blog.blogActivity.total_comments)}
                     </Typography>
                   </Box>
                 </Tooltip>

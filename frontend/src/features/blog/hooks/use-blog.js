@@ -1,4 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { QUERY_KEYS } from "../keys/queryKey";
 import {
   deleteBlog,
@@ -6,6 +11,7 @@ import {
   getAllCategory,
   getAllTags,
   getBlogBySlug,
+  getPersonalizedBlogs,
   publishBlog,
   updateBlog,
   uploadImages,
@@ -70,6 +76,20 @@ export const useGetAllBlogs = (options = {}, params = {}) => {
   });
 };
 
+export const useInfiniteGetAllBlogs = (options = {}, params = {}) => {
+  return useInfiniteQuery({
+    queryKey: [QUERY_KEYS.INFINITE_BLOGS, params], // Include params in queryKey to ensure cache uniqueness
+    queryFn: ({ signal, pageParam }) =>
+      getAllBlogs({
+        signal,
+        params: { ...params, cursor: pageParam }, // Merge cursor with params
+      }),
+    initialPageParam: null,
+    getNextPageParam: (lastPage) => lastPage?.data?.nextCursor ?? undefined,
+    ...options,
+  });
+};
+
 export const useGetBlogBySlug = (slug, options = {}) => {
   return useQuery({
     queryKey: QUERY_KEYS.BLOG(slug),
@@ -98,5 +118,19 @@ export const useDeleteBlog = (options = {}) => {
       queryClient.invalidateQueries(QUERY_KEYS.BLOGS);
       showToast(data?.message, { type: "success" });
     },
+  });
+};
+
+export const useGetPersonalizedBlogs = (options = {}, params = {}) => {
+  return useInfiniteQuery({
+    queryKey: QUERY_KEYS.PERSONALIZED_BLOGS,
+    queryFn: ({ signal, pageParam }) =>
+      getPersonalizedBlogs({
+        signal,
+        params: { ...params, cursor: pageParam }, // Merge cursor with params
+      }),
+    initialPageParam: null,
+    getNextPageParam: (lastPage) => lastPage?.data?.nextCursor ?? undefined,
+    ...options,
   });
 };

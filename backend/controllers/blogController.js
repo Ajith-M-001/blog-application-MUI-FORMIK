@@ -6,6 +6,118 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler, transactionHandler } from "../utils/AsyncHandler.js";
 import { generateSlug } from "../utils/generateSlug.js";
 
+export const getPersonalizedBlogs = asyncHandler(async (req, res) => {
+  const { cursor = null, limit = 10 } = req.query;
+  const userId = req.user._id;
+
+  const user = await userModel
+    .findById(userId)
+    .select("followingCategories followingTags following likedBlogs")
+    .lean();
+
+  if (!user) {
+    return res.status(404).json(ApiResponse.notFound("User not found"));
+  }
+
+  let query = {
+    status: "published",
+    $or: [
+      { category: { $in: user.followingCategories } },
+      { tags: { $in: user.followingTags } },
+      { author: { $in: user.following } },
+    ],
+  };
+
+  // Handle cursor-based pagination
+  if (cursor) {
+    let [timestamp, id] = cursor.split("_");
+    query = {
+      ...query,
+      $or: [
+        { createdAt: { $lt: new Date(parseInt(timestamp)) } },
+        {
+          createdAt: new Date(parseInt(timestamp)),
+          _id: { $lt: id },
+        },
+      ],
+    };
+  }
+
+  const cacheKey = `blogs:for-you:user=${userId}:cursor=${
+    cursor || "first"
+  }:limit=${limit}`;
+  const cachedBlogs = await redisService.get(cacheKey);
+
+  if (cachedBlogs) {
+    return res
+      .status(200)
+      .json(
+        ApiResponse.success(
+          "Personalized Blogs (cached)",
+          JSON.parse(cachedBlogs)
+        )
+      );
+  }
+
+  // Fetch blogs with sorting by engagement (e.g., views, likes) and recency
+  let blogs = await Blog.find(query)
+    .select(
+      "title description blogActivity author createdAt category coverImage slug status scheduleDateAndTime readingTime"
+    )
+    .sort({
+      // "blogActivity.total_views": -1, // Prioritize high engagement
+      createdAt: -1, // Then sort by recency
+    })
+    .populate("author", "username avatar")
+    .populate("category", "name")
+    .populate("tags", "name")
+    .limit(Number(limit) + 1) // Fetch one extra to check for next page
+    .lean();
+
+  if (blogs.length < Number(limit)) {
+    const additionalBlogs = await Blog.find({
+      status: "published",
+      _id: { $nin: blogs.map((b) => b._id) }, // Exclude already fetched blogs
+    })
+      .sort({ "blogActivity.total_views": -1, createdAt: -1 })
+      .limit(Number(limit) - blogs.length + 1)
+      .select(
+        "title description blogActivity author createdAt category coverImage slug status scheduleDateAndTime readingTime"
+      )
+      .populate("author", "username avatar")
+      .populate("category", "name")
+      .populate("tags", "name")
+      .lean();
+
+    blogs = [...blogs, ...additionalBlogs];
+  }
+
+  const totalBlogs = await Blog.countDocuments({ status: "published" });
+
+  const hasNextPage = blogs.length > Number(limit);
+  if (hasNextPage) {
+    blogs = blogs.slice(0, Number(limit));
+  }
+
+  const nextCursor = hasNextPage
+    ? `${blogs[blogs.length - 1].createdAt.getTime()}_${
+        blogs[blogs.length - 1]._id
+      }`
+    : null;
+
+  const responsePayload = {
+    blogs,
+    nextCursor,
+    totalBlogs,
+  };
+
+  await redisService.set(cacheKey, JSON.stringify(responsePayload), 600); // Cache for 10 minutes
+
+  return res
+    .status(200)
+    .json(ApiResponse.success("Personalized Blogs", responsePayload));
+});
+
 export const publishBlog = transactionHandler(
   async (req, res, next, session) => {
     const {
@@ -76,8 +188,7 @@ export const publishBlog = transactionHandler(
 export const getAllBlog = asyncHandler(async (req, res) => {
   const { cursor = null, limit = 10 } = req.query;
 
-  console.log("cursor", cursor, limit);
-  let query = {};
+  let query = { status: "published" };
 
   // Handle cursor-based pagination
   if (cursor) {
@@ -93,13 +204,8 @@ export const getAllBlog = asyncHandler(async (req, res) => {
     };
   }
 
-  console.log("query", query);
-
   const cacheKey = `blogs:cursor=${cursor || "first"}:limit=${limit}`;
   const cachedBlogs = await redisService.get(cacheKey);
-
-  console.log("cacheKey", cacheKey);
-  console.log("cachedBlogs", cachedBlogs);
 
   if (cachedBlogs) {
     return res
@@ -112,17 +218,14 @@ export const getAllBlog = asyncHandler(async (req, res) => {
     .select(
       "title description blogActivity author createdAt category coverImage slug status scheduleDateAndTime readingTime"
     )
-    .sort({ createdAt: -1, _id: -1 }) // Compound sort is great for pagination
+    .sort({ createdAt: -1 })
     .populate("author", "username avatar")
     .populate("category", "name")
     .populate("tags", "name")
     .limit(Number(limit) + 1) // Request one extra document to check for next page
     .lean();
 
-  console.log("blogs", blogs);
-
-  const totalBlogs = await Blog.countDocuments();
-
+  const totalBlogs = await Blog.countDocuments({ status: "published" });
   const hasNextPage = blogs.length > Number(limit);
 
   // If there's an extra document, remove it to maintain the limit
@@ -178,8 +281,6 @@ export const getBlogBySlug = asyncHandler(async (req, res, next) => {
     return res.status(404).json(ApiResponse.error("Blog not found", 404));
   }
 
-  console.log("CHECK_BLOG", blog);
-
   // Increment view count
   await Blog.findByIdAndUpdate(blog._id, {
     $inc: { "blogActivity.total_views": 1 },
@@ -212,7 +313,6 @@ export const updateBlog = transactionHandler(
       return res.status(404).json(ApiResponse.error("Blog not found", 404));
     }
 
-    console.log("blog", blog.author.toString(), userId.toString());
     if (blog.author.toString() !== userId.toString()) {
       return res
         .status(401)

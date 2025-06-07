@@ -12,7 +12,8 @@ const AppLayout = () => {
         id="main-content"
         component="main"
         sx={{
-          flexGrow: 1,
+          flexGrow: 1, // replaces height
+          overflow: "auto",
           width: "100%",
           pt: `${theme.mixins.toolbar["@media (min-width:600px)"].minHeight}px`,
           pb: theme.spacing(0.2),

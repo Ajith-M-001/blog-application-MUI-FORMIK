@@ -1,5 +1,7 @@
 import {
   Box,
+  Button,
+  CircularProgress,
   Divider,
   Grid2,
   Tab,
@@ -11,37 +13,48 @@ import { lazy, Suspense, useEffect, useState } from "react";
 import { showToast } from "../shared/utils/toast";
 import { useIsAuthenticated, useUserActions } from "../shared/store/userStore";
 import { useGetUserDetails } from "../features/auth/hooks/use-auth";
-import { useGetAllBlogs } from "../features/blog/hooks/use-blog";
-import BlogPost from "../components/UI/BlogPost";
+import { useInView } from "react-intersection-observer";
+import {
+  useGetPersonalizedBlogs,
+  useInfiniteGetAllBlogs,
+} from "../features/blog/hooks/use-blog";
+import { debounce } from "lodash";
+import LatestBlogs from "../features/blog/pages/LatestBlogs";
+import ForYouBlogs from "../features/blog/pages/ForyouBlogs";
 
 const VerificationDrawer = lazy(() =>
   import("../features/auth/components/VerificationDrawer")
 );
 
+// Constants
+const TAB_INDICES = {
+  LATEST: 0,
+  FOR_YOU: 1,
+};
+
+// Components
+const TabNavigation = ({ tabIndex, onTabChange, isAuthenticated }) => {
+  if (!isAuthenticated) return null;
+
+  return (
+    <Box sx={{ borderBottom: 1, borderColor: "divider", my: 2 }}>
+      <Tabs value={tabIndex} onChange={onTabChange} aria-label="home page tabs">
+        <Tab label="Latest Blogs" />
+        <Tab label="For You" />
+      </Tabs>
+    </Box>
+  );
+};
+
 const Home = () => {
   const [openDrawer, setOpenDrawer] = useState(false);
-  const [tabIndex, setTabIndex] = useState(0);
+  const [tabIndex, setTabIndex] = useState(TAB_INDICES.LATEST);
   const urlParams = new URLSearchParams(window.location.search);
   const authMessage = urlParams.get("auth");
 
-  const [cursor, setCursor] = useState(null);
-  const limit = 2;
-
-  const params = cursor ? { cursor, limit } : { limit };
-
-  const {
-    data: latestBlogs,
-    isLoading: isLatestBlogsLoading,
-    isError: isLatestBlogsError,
-    error: latestBlogsError,
-  } = useGetAllBlogs({ staleTime: 60 * 1000, gcTime: 65 * 1000 }, params);
-
-  console.log("Auth message", latestBlogs?.data);
   // Get Zustand store actions
   const isAuthenticated = useIsAuthenticated();
-
   const { setUserData, setIsAuthenticated } = useUserActions();
-
   const theme = useTheme();
 
   const {
@@ -78,54 +91,35 @@ const Home = () => {
     }
   }, [isUserSuccess, user?.data, userError]);
 
-  console.log("User", user);
-
   const handleCloseDrawer = () => {
     setOpenDrawer(false);
   };
 
-  console.log("Component rendered");
-
+  // Event handlers
   const handleTabChange = (event, newValue) => {
     setTabIndex(newValue);
   };
 
+  console.log("Component rendered");
+
+  // Determine which content to show
+  const showLatestTab = !isAuthenticated || tabIndex === TAB_INDICES.LATEST;
+  const showForYouTab = isAuthenticated && tabIndex === TAB_INDICES.FOR_YOU;
+
   return (
     <>
       <Grid2 container spacing={2} sx={{ height: "100%" }}>
-        <Grid2 size={{ xs: 12, md: 8 }}>
-          <Box sx={{ borderBottom: 1, borderColor: "divider", my: 2 }}>
-            <Tabs
-              value={tabIndex}
-              onChange={handleTabChange}
-              aria-label="home page tabs"
-            >
-              <Tab label="Latest Blogs" />
-              <Tab label="For You" />
-            </Tabs>
-          </Box>
-
-          {/* Tab Panels */}
-          {tabIndex === 0 && (
-            <Box>
-              <BlogPost
-                blogs={latestBlogs?.data?.blogs}
-                isLoading={isLatestBlogsLoading}
-                isError={isLatestBlogsError}
-                error={latestBlogsError}
-              />
-            </Box>
-          )}
-          {tabIndex === 1 && (
-            <Box>
-              <Typography variant="h6">For You</Typography>
-              {/* Replace with real personalized content */}
-              <Typography>Here are blogs curated just for you...</Typography>
-            </Box>
-          )}
+        <Grid2 size={{ xs: 12, md: 7.8 }}>
+          <TabNavigation
+            tabIndex={tabIndex}
+            onTabChange={handleTabChange}
+            isAuthenticated={isAuthenticated}
+          />
+          {showLatestTab && <LatestBlogs />}
+          {showForYouTab && <ForYouBlogs />}
         </Grid2>
-        <Divider orientation="vertical" />
-        <Grid2 size={{ xs: 12, md: 4 }}></Grid2>
+        <Divider orientation="vertical" flexItem />
+        <Grid2 size={{ xs: 12, md: 4 }}>hello my name is john</Grid2>
       </Grid2>
 
       {openDrawer && (

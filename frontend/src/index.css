@@ -10,3 +10,14 @@
 .loader-circle {
   animation: spin 1s linear infinite;
 }
+
+/* Hide scrollbar for WebKit-based browsers (Chrome, Safari, Opera) */
+.scroll-container::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge */
+.scroll-container {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}

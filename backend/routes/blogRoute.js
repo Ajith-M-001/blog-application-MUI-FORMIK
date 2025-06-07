@@ -19,7 +19,7 @@ router.post(
   publishBlog
 );
 router.get("/for_you", verifyAccessToken, getPersonalizedBlogs);
-router.get("/all", verifyAccessToken, getAllBlog);
+router.get("/all", getAllBlog);
 router.get("/:slug", verifyAccessToken, getBlogBySlug);
 router.put("/:id", verifyAccessToken, updateBlog);
 router.delete("/:id", verifyAccessToken, deleteBlog);

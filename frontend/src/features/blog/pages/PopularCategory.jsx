@@ -2,6 +2,7 @@ import { Box, Chip, Stack, Typography, useTheme } from "@mui/material";
 import { useGetPopularCategories } from "../hooks/use-blog";
 import { FolderKanban } from "lucide-react";
 import { motion } from "motion/react";
+import PopularCategorySkeleton from "../components/SkeltonsLoaders/PopularCategorySkeleton";
 
 const MotionChip = motion(Chip);
 
@@ -15,7 +16,7 @@ const PopularCategory = () => {
   } = useGetPopularCategories();
   console.log("popularCategories", popularCategories);
 
-  if (isPopularCategoriesLoading) return <div>Loading...</div>;
+  if (isPopularCategoriesLoading) return <PopularCategorySkeleton />;
   if (isPopularCategoriesError)
     return <div>Error: {popularCategoriesError.message}</div>;
 

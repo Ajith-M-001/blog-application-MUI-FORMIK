@@ -23,6 +23,7 @@ import MUIDateTimePicker from "../../../components/MUI/MUIDateTimePicker";
 import dayjs from "dayjs";
 import CoverImageUpload from "../components/CoverImageUpload";
 import TiptapEditor from "../components/editor/TiptapEditor";
+import { transformBlogData } from "../utils/transformBlogData";
 
 const MIN_WORDS = 50;
 const MAX_WORDS = 5000;
@@ -198,7 +199,7 @@ const BlogForm = () => {
   const { slug } = useParams();
   const isEditMode = Boolean(slug);
   const blog = useBlogData();
-  const { setBlogData } = useBlogActions();
+  const { setBlogData, clearBlogData } = useBlogActions();
 
   const lastSavedBlog = useRef(blog);
   const { data: fetchedBlog } = useGetBlogBySlug(slug, {
@@ -228,26 +229,7 @@ const BlogForm = () => {
 
   useEffect(() => {
     if (isEditMode && fetchedBlog?.data) {
-      const newBlogData = {
-        _id: fetchedBlog.data._id || null,
-        slug: fetchedBlog.data.slug || null,
-        title: fetchedBlog.data.title || "",
-        coverImage: {
-          url: fetchedBlog.data.coverImage?.url || "",
-          publicId: fetchedBlog.data.coverImage?.publicId || "",
-        },
-        content: fetchedBlog.data.content || null,
-        category: fetchedBlog.data.category || null,
-        tags: fetchedBlog.data.tags || [],
-        description: fetchedBlog.data.description || "",
-        status: fetchedBlog.data.status || BLOG_STATUS.DRAFT,
-        scheduleDateAndTime: fetchedBlog.data.scheduleDateAndTime || "",
-        readingTime: {
-          minutes: fetchedBlog.data.readingTime?.minutes || 0,
-          words: fetchedBlog.data.readingTime?.words || 0,
-        },
-      };
-
+      const newBlogData = transformBlogData(fetchedBlog.data);
       if (!isEqual(newBlogData, blog)) {
         setBlogData(newBlogData);
       }
@@ -340,6 +322,7 @@ const BlogForm = () => {
         { id: values._id, blogData: values },
         {
           onSuccess: () => {
+            clearBlogData();
             navigate("/");
           },
         }
@@ -348,6 +331,7 @@ const BlogForm = () => {
       console.log("create blog", values);
       publishBlog(values, {
         onSuccess: () => {
+          clearBlogData();
           navigate("/");
         },
       });

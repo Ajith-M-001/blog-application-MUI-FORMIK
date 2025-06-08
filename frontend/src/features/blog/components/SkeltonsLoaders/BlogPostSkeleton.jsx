@@ -6,7 +6,14 @@ const BlogPostSkeleton = ({ count = 5 }) => {
     <Box>
       {[...Array(count)].map((_, index) => (
         <Box key={index} sx={{ p: 2, gap: 2 }}>
-          <Grid2 container spacing={2}>
+          <Grid2
+            container
+            spacing={2}
+            sx={{
+              display: "flex",
+              flexDirection: { xs: "column-reverse", lg: "row" },
+            }}
+          >
             <Grid2 size={{ xs: 12, lg: 8 }}>
               <Box
                 sx={{

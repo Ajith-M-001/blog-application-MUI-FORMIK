@@ -109,7 +109,6 @@ const Home = () => {
         <Divider orientation="vertical" flexItem />
         <Grid2 size={{ xs: 12, md: 3 }}>
           <TrendingBlogs />
-          <Divider flexItem my={6} />
           <PopularCategory />
         </Grid2>
       </Grid2>

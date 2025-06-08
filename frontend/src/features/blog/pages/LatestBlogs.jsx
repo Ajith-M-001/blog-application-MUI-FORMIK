@@ -1,11 +1,11 @@
 import { useEffect, useRef } from "react";
 import { useInfiniteGetAllBlogs } from "../hooks/use-blog";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { BlogPostSkeleton } from "../components/BlogPostSkeleton";
 import { Box, Divider, Typography } from "@mui/material";
 import PropTypes from "prop-types";
 import BlogPost from "../components/UI/BlogPost";
 import { BLOG_LIMIT } from "../constants/constants";
+import { BlogPostSkeleton } from "../components/SkeltonsLoaders/BlogPostSkeleton";
 
 const LatestBlogs = () => {
   const limit = BLOG_LIMIT;

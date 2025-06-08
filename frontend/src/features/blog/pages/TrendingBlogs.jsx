@@ -12,6 +12,10 @@ import { useGetTrendingBlogs } from "../hooks/use-blog";
 import { Eye, TrendingUp } from "lucide-react";
 import { differenceInCalendarDays, parseISO } from "date-fns";
 import { formatViews } from "../utils/formatViews";
+import { motion } from "framer-motion";
+import { TrendingPostSkeleton } from "../components/SkeltonsLoaders/TrendingPostSkeleton";
+
+const MotionCard = motion(Card);
 
 const TrendingBlogs = () => {
   const {
@@ -20,14 +24,14 @@ const TrendingBlogs = () => {
     isError: isErrorTrendingBlogs,
     error: errorTrendingBlogs,
   } = useGetTrendingBlogs({}, { limit: 3 });
-  console.log("trendingBlogs", trendingBlogs);
 
-  if (isLoadingTrendingBlogs) return <div>Loading...</div>;
+  if (isLoadingTrendingBlogs) return <TrendingPostSkeleton />;
   if (isErrorTrendingBlogs)
     return <div>Error: {errorTrendingBlogs.message}</div>;
+
   return (
     <Box>
-      <Box sx={{ p: 2 }} data-testid="trending-blogs" display={"flex"}>
+      <Box sx={{ p: 2 }} display="flex">
         <Stack direction="row" alignItems="center" spacing={1}>
           <TrendingUp color="#f44336" size={24} />
           <Typography variant="h5" fontWeight="bold">
@@ -35,15 +39,26 @@ const TrendingBlogs = () => {
           </Typography>
         </Stack>
       </Box>
+
       <Grid2 container spacing={2}>
         {trendingBlogs?.data?.map((blog, index) => {
           const createdAt = parseISO(blog?.createdAt);
           const daysAgo = differenceInCalendarDays(new Date(), createdAt);
+
           return (
             <Grid2 size={{ xs: 12 }} key={blog._id}>
-              <Card
+              <MotionCard
                 variant="outlined"
-                sx={{ display: "flex", alignItems: "center", p: 0.5 }}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: index * 0.1 }}
+                whileHover={{ scale: 1.02 }}
+                sx={{
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  p: 0.5,
+                }}
               >
                 <Typography
                   variant="h5"
@@ -77,6 +92,7 @@ const TrendingBlogs = () => {
                       {blog.title}
                     </Typography>
                   </Tooltip>
+
                   <Stack
                     direction="row"
                     spacing={1}
@@ -96,7 +112,7 @@ const TrendingBlogs = () => {
                     </Typography>
                   </Stack>
                 </CardContent>
-              </Card>
+              </MotionCard>
             </Grid2>
           );
         })}

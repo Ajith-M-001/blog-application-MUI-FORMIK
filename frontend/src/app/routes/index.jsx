@@ -12,6 +12,7 @@ const Home = lazy(() => import("../../pages/Home"));
 const About = lazy(() => import("../../pages/About"));
 const Contact = lazy(() => import("../../pages/Contact"));
 const NotFound = lazy(() => import("../../pages/NotFound"));
+const BlogDetails = lazy(() => import("../../features/blog/pages/BlogDetails"));
 
 const AppRoutes = () => {
   return (
@@ -24,6 +25,7 @@ const AppRoutes = () => {
               <Route index element={<Home />} />
               <Route path="about" element={<About />} />
               <Route path="contact" element={<Contact />} />
+              <Route path="/blog/:slug" element={<BlogDetails />} />
 
               {/* Auth Routes */}
               {authRoutes}

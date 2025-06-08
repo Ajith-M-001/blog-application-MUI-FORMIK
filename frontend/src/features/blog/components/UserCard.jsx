@@ -28,14 +28,8 @@ const UserCard = () => {
     <Box
       sx={{
         p: 3,
-        mb: 4,
-        borderRadius: 2,
-        backgroundColor: theme.palette.background.paper,
-        boxShadow: theme.shadows[1],
-        "&:hover": {
-          boxShadow: theme.shadows[3],
-        },
-        transition: "box-shadow 0.3s ease",
+        mb: 1,
+        backgroundColor: theme.palette.background.default,
       }}
     >
       <Grid2 container alignItems="center" spacing={3}>

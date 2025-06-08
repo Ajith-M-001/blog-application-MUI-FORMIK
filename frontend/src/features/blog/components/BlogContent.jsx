@@ -1,9 +1,19 @@
-import { Box, Divider, Stack, Typography, useTheme } from "@mui/material";
+import { Box, Chip, Divider, Stack, Typography, useTheme } from "@mui/material";
 import { UserCard } from "./UserCard";
 import { useMemo } from "react";
 import { useBlogData } from "../../../shared/store/blogStore";
+import cld from "../../../lib/claudinary";
+import {
+  AdvancedImage,
+  lazyload,
+  responsive,
+  placeholder,
+} from "@cloudinary/react";
+import { Timer } from "lucide-react";
+import BlogActionsBar from "./UI/BlogActionsBar";
+import PropTypes from "prop-types";
 
-const BlogContent = () => {
+const BlogContent = ({ blogActivity }) => {
   const theme = useTheme();
 
   const blog = useBlogData();
@@ -203,7 +213,14 @@ const BlogContent = () => {
           return null;
       }
     });
-  }, [blog?.content?.content]);
+  }, [blog?.content?.content, theme?.palette?.mode]);
+
+  console.log("renderContent", blogActivity);
+
+  const image = cld
+    .image(blog?.coverImage?.publicId)
+    .quality("auto:low")
+    .format("auto");
 
   return (
     <Stack
@@ -220,7 +237,7 @@ const BlogContent = () => {
         <Typography
           variant="subtitle1"
           sx={{
-            mb: 4,
+            mb: 2,
             fontStyle: "italic",
             color: "text.secondary",
           }}
@@ -228,35 +245,47 @@ const BlogContent = () => {
           {blog?.description}
         </Typography>
 
-        {blog?.coverImage?.url && (
-          <Box
-            sx={{
-              width: "100%",
-              height: "auto",
-              borderRadius: 2,
-              overflow: "hidden",
-              my: 2,
-            }}
+        <Stack direction="row" spacing={2} alignItems="center" mb={2}>
+          <Chip label={blog.category?.name} />
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            display="flex"
+            alignItems="center"
+            gap={1}
           >
-            <img
-              src={blog?.coverImage?.url}
-              alt={blog?.title}
-              style={{
-                width: "100%",
-                height: "100%",
-                objectFit: "cover",
-                display: "block",
-              }}
-            />
-          </Box>
+            <Timer size={20} /> {blog.readingTime.minutes} min read
+          </Typography>
+        </Stack>
+
+        {blog?.coverImage?.url && (
+          <AdvancedImage
+            cldImg={image}
+            plugins={[lazyload(), responsive(), placeholder("blur")]}
+            style={{
+              width: "100%",
+              aspectRatio: "16/9",
+              objectFit: "cover",
+              borderRadius: 24,
+              marginBottom: 24,
+            }}
+            alt={blog.title}
+          />
         )}
 
         <UserCard />
+        <BlogActionsBar blogActivity={blogActivity} />
 
         <Box>{renderContent}</Box>
+
+        <BlogActionsBar blogActivity={blogActivity} />
       </>
     </Stack>
   );
+};
+
+BlogContent.propTypes = {
+  blogActivity: PropTypes.object,
 };
 
 export { BlogContent };

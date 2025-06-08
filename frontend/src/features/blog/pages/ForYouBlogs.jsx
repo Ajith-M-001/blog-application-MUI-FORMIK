@@ -2,10 +2,10 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import { BLOG_LIMIT } from "../constants/constants";
 import { useGetPersonalizedBlogs } from "../hooks/use-blog";
 import { useEffect, useRef } from "react";
-import { BlogPostSkeleton } from "../components/BlogPostSkeleton";
 import { Box, Divider, Typography } from "@mui/material";
 import PropTypes from "prop-types";
 import BlogPost from "../components/UI/BlogPost";
+import { BlogPostSkeleton } from "../components/SkeltonsLoaders/BlogPostSkeleton";
 
 const ForYouBlogs = () => {
   const limit = BLOG_LIMIT;

@@ -22,7 +22,7 @@ router.post(
 router.get("/for_you", verifyAccessToken, getPersonalizedBlogs);
 router.get("/all", getAllBlog);
 router.get("/trending", getTrendingBlogs);
-router.get("/:slug", verifyAccessToken, getBlogBySlug);
+router.get("/:slug", getBlogBySlug);
 router.put("/:id", verifyAccessToken, updateBlog);
 router.delete("/:id", verifyAccessToken, deleteBlog);
 

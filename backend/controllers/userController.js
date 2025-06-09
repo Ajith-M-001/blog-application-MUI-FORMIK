@@ -818,3 +818,196 @@ function getBrowser(userAgent) {
     return "Internet Explorer";
   return "Unknown";
 }
+
+export const isFollowing = asyncHandler(async (req, res, next) => {
+  const { userIdToCheck } = req.query;
+  const currentUserId = req.user._id;
+
+  if (!userIdToCheck) {
+    return res.status(400).json(ApiResponse.error("User id is required", 400));
+  }
+
+  if (userIdToCheck === currentUserId.toString()) {
+    return res
+      .status(400)
+      .json(
+        ApiResponse.error("You cannot check follow status for yourself", 400)
+      );
+  }
+
+  // Check cache first
+  const cacheKey = `follow:${currentUserId}:${userIdToCheck}`;
+  const cachedResult = await redisService.get(cacheKey);
+
+  if (cachedResult !== null) {
+    return res.status(200).json(
+      ApiResponse.success("Follow status retrieved (cached)", {
+        isFollowing: cachedResult === "true",
+      })
+    );
+  }
+
+  const currentUser = await User.findById(currentUserId);
+
+  if (!currentUser) {
+    return res.status(404).json(ApiResponse.notFound("Current user not found"));
+  }
+
+  console.log("currentUser", currentUser);
+
+  // Check if the user is following
+  const isFollowingStatus = currentUser.following.includes(userIdToCheck);
+
+  await redisService.set(cacheKey, isFollowingStatus.toString(), 300);
+
+  return res.status(200).json(
+    ApiResponse.success("Follow status retrieved", {
+      isFollowing: isFollowingStatus,
+    })
+  );
+});
+
+export const followUser = transactionHandler(
+  async (req, res, next, session) => {
+    const { userIdToFollow } = req.body;
+    const currentUserId = req.user._id;
+
+    if (!userIdToFollow) {
+      return res
+        .status(400)
+        .json(ApiResponse.error("User id is required", 400));
+    }
+
+    if (userIdToFollow === currentUserId.toString()) {
+      return res
+        .status(400)
+        .json(ApiResponse.error("You cannot follow yourself", 400));
+    }
+
+    // Find both users
+    const [currentUser, userToFollow] = await Promise.all([
+      User.findById(currentUserId).session(session),
+      User.findById(userIdToFollow).session(session),
+    ]);
+
+    if (!userToFollow) {
+      return res
+        .status(404)
+        .json(ApiResponse.notFound("User to follow not found"));
+    }
+
+    if (!currentUser) {
+      return res
+        .status(404)
+        .json(ApiResponse.notFound("Current user not found"));
+    }
+
+    // Check if the user is already following
+    if (currentUser.following.includes(userIdToFollow)) {
+      return res
+        .status(400)
+        .json(ApiResponse.error("You are already following this user", 400));
+    }
+
+    // Add the user to the current user's following list
+    currentUser.following.push(userIdToFollow);
+
+    // Add the current user to the user to follow's followers list
+    userToFollow.followers.push(currentUserId);
+
+    // Save both users in the transaction
+    await Promise.all([
+      currentUser.save({ session }),
+      userToFollow.save({ session }),
+    ]);
+
+    // Invalidate cache for both users
+    await Promise.all([
+      redisService.del(`user:${currentUserId}`),
+      redisService.del(`user:${userIdToFollow}`),
+    ]);
+
+    return res
+      .status(200)
+      .json(ApiResponse.success("Successfully followed user"));
+  }
+);
+
+export const unfollowUser = transactionHandler(
+  async (req, res, next, session) => {
+    const { userIdToUnfollow } = req.body;
+    const currentUserId = req.user._id;
+
+    // Validate input
+    if (!userIdToUnfollow) {
+      return res
+        .status(400)
+        .json(ApiResponse.error("User ID to unfollow is required", 400));
+    }
+
+    if (userIdToUnfollow === currentUserId.toString()) {
+      return res
+        .status(400)
+        .json(ApiResponse.error("You cannot unfollow yourself", 400));
+    }
+
+    // Find both users with the session
+    const [currentUser, userToUnfollow] = await Promise.all([
+      User.findById(currentUserId).session(session),
+      User.findById(userIdToUnfollow).session(session),
+    ]);
+
+    if (!userToUnfollow) {
+      return res
+        .status(404)
+        .json(ApiResponse.notFound("User to unfollow not found"));
+    }
+
+    if (!currentUser) {
+      return res
+        .status(404)
+        .json(ApiResponse.notFound("Current user not found"));
+    }
+
+    // Check if the user is following
+    const isFollowing = currentUser.following.some(
+      (id) => id.toString() === userIdToUnfollow
+    );
+
+    if (!isFollowing) {
+      return res
+        .status(400)
+        .json(ApiResponse.error("You are not following this user", 400));
+    }
+
+    // Remove the user from the current user's following list
+    currentUser.following = currentUser.following.filter(
+      (id) => id.toString() !== userIdToUnfollow
+    );
+
+    // Remove the current user from the user to unfollow's followers list
+    userToUnfollow.followers = userToUnfollow.followers.filter(
+      (id) => id.toString() !== currentUserId.toString()
+    );
+
+    // Log for debugging
+    console.log("Updated userToUnfollow.followers:", userToUnfollow.followers);
+
+    // Save both users in the transaction
+    await Promise.all([
+      currentUser.save({ session }),
+      userToUnfollow.save({ session }),
+    ]);
+
+    // Invalidate cache for both users and follow status
+    await Promise.all([
+      redisService.del(`user:${currentUserId}`),
+      redisService.del(`user:${userIdToUnfollow}`),
+      redisService.del(`follow:${currentUserId}:${userIdToUnfollow}`),
+    ]);
+
+    return res
+      .status(200)
+      .json(ApiResponse.success("Successfully unfollowed user"));
+  }
+);

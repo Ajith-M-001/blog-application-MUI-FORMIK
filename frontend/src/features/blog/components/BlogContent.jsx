@@ -9,7 +9,6 @@ import {
   responsive,
   placeholder,
 } from "@cloudinary/react";
-import { Timer } from "lucide-react";
 import BlogActionsBar from "./UI/BlogActionsBar";
 import PropTypes from "prop-types";
 
@@ -247,15 +246,6 @@ const BlogContent = ({ blogActivity }) => {
 
         <Stack direction="row" spacing={2} alignItems="center" mb={2}>
           <Chip label={blog.category?.name} />
-          <Typography
-            variant="body2"
-            color="text.secondary"
-            display="flex"
-            alignItems="center"
-            gap={1}
-          >
-            <Timer size={20} /> {blog.readingTime.minutes} min read
-          </Typography>
         </Stack>
 
         {blog?.coverImage?.url && (

@@ -262,6 +262,8 @@ export const getBlogBySlug = asyncHandler(async (req, res, next) => {
       .json(ApiResponse.error("Blog slug is required", 400));
   }
 
+  console.log("slug", slug);
+
   const cacheKey = `blogs:slug=${slug}`;
   const cachedBlog = await redisService.get(cacheKey);
 
@@ -482,5 +484,3 @@ export const getTrendingBlogs = asyncHandler(async (req, res, next) => {
     .status(200)
     .json(ApiResponse.success("Trending Blogs", trendingBlogs));
 });
-
-

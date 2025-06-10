@@ -99,11 +99,41 @@ import { format } from "date-fns";
 import { capitalizeFirstLetter } from "../../../shared/utils/capitalizeFirstLetter";
 import { useUserData } from "../../../shared/store/userStore";
 import { useBlogData } from "../../../shared/store/blogStore";
+import { useGetBlogBySlug } from "../hooks/use-blog";
+import { useParams } from "react-router";
+import { useUserFollowingStatus } from "../../../shared/hooks/use-shared";
 
-const UserCard = () => {
+const UserCard = ({ slug }) => {
   const theme = useTheme();
   const blog = useBlogData();
   const user = useUserData();
+
+  console.log("user", user);
+
+  const {
+    data: blogData,
+    isLoading: isBlogLoading,
+    isError: isBlogError,
+    error: blogError,
+  } = useGetBlogBySlug(slug);
+
+  const authorId = blogData?.data?.author?._id;
+
+  const {
+    data: isFollowingData,
+    isLoading: isFollowingLoading,
+    isError: isFollowingError,
+    error: followingError,
+  } = useUserFollowingStatus(
+    { userIdToCheck: authorId },
+    {
+      enabled: !!authorId && user?._id !== authorId,
+    }
+  );
+
+  if (isBlogLoading || isFollowingLoading) return <div>Loading blog...</div>;
+  if (isBlogError || isFollowingError)
+    return <div>Error: {blogError.message || followingError?.message}</div>;
 
   const getInitials = () => {
     if (user?.firstName && user?.lastName) {
@@ -159,17 +189,23 @@ const UserCard = () => {
               @{user?.username}
             </Typography>
           </Box>
-          <Box ml={3}>
-            <Button
-              variant="outlined"
-              size="medium"
-              sx={{
-                px: 5,
-              }}
-            >
-              Follow
-            </Button>
-          </Box>
+          {/* Follow Button */}
+          {user?._id === authorId ? null : (
+            <>
+              {" "}
+              <Box ml={3}>
+                <Button
+                  variant="outlined"
+                  size="medium"
+                  sx={{
+                    px: 5,
+                  }}
+                >
+                  {isFollowingData?.data?.isFollowing ? "Following" : "Follow"}
+                </Button>
+              </Box>
+            </>
+          )}
         </Box>
 
         {/* Blog Stats */}

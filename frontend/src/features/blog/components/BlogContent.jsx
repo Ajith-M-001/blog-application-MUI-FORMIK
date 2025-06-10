@@ -12,7 +12,7 @@ import {
 import BlogActionsBar from "./UI/BlogActionsBar";
 import PropTypes from "prop-types";
 
-const BlogContent = ({ blogActivity }) => {
+const BlogContent = ({ blogActivity, slug }) => {
   const theme = useTheme();
 
   const blog = useBlogData();
@@ -263,7 +263,7 @@ const BlogContent = ({ blogActivity }) => {
           />
         )}
 
-        <UserCard />
+        <UserCard slug={slug} />
         <BlogActionsBar blogActivity={blogActivity} />
 
         <Box>{renderContent}</Box>

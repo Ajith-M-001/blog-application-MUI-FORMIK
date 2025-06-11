@@ -1,204 +1,6 @@
-// import {
-//   Alert,
-//   AlertTitle,
-//   Box,
-//   Button,
-//   CircularProgress,
-//   Container,
-//   Skeleton,
-//   Stack,
-//   Typography,
-// } from "@mui/material";
-// import PropTypes from "prop-types";
-// import { useCallback, useEffect, useState } from "react";
-// import { Refresh, ErrorOutline, HourglassEmpty } from "@mui/icons-material";
-
-// // Default Error UI
-// const DefaultError = ({ error, onRetry }) => (
-//   <Alert
-//     severity="error"
-//     sx={{ m: 2 }}
-//     icon={<ErrorOutline />}
-//     action={
-//       onRetry && (
-//         <Button onClick={onRetry} startIcon={<Refresh />} size="small">
-//           Retry
-//         </Button>
-//       )
-//     }
-//   >
-//     <AlertTitle>Error</AlertTitle>
-//     {error?.response?.data?.message ||
-//       error?.message ||
-//       "An unknown error occurred"}
-//   </Alert>
-// );
-
-// const DefaultLoading = ({ variant = "spinner" }) => {
-//   if (variant === "skeleton") {
-//     return (
-//       <Container maxWidth="lg" sx={{ py: 4 }}>
-//         <Stack spacing={2}>
-//           <Skeleton variant="text" width="50%" height={40} />
-//           <Skeleton variant="rectangular" width="100%" height={200} />
-//         </Stack>
-//       </Container>
-//     );
-//   }
-//   if (variant === "minimal") {
-//     return (
-//       <Box
-//         display="flex"
-//         justifyContent="center"
-//         alignItems="center"
-//         minHeight={150}
-//       >
-//         <HourglassEmpty color="action" />
-//       </Box>
-//     );
-//   }
-//   return (
-//     <Box
-//       display="flex"
-//       flexDirection="column"
-//       alignItems="center"
-//       justifyContent="center"
-//       height="100%"
-//       gap={2}
-//     >
-//       <CircularProgress />
-//       <Typography variant="body2" color="text.secondary">
-//         Loading...
-//       </Typography>
-//     </Box>
-//   );
-// };
-
-// // Default Empty UI
-// const DefaultEmpty = () => (
-//   <Box
-//     sx={{
-//       display: "flex",
-//       alignItems: "center",
-//       justifyContent: "center",
-//       flexDirection: "column",
-//       height: "100%",
-//     }}
-//     textAlign="center"
-//     py={4}
-//   >
-//     <Typography variant="h4" color="text.secondary">
-//       No data found
-//     </Typography>
-//     <Typography variant="body1" color="text.disabled">
-//       There&apos;s nothing to show here yet.
-//     </Typography>
-//   </Box>
-// );
-
-// const QueryHandler = ({
-//   children,
-//   isLoading,
-//   isError,
-//   error,
-//   errorComponent,
-//   showRetryButton = true,
-//   retryAttempts = 3,
-//   onRefresh,
-//   isRefetching,
-//   fallbackToSkeleton = false,
-//   loadingComponent,
-//   skeletonComponent,
-//   isEmpty,
-//   emptyComponent,
-// }) => {
-//   const [retryCount, setRetryCount] = useState(0);
-
-//   const handleRetry = useCallback(() => {
-//     if (retryCount < retryAttempts) {
-//       setRetryCount((prev) => prev + 1);
-//       onRefresh?.();
-//     }
-//   }, [retryCount, retryAttempts, onRefresh]);
-
-//   useEffect(() => {
-//     if (!isError) setRetryCount(0);
-//   }, [isError]);
-
-//   console.log("isLoading", error);
-
-//   if (!isLoading && isRefetching) {
-//     return (
-//       <Box position="relative">
-//         <Box
-//           position="absolute"
-//           top={0}
-//           left={0}
-//           right={0}
-//           zIndex={1}
-//           display="flex"
-//           justifyContent="center"
-//           py={1}
-//         >
-//           <Box
-//             display="flex"
-//             alignItems="center"
-//             bgcolor="background.paper"
-//             px={2}
-//             py={1}
-//             borderRadius={1}
-//             boxShadow={1}
-//             gap={1}
-//           >
-//             <CircularProgress size={16} />
-//             <Typography variant="caption">Refreshing...</Typography>
-//           </Box>
-//         </Box>
-//         <Box sx={{ opacity: 0.6 }}>{children}</Box>
-//       </Box>
-//     );
-//   }
-
-//   if (isLoading) {
-//     return (
-//       loadingComponent ||
-//       skeletonComponent || (
-//         <DefaultLoading variant={fallbackToSkeleton ? "skeleton" : "spinner"} />
-//       )
-//     );
-//   }
-
-//   console.log("isError", isEmpty);
-
-//   if (isEmpty) {
-//     return emptyComponent || <DefaultEmpty />;
-//   }
-
-//   if (isError) {
-//     return (
-//       <DefaultError
-//         error={error}
-//         onRetry={
-//           showRetryButton && retryCount < retryAttempts
-//             ? handleRetry
-//             : undefined
-//         }
-//       />
-//     );
-//   }
-//   return <div>{children}</div>;
-// };
-
-// QueryHandler.propTypes = {
-//   children: PropTypes.node.isRequired,
-//   isLoading: PropTypes.bool,
-//   isError: PropTypes.bool,
-//   error: PropTypes.object,
-// };
-
-// export default QueryHandler;
 
 // QueryHandler.jsx
+
 import PropTypes from "prop-types";
 import {
   Box,
@@ -264,7 +66,7 @@ const DefaultLoading = ({ variant }) => {
         display="flex"
         justifyContent="center"
         alignItems="center"
-        height={'100%'}
+        height={"100%"}
       >
         <HourglassIcon color="action" />
       </Box>
@@ -410,7 +212,7 @@ const QueryHandler = ({
       {...containerProps}
       sx={{
         width: "100%",
-        ...(fullHeight && { minHeight: "100vh" }),
+        ...(fullHeight && { minHeight: "100%" }),
         ...(centerContent && {
           display: "flex",
           alignItems: "center",

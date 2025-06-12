@@ -2,6 +2,7 @@
 import { create } from "zustand";
 import { devtools, persist } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
+import { subscribeWithSelector } from "zustand/middleware";
 
 const INITIAL_USER_STATE = Object.freeze({
   userData: null,
@@ -9,44 +10,46 @@ const INITIAL_USER_STATE = Object.freeze({
 });
 
 const useUserStore = create(
-  devtools(
-    persist(
-      immer((set) => ({
-        user: { ...INITIAL_USER_STATE },
-        userActions: {
-          setUserData: (data) =>
-            set(
-              (state) => {
-                state.user.userData = data;
-              },
-              false,
-              "user/setUserData"
-            ),
-          clearUserData: () =>
-            set(
-              (state) => {
-                state.user = { ...INITIAL_USER_STATE };
-              },
-              false,
-              "user/clearUserData"
-            ),
-          setIsAuthenticated: (value) =>
-            set(
-              (state) => {
-                state.user.isAuthenticated = value;
-              },
-              false,
-              "user/setIsAuthenticated"
-            ),
-        },
-      })),
-      {
-        name: "user-store",
-        version: 1,
-        partialize: (state) => ({ user: state.user }),
-      }
-    ),
-    { name: "UserStore" }
+  subscribeWithSelector(
+    devtools(
+      persist(
+        immer((set) => ({
+          user: { ...INITIAL_USER_STATE },
+          userActions: {
+            setUserData: (data) =>
+              set(
+                (state) => {
+                  state.user.userData = data;
+                },
+                false,
+                "user/setUserData"
+              ),
+            clearUserData: () =>
+              set(
+                (state) => {
+                  state.user = { ...INITIAL_USER_STATE };
+                },
+                false,
+                "user/clearUserData"
+              ),
+            setIsAuthenticated: (value) =>
+              set(
+                (state) => {
+                  state.user.isAuthenticated = value;
+                },
+                false,
+                "user/setIsAuthenticated"
+              ),
+          },
+        })),
+        {
+          name: "user-store",
+          version: 1,
+          partialize: (state) => ({ user: state.user }),
+        }
+      ),
+      { name: "UserStore" }
+    )
   )
 );
 

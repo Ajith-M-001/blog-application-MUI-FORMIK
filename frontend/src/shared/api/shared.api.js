@@ -8,3 +8,21 @@ export const getUserFollowingStatus = async (userIdToCheck, signal) => {
   });
   return data;
 };
+
+export const followUser = async (userIdToFollow, signal) => {
+  const { data } = await axiosInstance.put(
+    USER_API_ENDPOINTS.FOLLOW,
+    { userIdToFollow },
+    { signal }
+  );
+  return data;
+};
+
+export const unfollowUser = async (userIdToUnfollow, signal) => {
+  const { data } = await axiosInstance.put(
+    USER_API_ENDPOINTS.UNFOLLOW,
+    { userIdToUnfollow },
+    { signal }
+  );
+  return data;
+};

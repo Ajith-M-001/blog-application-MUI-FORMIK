@@ -18,13 +18,15 @@ import PropTypes from "prop-types";
 import { memo } from "react";
 import { formatViews } from "../../utils/formatViews";
 import { motion } from "framer-motion";
+import { useBlogData } from "../../../../shared/store/blogStore";
 
 const MotionStack = motion(Stack);
 const MotionIconButton = motion(IconButton);
 const MotionTypography = motion(Typography);
 
-const BlogActionsBar = memo(({ blogActivity }) => {
+const BlogActionsBar = memo(() => {
   const theme = useTheme();
+  const blog = useBlogData();
   const isLiked = false;
 
   // Custom motion variants for each icon group
@@ -74,7 +76,7 @@ const BlogActionsBar = memo(({ blogActivity }) => {
         <Tooltip
           placement="top"
           arrow
-          title={`${formatViews(blogActivity?.total_views)} views`}
+          title={`${formatViews(blog?.blogActivity?.total_views)} views`}
         >
           <Stack
             direction="row"
@@ -84,7 +86,7 @@ const BlogActionsBar = memo(({ blogActivity }) => {
           >
             <Eye size={30} />
             <Typography variant="h5" fontWeight={500}>
-              {formatViews(blogActivity?.total_views)}
+              {formatViews(blog?.blogActivity?.total_views)}
             </Typography>
           </Stack>
         </Tooltip>
@@ -93,7 +95,7 @@ const BlogActionsBar = memo(({ blogActivity }) => {
         <Tooltip
           placement="top"
           arrow
-          title={`${formatViews(blogActivity?.total_likes)} likes`}
+          title={`${formatViews(blog?.blogActivity?.total_likes)} likes`}
         >
           <MotionStack
             direction="row"
@@ -122,7 +124,7 @@ const BlogActionsBar = memo(({ blogActivity }) => {
               variants={textVariants}
               transition={{ duration: 0.2 }}
             >
-              {formatViews(blogActivity?.total_likes)}
+              {formatViews(blog?.blogActivity?.total_likes)}
             </MotionTypography>
           </MotionStack>
         </Tooltip>
@@ -131,7 +133,7 @@ const BlogActionsBar = memo(({ blogActivity }) => {
         <Tooltip
           placement="top"
           arrow
-          title={`${formatViews(blogActivity?.total_comments)} comments`}
+          title={`${formatViews(blog?.blogActivity?.total_comments)} comments`}
         >
           <MotionStack
             direction="row"
@@ -156,7 +158,7 @@ const BlogActionsBar = memo(({ blogActivity }) => {
               variants={textVariants}
               transition={{ duration: 0.2 }}
             >
-              {formatViews(blogActivity?.total_comments)}
+              {formatViews(blog?.blogActivity?.total_comments)}
             </MotionTypography>
           </MotionStack>
         </Tooltip>
@@ -168,7 +170,7 @@ const BlogActionsBar = memo(({ blogActivity }) => {
         <Tooltip
           placement="top"
           arrow
-          title={`${formatViews(blogActivity?.total_bookmarks)} bookmarks`}
+          title={`${formatViews(blog?.blogActivity?.total_bookmarks)} bookmarks`}
         >
           <MotionStack
             direction="row"
@@ -193,7 +195,7 @@ const BlogActionsBar = memo(({ blogActivity }) => {
               variants={textVariants}
               transition={{ duration: 0.2 }}
             >
-              {formatViews(blogActivity?.total_bookmarks)}
+              {formatViews(blog?.blogActivity?.total_bookmarks)}
             </MotionTypography>
           </MotionStack>
         </Tooltip>

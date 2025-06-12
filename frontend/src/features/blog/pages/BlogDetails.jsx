@@ -1,13 +1,15 @@
+import { Box } from "@mui/material";
+import { useEffect } from "react";
 import { useParams } from "react-router";
 import QueryHandler from "../../../shared/QueryHandler";
-import { useGetBlogBySlug } from "../hooks/use-blog";
-import { useUserFollowingStatus } from "../../../shared/hooks/use-shared";
-import { useUserData } from "../../../shared/store/userStore";
+import { useBlogActions } from "../../../shared/store/blogStore";
 import { isEmpty } from "../../../shared/utils/isEmpty";
+import { BlogContent } from "../components/BlogContent";
+import { useGetBlogBySlug } from "../hooks/use-blog";
 
 const BlogDetails = () => {
   const { slug } = useParams();
-  const user = useUserData();
+  const { setBlogData } = useBlogActions();
 
   const {
     data: blogDetails,
@@ -21,52 +23,33 @@ const BlogDetails = () => {
     gcTime: 15000,
   });
 
-  const authorId = blogDetails?.data?.author?._id;
-
-  const {
-    data: isFollowingData,
-    isLoading: isFollowingLoading,
-    isError: isFollowingError,
-    error: followingError,
-    isFetching: isFollowingFetching,
-    refetch: refetchFollowing,
-  } = useUserFollowingStatus(
-    { userIdToCheck: authorId },
-    {
-      enabled: !!authorId && user?._id !== authorId,
+  useEffect(() => {
+    if (blogDetails?.data) {
+      setBlogData(blogDetails?.data);
     }
-  );
-
-  console.log(blogDetails, "followingError");
+  });
 
   const handleRefresh = () => {
     if (isBlogError) refetchBlog();
-    if (isFollowingError) refetchFollowing();
   };
-
-  console.log(
-    "loading000",
-    isBlogLoading,
-    isFollowingLoading,
-    isBlogFetching,
-    isFollowingFetching
-  );
 
   const isDataEmpty =
     !isBlogLoading && !isBlogError && isEmpty(blogDetails?.data);
 
   return (
     <QueryHandler
-      isLoading={isBlogLoading || isFollowingLoading}
-      isError={isBlogError || isFollowingError}
-      error={isBlogError ? blogError : followingError}
+      isLoading={isBlogLoading}
+      isError={isBlogError}
+      error={blogError}
       onRefresh={handleRefresh}
       showRetryButton={true}
       retryAttempts={3}
-      isRefetching={isBlogFetching || isFollowingFetching}
+      isRefetching={isBlogFetching}
       isEmpty={isDataEmpty}
     >
-      BlogDetails 1234
+      <Box width="100%" height={"100%"} maxWidth="md" mx="auto" px={2} py={5}>
+        <BlogContent />
+      </Box>
     </QueryHandler>
   );
 };

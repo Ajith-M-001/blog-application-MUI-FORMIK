@@ -274,7 +274,7 @@ export const getBlogBySlug = asyncHandler(async (req, res, next) => {
   }
 
   const blog = await Blog.findOne({ slug })
-    .populate("author", "username avatar")
+    .populate("author", "username avatar firstName lastName")
     .populate("category", "name")
     .populate("tags", "name")
     .lean();

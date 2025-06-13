@@ -821,7 +821,7 @@ function getBrowser(userAgent) {
 
 export const isFollowing = asyncHandler(async (req, res, next) => {
   const { userIdToCheck } = req.query;
-  const currentUserId = req.user._id;
+  const currentUserId = req.user?._id;
 
   if (!userIdToCheck) {
     return res.status(400).json(ApiResponse.error("User id is required", 400));
@@ -839,7 +839,7 @@ export const isFollowing = asyncHandler(async (req, res, next) => {
   const cacheKey = `follow:${currentUserId}:${userIdToCheck}`;
   const cachedResult = await redisService.get(cacheKey);
 
-  if (cachedResult !== null) {
+  if (cachedResult) {
     return res.status(200).json(
       ApiResponse.success("Follow status retrieved (cached)", {
         isFollowing: cachedResult === "true",
@@ -853,12 +853,10 @@ export const isFollowing = asyncHandler(async (req, res, next) => {
     return res.status(404).json(ApiResponse.notFound("Current user not found"));
   }
 
-  console.log("currentUser", currentUser);
-
   // Check if the user is following
   const isFollowingStatus = currentUser.following.includes(userIdToCheck);
 
-  await redisService.set(cacheKey, isFollowingStatus.toString(), 300);
+  await redisService.set(cacheKey, isFollowingStatus.toString(), 600);
 
   return res.status(200).json(
     ApiResponse.success("Follow status retrieved", {
@@ -925,6 +923,7 @@ export const followUser = transactionHandler(
     await Promise.all([
       redisService.del(`user:${currentUserId}`),
       redisService.del(`user:${userIdToFollow}`),
+      redisService.del(`follow:${currentUserId}:${userIdToFollow}`),
     ]);
 
     return res
@@ -937,6 +936,8 @@ export const unfollowUser = transactionHandler(
   async (req, res, next, session) => {
     const { userIdToUnfollow } = req.body;
     const currentUserId = req.user._id;
+
+    console.log("currentUserId", currentUserId);
 
     // Validate input
     if (!userIdToUnfollow) {

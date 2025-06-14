@@ -1,98 +1,3 @@
-// import { Avatar, Box, Grid2, Typography, useTheme } from "@mui/material";
-// import { CalendarMonth, Schedule, Article } from "@mui/icons-material";
-// import { format } from "date-fns";
-// import { capitalizeFirstLetter } from "../../../shared/utils/capitalizeFirstLetter";
-// import { useUserData } from "../../../shared/store/userStore";
-// import { useBlogData } from "../../../shared/store/blogStore";
-
-// const UserCard = () => {
-//   const theme = useTheme();
-
-//   const blog = useBlogData();
-//   const user = useUserData();
-
-//   // Get user initials for avatar fallback
-//   const getInitials = () => {
-//     if (user?.firstName && user?.lastName) {
-//       return `${user?.firstName[0].toUpperCase()}${user?.lastName[0].toUpperCase()}`;
-//     }
-//     return user?.username[0]?.toUpperCase() || "";
-//   };
-
-//   // Format date
-//   const formatDate = (dateString) => {
-//     return format(new Date(dateString || new Date()), "MMM dd, yyyy");
-//   };
-
-//   return (
-//     <Box
-//       sx={{
-//         p: 3,
-//         mb: 1,
-//         backgroundColor: theme.palette.background.default,
-//       }}
-//     >
-//       <Grid2 container alignItems="center" spacing={3}>
-//         {/* Avatar Section */}
-//         <Grid2 item>
-//           <Avatar
-//             src={user?.avatar?.url}
-//             sx={{
-//               width: 54,
-//               height: 54,
-//               bgcolor: theme.palette.primary.main,
-//               fontSize: "1.5rem",
-//             }}
-//           >
-//             {getInitials()}
-//           </Avatar>
-//         </Grid2>
-
-//         {/* User Info Section */}
-//         <Grid2 item xs={6}>
-//           <Typography variant="h6" component="div">
-//             <Typography variant="h6" component="div">
-//               {capitalizeFirstLetter(user?.firstName)}{" "}
-//               {capitalizeFirstLetter(user?.lastName)}
-//             </Typography>
-//           </Typography>
-//           <Typography variant="body2" color="text.secondary">
-//             @{user?.username}
-//           </Typography>
-//         </Grid2>
-
-//         {/* Stats Section */}
-//         <Grid2 item xs={4}>
-//           <Box display="flex" alignItems="center" mb={1}>
-//             <CalendarMonth fontSize="small" color="inherit" sx={{ mr: 1 }} />
-//             <Typography variant="body2">
-//               {formatDate(blog?.scheduleDate || blog?.createdAt)}
-//             </Typography>
-//           </Box>
-
-//           <Box display="flex" alignItems="center">
-//             <Box display="flex" alignItems="center" mr={2}>
-//               <Schedule fontSize="small" color="inherit" sx={{ mr: 0.5 }} />
-//               <Typography variant="body2">
-//                 {blog?.readingTime?.minutes || 0} min read
-//               </Typography>
-//             </Box>
-
-//             <Box display="flex" alignItems="center">
-//               <Article fontSize="small" color="inherit" sx={{ mr: 0.5 }} />
-//               <Typography variant="body2">
-//                 {blog?.readingTime?.words || 0} words
-//               </Typography>
-//             </Box>
-//           </Box>
-//         </Grid2>
-//       </Grid2>
-//     </Box>
-//   );
-// };
-
-// export { UserCard };
-
 import { Avatar, Box, Button, Typography, useTheme } from "@mui/material";
 import { CalendarMonth, Schedule, Article } from "@mui/icons-material";
 import { format } from "date-fns";
@@ -130,7 +35,7 @@ const UserCard = () => {
     isLoading: isFollowingLoading,
     isError: isFollowingError,
     error: followingError,
-    isFetching: isFollowingFetching,
+    // isFetching: isFollowingFetching,
     refetch: refetchFollowingStatus,
   } = useUserFollowingStatus(authorId, {
     enabled: isAuthenticated && !!authorId && user?._id !== authorId,
@@ -181,7 +86,7 @@ const UserCard = () => {
         onRefresh={refetchFollowingStatus}
         showRetryButton={true}
         retryAttempts={3}
-        isRefetching={isFollowingFetching}
+        // isRefetching={isFollowingFetching}
         isEmpty={isAuthenticated ? isDataEmpty : false}
       >
         <Box
@@ -237,12 +142,12 @@ const UserCard = () => {
                     }
                     size="medium"
                     onClick={handleFollowToggle}
-                    disabled={
-                      isAuthenticated && (isFollowPending || isUnfollowPending)
-                    }
+                    disabled={isFollowPending || isUnfollowPending} // Disable during pending actions or for unauthenticated users
                     sx={{ px: 5 }}
                   >
-                    {isAuthenticated && isFollowingData?.data?.isFollowing
+                    {isFollowPending || isUnfollowPending
+                      ? "Loading..."
+                      : isAuthenticated && isFollowingData?.data?.isFollowing
                       ? "Following"
                       : "Follow"}
                   </Button>
@@ -285,7 +190,11 @@ const UserCard = () => {
           </Box>
         </Box>
       </QueryHandler>
-      <LoginDialog open={loginDialogOpen} onClose={handleCloseLoginDialog} />
+      <LoginDialog
+        open={loginDialogOpen}
+        onClose={handleCloseLoginDialog}
+        actionType="follow"
+      />
     </>
   );
 };

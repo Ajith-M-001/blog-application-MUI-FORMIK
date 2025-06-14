@@ -34,7 +34,7 @@ router.post("/refresh", verifyRefreshToken, refreshAccessToken);
 router.get("/get-user-details", verifyAccessToken, getUserDetails);
 router.put("/session-preference", verifyAccessToken, updateSessionPreference);
 router.put("/reset-password", verifyAccessToken, ResetPassword);
-router.get("/is-following", isFollowing);
+router.get("/is-following", verifyAccessToken, isFollowing);
 router.put("/follow", verifyAccessToken, followUser);
 router.put("/unfollow", verifyAccessToken, unfollowUser);
 router.put("/verify-otp", verifyOtp);

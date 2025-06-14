@@ -30,9 +30,11 @@ const BlogActionsBar = memo(() => {
   const theme = useTheme();
   const blog = useBlogData();
   const [loginDialogOpen, setLoginDialogOpen] = useState(false);
+  const [currentAction, setCurrentAction] = useState("default");
 
   const handleCloseLoginDialog = () => {
     setLoginDialogOpen(false);
+    setCurrentAction("default");
   };
 
   const isAuthenticated = useIsAuthenticated();
@@ -73,6 +75,7 @@ const BlogActionsBar = memo(() => {
 
   const handleAuthRequiredAction = (action) => {
     if (!isAuthenticated) {
+      setCurrentAction(action);
       setLoginDialogOpen(true);
       return;
     }
@@ -308,7 +311,11 @@ const BlogActionsBar = memo(() => {
           </Tooltip>
         </Stack>
       </Box>
-      <LoginDialog open={loginDialogOpen} onClose={handleCloseLoginDialog} />
+      <LoginDialog
+        actionType={currentAction}
+        open={loginDialogOpen}
+        onClose={handleCloseLoginDialog}
+      />
     </>
   );
 });

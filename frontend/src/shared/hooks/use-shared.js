@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { SHARED_QUERY_KEYS } from "../Keys/sharedKeys";
+import { showToast } from "../../shared/utils/toast";
 import {
   followUser,
   getUserFollowingStatus,
@@ -21,7 +22,8 @@ export const useFollowUser = (userIdToCheck) => {
   return useMutation({
     mutationFn: ({ userIdToFollow, signal }) =>
       followUser(userIdToFollow, signal),
-    onSuccess: () => {
+    onSuccess: (response) => {
+      showToast(response?.message, { type: "success" });
       // Invalidate the query to refresh following status
       queryClient.invalidateQueries({
         queryKey: [SHARED_QUERY_KEYS.USER_FOLLOWING_STATUS, userIdToCheck],
@@ -37,7 +39,8 @@ export const useUnfollowUser = (userIdToCheck) => {
   return useMutation({
     mutationFn: ({ userIdToUnfollow, signal }) =>
       unfollowUser(userIdToUnfollow, signal),
-    onSuccess: () => {
+    onSuccess: (response) => {
+      showToast(response?.message, { type: "success" });
       // Invalidate the query to refresh following status
       queryClient.invalidateQueries({
         queryKey: [SHARED_QUERY_KEYS.USER_FOLLOWING_STATUS, userIdToCheck],

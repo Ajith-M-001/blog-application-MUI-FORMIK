@@ -262,6 +262,8 @@ export const getBlogBySlug = asyncHandler(async (req, res, next) => {
       .json(ApiResponse.error("Blog slug is required", 400));
   }
 
+  console.log("slug", slug);
+
   const cacheKey = `blogs:slug=${slug}`;
   const cachedBlog = await redisService.get(cacheKey);
 
@@ -272,7 +274,7 @@ export const getBlogBySlug = asyncHandler(async (req, res, next) => {
   }
 
   const blog = await Blog.findOne({ slug })
-    .populate("author", "username avatar")
+    .populate("author", "username avatar firstName lastName")
     .populate("category", "name")
     .populate("tags", "name")
     .lean();
@@ -482,5 +484,3 @@ export const getTrendingBlogs = asyncHandler(async (req, res, next) => {
     .status(200)
     .json(ApiResponse.success("Trending Blogs", trendingBlogs));
 });
-
-

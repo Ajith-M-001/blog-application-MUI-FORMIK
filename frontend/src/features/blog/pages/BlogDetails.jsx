@@ -1,34 +1,56 @@
 import { Box } from "@mui/material";
+import { useEffect } from "react";
 import { useParams } from "react-router";
+import QueryHandler from "../../../shared/QueryHandler";
 import { useBlogActions } from "../../../shared/store/blogStore";
+import { isEmpty } from "../../../shared/utils/isEmpty";
 import { BlogContent } from "../components/BlogContent";
 import { useGetBlogBySlug } from "../hooks/use-blog";
-import { transformBlogData } from "../utils/transformBlogData";
+
 const BlogDetails = () => {
   const { slug } = useParams();
-
   const { setBlogData } = useBlogActions();
+
   const {
-    data: blogData,
+    data: blogDetails,
     isLoading: isBlogLoading,
     isError: isBlogError,
     error: blogError,
-  } = useGetBlogBySlug(slug);
+    isFetching: isBlogFetching,
+    refetch: refetchBlog,
+  } = useGetBlogBySlug(slug, {
+    staleTime: 10000,
+    gcTime: 15000,
+  });
 
-  if (blogData) {
-    const newBlog = transformBlogData(blogData?.data);
+  useEffect(() => {
+    if (blogDetails?.data) {
+      setBlogData(blogDetails?.data);
+    }
+  });
 
-    console.log("newBlog", newBlog);
-    setBlogData(newBlog);
-  }
+  const handleRefresh = () => {
+    if (isBlogError) refetchBlog();
+  };
 
-  if (isBlogLoading) return <div>Loading...</div>;
-  if (isBlogError) return <div>Error: {blogError.message}</div>;
+  const isDataEmpty =
+    !isBlogLoading && !isBlogError && isEmpty(blogDetails?.data);
 
   return (
-    <Box width="100%" height={"100%"} maxWidth="lg" mx="auto" px={2} py={5}>
-      <BlogContent blogActivity={blogData?.data?.blogActivity} />
-    </Box>
+    <QueryHandler
+      isLoading={isBlogLoading}
+      isError={isBlogError}
+      error={blogError}
+      onRefresh={handleRefresh}
+      showRetryButton={true}
+      retryAttempts={3}
+      isRefetching={isBlogFetching}
+      isEmpty={isDataEmpty}
+    >
+      <Box width="100%" height={"100%"} maxWidth="md" mx="auto" px={2} py={5}>
+        <BlogContent />
+      </Box>
+    </QueryHandler>
   );
 };
 

@@ -15,16 +15,31 @@ import {
   Share2,
 } from "lucide-react";
 import PropTypes from "prop-types";
-import { memo } from "react";
+import { memo, useState } from "react";
 import { formatViews } from "../../utils/formatViews";
 import { motion } from "framer-motion";
+import { useBlogData } from "../../../../shared/store/blogStore";
+import { useIsAuthenticated } from "../../../../shared/store/userStore";
+import LoginDialog from "./LoginDialog";
 
 const MotionStack = motion(Stack);
 const MotionIconButton = motion(IconButton);
 const MotionTypography = motion(Typography);
 
-const BlogActionsBar = memo(({ blogActivity }) => {
+const BlogActionsBar = memo(() => {
   const theme = useTheme();
+  const blog = useBlogData();
+  const [loginDialogOpen, setLoginDialogOpen] = useState(false);
+  const [currentAction, setCurrentAction] = useState("default");
+
+  const handleCloseLoginDialog = () => {
+    setLoginDialogOpen(false);
+    setCurrentAction("default");
+  };
+
+  const isAuthenticated = useIsAuthenticated();
+
+  console.log("isAuthenticated", isAuthenticated);
   const isLiked = false;
 
   // Custom motion variants for each icon group
@@ -58,191 +73,250 @@ const BlogActionsBar = memo(({ blogActivity }) => {
     hover: { scale: 1.05 },
   };
 
+  const handleAuthRequiredAction = (action) => {
+    if (!isAuthenticated) {
+      setCurrentAction(action);
+      setLoginDialogOpen(true);
+      return;
+    }
+
+    switch (action) {
+      case "like":
+        console.log("Like action");
+        break;
+      case "comment":
+        console.log("Comment action");
+        break;
+      case "bookmark":
+        console.log("Bookmark action");
+        break;
+      case "listen":
+        console.log("Listen action");
+        break;
+      case "share":
+        console.log("Share action");
+        break;
+      default:
+        break;
+    }
+  };
+
   return (
-    <Box
-      sx={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        p: 4,
-        mb: 1,
-      }}
-    >
-      {/* Left Section */}
-      <Stack direction="row" spacing={4} alignItems="center">
-        {/* Views - static */}
-        <Tooltip
-          placement="top"
-          arrow
-          title={`${formatViews(blogActivity?.total_views)} views`}
-        >
-          <Stack
-            direction="row"
-            spacing={1}
-            alignItems="center"
-            color="text.secondary"
+    <>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          p: 4,
+          mb: 1,
+        }}
+      >
+        {/* Left Section */}
+        <Stack direction="row" spacing={4} alignItems="center">
+          {/* Views - static */}
+          <Tooltip
+            placement="top"
+            arrow
+            title={`${formatViews(blog?.blogActivity?.total_views)} views`}
           >
-            <Eye size={30} />
-            <Typography variant="h5" fontWeight={500}>
-              {formatViews(blogActivity?.total_views)}
-            </Typography>
-          </Stack>
-        </Tooltip>
+            <Stack
+              direction="row"
+              spacing={1}
+              alignItems="center"
+              color="text.secondary"
+            >
+              <Eye size={30} />
+              <Typography variant="h5" fontWeight={500}>
+                {formatViews(blog?.blogActivity?.total_views)}
+              </Typography>
+            </Stack>
+          </Tooltip>
 
-        {/* Likes */}
-        <Tooltip
-          placement="top"
-          arrow
-          title={`${formatViews(blogActivity?.total_likes)} likes`}
-        >
-          <MotionStack
-            direction="row"
-            spacing={1}
-            alignItems="center"
-            initial="rest"
-            whileHover="hover"
-            animate="rest"
-            variants={likeVariants}
-            sx={{ cursor: "pointer" }}
+          {/* Likes */}
+          <Tooltip
+            placement="top"
+            arrow
+            title={
+              isAuthenticated
+                ? `${formatViews(blog?.blogActivity?.total_likes)} likes`
+                : "Sign in to like this blog"
+            }
           >
-            <MotionIconButton
-              color="inherit"
+            <MotionStack
+              direction="row"
+              spacing={1}
+              alignItems="center"
+              initial="rest"
+              whileHover="hover"
+              animate="rest"
               variants={likeVariants}
-              transition={{ type: "spring", stiffness: 300, damping: 20 }}
+              sx={{ cursor: "pointer" }}
             >
-              <Heart
-                size={30}
-                fill={isLiked ? theme.palette.error.main : "none"}
-                color={isLiked ? theme.palette.error.main : undefined}
-              />
-            </MotionIconButton>
-            <MotionTypography
-              variant="h5"
-              fontWeight={500}
-              variants={textVariants}
-              transition={{ duration: 0.2 }}
-            >
-              {formatViews(blogActivity?.total_likes)}
-            </MotionTypography>
-          </MotionStack>
-        </Tooltip>
+              <MotionIconButton
+                color="inherit"
+                variants={likeVariants}
+                transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                onClick={() => handleAuthRequiredAction("like")}
+              >
+                <Heart
+                  size={30}
+                  fill={isLiked ? theme.palette.error.main : "none"}
+                  color={isLiked ? theme.palette.error.main : undefined}
+                />
+              </MotionIconButton>
+              <MotionTypography
+                variant="h5"
+                fontWeight={500}
+                variants={textVariants}
+                transition={{ duration: 0.2 }}
+              >
+                {formatViews(blog?.blogActivity?.total_likes)}
+              </MotionTypography>
+            </MotionStack>
+          </Tooltip>
 
-        {/* Comments */}
-        <Tooltip
-          placement="top"
-          arrow
-          title={`${formatViews(blogActivity?.total_comments)} comments`}
-        >
-          <MotionStack
-            direction="row"
-            spacing={1}
-            alignItems="center"
-            initial="rest"
-            whileHover="hover"
-            animate="rest"
-            variants={commentVariants}
-            sx={{ cursor: "pointer" }}
+          {/* Comments */}
+          <Tooltip
+            placement="top"
+            arrow
+            title={
+              isAuthenticated
+                ? `${formatViews(blog?.blogActivity?.total_comments)} comments`
+                : "Sign in to comment on this blog"
+            }
           >
-            <MotionIconButton
-              color="inherit"
+            <MotionStack
+              direction="row"
+              spacing={1}
+              alignItems="center"
+              initial="rest"
+              whileHover="hover"
+              animate="rest"
               variants={commentVariants}
-              transition={{ type: "spring", stiffness: 300, damping: 20 }}
+              sx={{ cursor: "pointer" }}
             >
-              <MessageSquare size={30} />
-            </MotionIconButton>
-            <MotionTypography
-              variant="h5"
-              fontWeight={500}
-              variants={textVariants}
-              transition={{ duration: 0.2 }}
-            >
-              {formatViews(blogActivity?.total_comments)}
-            </MotionTypography>
-          </MotionStack>
-        </Tooltip>
-      </Stack>
+              <MotionIconButton
+                color="inherit"
+                variants={commentVariants}
+                transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                onClick={() => handleAuthRequiredAction("comment")}
+              >
+                <MessageSquare size={30} />
+              </MotionIconButton>
+              <MotionTypography
+                variant="h5"
+                fontWeight={500}
+                variants={textVariants}
+                transition={{ duration: 0.2 }}
+              >
+                {formatViews(blog?.blogActivity?.total_comments)}
+              </MotionTypography>
+            </MotionStack>
+          </Tooltip>
+        </Stack>
 
-      {/* Right Section */}
-      <Stack direction="row" spacing={4} alignItems="center">
-        {/* Bookmarks */}
-        <Tooltip
-          placement="top"
-          arrow
-          title={`${formatViews(blogActivity?.total_bookmarks)} bookmarks`}
-        >
-          <MotionStack
-            direction="row"
-            spacing={1}
-            alignItems="center"
-            initial="rest"
-            whileHover="hover"
-            animate="rest"
-            variants={bookmarkVariants}
-            sx={{ cursor: "pointer" }}
+        {/* Right Section */}
+        <Stack direction="row" spacing={4} alignItems="center">
+          {/* Bookmarks */}
+          <Tooltip
+            placement="top"
+            arrow
+            title={
+              isAuthenticated
+                ? `${formatViews(
+                    blog?.blogActivity?.total_bookmarks
+                  )} bookmarks`
+                : "Sign in to bookmark this blog"
+            }
           >
-            <MotionIconButton
-              color="inherit"
+            <MotionStack
+              direction="row"
+              spacing={1}
+              alignItems="center"
+              initial="rest"
+              whileHover="hover"
+              animate="rest"
               variants={bookmarkVariants}
-              transition={{ type: "spring", stiffness: 300, damping: 20 }}
+              sx={{ cursor: "pointer" }}
             >
-              <Bookmark size={30} />
-            </MotionIconButton>
-            <MotionTypography
-              variant="h5"
-              fontWeight={500}
-              variants={textVariants}
-              transition={{ duration: 0.2 }}
-            >
-              {formatViews(blogActivity?.total_bookmarks)}
-            </MotionTypography>
-          </MotionStack>
-        </Tooltip>
+              <MotionIconButton
+                color="inherit"
+                variants={bookmarkVariants}
+                onClick={() => handleAuthRequiredAction("bookmark")}
+                transition={{ type: "spring", stiffness: 300, damping: 20 }}
+              >
+                <Bookmark size={30} />
+              </MotionIconButton>
+              <MotionTypography
+                variant="h5"
+                fontWeight={500}
+                variants={textVariants}
+                transition={{ duration: 0.2 }}
+              >
+                {formatViews(blog?.blogActivity?.total_bookmarks)}
+              </MotionTypography>
+            </MotionStack>
+          </Tooltip>
 
-        {/* Listen */}
-        <Tooltip title="Listen" placement="top" arrow>
-          <MotionStack
-            direction="row"
-            spacing={1}
-            alignItems="center"
-            initial="rest"
-            whileHover="hover"
-            animate="rest"
-            variants={listenVariants}
-            sx={{ cursor: "pointer" }}
+          {/* Listen */}
+          <Tooltip
+            title={
+              isAuthenticated ? "Listen" : "Sign in to listen to this blog"
+            }
+            placement="top"
+            arrow
           >
-            <MotionIconButton
-              color="inherit"
+            <MotionStack
+              direction="row"
+              spacing={1}
+              alignItems="center"
+              initial="rest"
+              whileHover="hover"
+              animate="rest"
               variants={listenVariants}
-              transition={{ type: "spring", stiffness: 300, damping: 20 }}
+              sx={{ cursor: "pointer" }}
             >
-              <Headphones size={30} />
-            </MotionIconButton>
-          </MotionStack>
-        </Tooltip>
+              <MotionIconButton
+                color="inherit"
+                variants={listenVariants}
+                onClick={() => handleAuthRequiredAction("listen")}
+                transition={{ type: "spring", stiffness: 300, damping: 20 }}
+              >
+                <Headphones size={30} />
+              </MotionIconButton>
+            </MotionStack>
+          </Tooltip>
 
-        {/* Share */}
-        <Tooltip title="Share" placement="top" arrow>
-          <MotionStack
-            direction="row"
-            spacing={1}
-            alignItems="center"
-            initial="rest"
-            whileHover="hover"
-            animate="rest"
-            variants={shareVariants}
-            sx={{ cursor: "pointer" }}
-          >
-            <MotionIconButton
-              color="inherit"
+          {/* Share */}
+          <Tooltip title="Share" placement="top" arrow>
+            <MotionStack
+              direction="row"
+              spacing={1}
+              alignItems="center"
+              initial="rest"
+              whileHover="hover"
+              animate="rest"
               variants={shareVariants}
-              transition={{ type: "spring", stiffness: 300, damping: 20 }}
+              sx={{ cursor: "pointer" }}
             >
-              <Share2 size={30} />
-            </MotionIconButton>
-          </MotionStack>
-        </Tooltip>
-      </Stack>
-    </Box>
+              <MotionIconButton
+                color="inherit"
+                variants={shareVariants}
+                transition={{ type: "spring", stiffness: 300, damping: 20 }}
+              >
+                <Share2 size={30} />
+              </MotionIconButton>
+            </MotionStack>
+          </Tooltip>
+        </Stack>
+      </Box>
+      <LoginDialog
+        actionType={currentAction}
+        open={loginDialogOpen}
+        onClose={handleCloseLoginDialog}
+      />
+    </>
   );
 });
 

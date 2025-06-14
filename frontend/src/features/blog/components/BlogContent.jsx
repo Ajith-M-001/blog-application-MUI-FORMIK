@@ -12,7 +12,7 @@ import {
 import BlogActionsBar from "./UI/BlogActionsBar";
 import PropTypes from "prop-types";
 
-const BlogContent = ({ blogActivity }) => {
+const BlogContent = () => {
   const theme = useTheme();
 
   const blog = useBlogData();
@@ -214,10 +214,8 @@ const BlogContent = ({ blogActivity }) => {
     });
   }, [blog?.content?.content, theme?.palette?.mode]);
 
-  console.log("renderContent", blogActivity);
-
   const image = cld
-    .image(blog?.coverImage?.publicId)
+    .image(blog?.coverImage?.public_id)
     .quality("auto:low")
     .format("auto");
 
@@ -264,11 +262,11 @@ const BlogContent = ({ blogActivity }) => {
         )}
 
         <UserCard />
-        <BlogActionsBar blogActivity={blogActivity} />
+        <BlogActionsBar />
 
         <Box>{renderContent}</Box>
 
-        <BlogActionsBar blogActivity={blogActivity} />
+        <BlogActionsBar />
       </>
     </Stack>
   );

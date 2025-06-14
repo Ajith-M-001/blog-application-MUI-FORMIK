@@ -52,7 +52,7 @@ const BlogPost = ({ blog = {} }) => {
                   fontSize: { xs: "1.5rem", lg: "2rem" },
                   fontWeight: 600,
                   transition: "color 0.3s ease",
-
+                  color: theme.palette.text.primary,
                   "&:hover": {
                     color: theme.palette.primary.main,
                   },
@@ -77,7 +77,11 @@ const BlogPost = ({ blog = {} }) => {
                   sx={{ width: 40, height: 40 }}
                 />
                 <Box>
-                  <Typography variant="body1" fontWeight="medium">
+                  <Typography
+                    variant="body1"
+                    fontWeight="medium"
+                    color="text.primary"
+                  >
                     {blog?.author?.username}
                   </Typography>
                   <Typography variant="subtitle2" color="text.secondary">
@@ -110,7 +114,7 @@ const BlogPost = ({ blog = {} }) => {
                       <IconButton size="small" sx={{ color: "text.secondary" }}>
                         <Eye size={20} />
                       </IconButton>
-                      <Typography variant="body2">
+                      <Typography variant="body2" color="text.secondary">
                         {formatViews(blog.blogActivity.total_views)}
                       </Typography>
                     </Box>
@@ -144,7 +148,7 @@ const BlogPost = ({ blog = {} }) => {
                           fill={isLiked ? theme.palette.primary.main : "none"}
                         />
                       </IconButton>
-                      <Typography variant="body2">
+                      <Typography variant="body2" color="text.secondary">
                         {formatViews(blog.blogActivity.total_likes)}
                       </Typography>
                     </Box>
@@ -163,7 +167,7 @@ const BlogPost = ({ blog = {} }) => {
                       <IconButton size="small" sx={{ color: "text.secondary" }}>
                         <MessageSquare size={20} />
                       </IconButton>
-                      <Typography variant="body2">
+                      <Typography variant="body2" color="text.primary">
                         {formatViews(blog.blogActivity.total_comments)}
                       </Typography>
                     </Box>

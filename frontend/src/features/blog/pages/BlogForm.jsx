@@ -234,7 +234,11 @@ const BlogForm = () => {
         setBlogData(newBlogData);
       }
     }
-  }, [isEditMode, fetchedBlog, setBlogData, blog]);
+
+    return () => {
+      clearBlogData();
+    };
+  }, [isEditMode, fetchedBlog, setBlogData, blog, clearBlogData]);
 
   const debouncedAutoSave = useCallback(
     debounce((nextValues, setFieldValue) => {
@@ -322,7 +326,6 @@ const BlogForm = () => {
         { id: values._id, blogData: values },
         {
           onSuccess: () => {
-            clearBlogData();
             navigate("/");
           },
         }
@@ -331,7 +334,6 @@ const BlogForm = () => {
       console.log("create blog", values);
       publishBlog(values, {
         onSuccess: () => {
-          clearBlogData();
           navigate("/");
         },
       });

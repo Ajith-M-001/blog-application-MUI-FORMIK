@@ -12,6 +12,7 @@ import queryClient from "./api/queryClient.js";
 import App from "./app/App.jsx";
 import { useIsDarkTheme } from "./shared/store/themeStore.js";
 import "./index.css";
+import { SocketProvider } from "./app/providers/SocketProvider";
 
 const RootApp = () => {
   const isDarkTheme = useIsDarkTheme();
@@ -27,7 +28,9 @@ const RootApp = () => {
 createRoot(document.getElementById("root")).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <RootApp />
+      <SocketProvider>
+        <RootApp />
+      </SocketProvider>
       <NotificationToaster />
       <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>

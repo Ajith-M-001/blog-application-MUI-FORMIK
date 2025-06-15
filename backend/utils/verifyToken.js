@@ -32,8 +32,6 @@ export const verifyAccessToken = async (req, res, next) => {
     }
 
     const isSignOutRoute = req.path.includes("/sign-out");
-    console.log("isSignOutRoute", isSignOutRoute);
-    console.log("req.path", req.path);
 
     if (user.accountStatus !== "active" && !isSignOutRoute) {
       if (user.accountStatus === "inactive") {
@@ -140,5 +138,32 @@ export const verifyRefreshToken = async (req, res, next) => {
     next();
   } catch (error) {
     next(error);
+  }
+};
+
+export const socketAuthenticator = async (err, socket, next) => {
+  try {
+    if (err) {
+      return next(err);
+    }
+
+    const authToken = socket.request.cookies?.access_token;
+    if (!authToken) {
+      return next(new Error("Authentication error: Access token missing"));
+    }
+
+    const decodedUser = jwt.verify(authToken, process.env.JWT_ACCESS_SECRET);
+    const user = await User.findById(decodedUser._id).select(
+      "email firstName lastName roles accountStatus refreshTokens country phoneNumber"
+    );
+    if (!user) {
+      return next(new Error("Authentication error: User not found"));
+    }
+
+    // Attach user data to socket
+    socket.user = user;
+    next();
+  } catch (error) {
+    next(new Error(`Authentication error: ${error.message}`));
   }
 };

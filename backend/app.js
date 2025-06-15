@@ -1,4 +1,5 @@
 import express from "express";
+import { createServer } from "http";
 import dotenv from "dotenv";
 import connectDB from "./config/database.js";
 import userRoutes from "./routes/userRoutes.js";
@@ -15,55 +16,63 @@ import cron from "node-cron";
 import { configurePassport } from "./config/passport.js";
 import ConfigRedisClient from "./config/redis.config.js";
 import publishScheduledBlogs from "./publishScheduledBlogs.js";
+import socketService from "./services/socket/socketService.js";
 dotenv.config();
 
 const app = express();
+const httpServer = createServer(app);
 
+//
 app.disable("x-powered-by");
 
-const PORT = process.env.PORT || 4000;
-
-app.get("/", (req, res) => {
-  res.send("Welcome to BLOG Application - build by Ajith");
-});
-
-// Body parser middleware (parsing incoming JSON requests)
+// Middleware setup
 app.use(express.json());
-
-// Body parser for URL encoded form data
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 const corsOptions = {
-  origin: "http://localhost:5173",
+  origin: process.env.FRONTEND_DEV_URL,
   credentials: true,
   methods: "GET,PUT,POST,DELETE",
   allowedHeaders: "Content-Type, Authorization",
 };
-// Enable CORS
 app.use(cors(corsOptions));
-
-app.use(cookieParser());
 
 configurePassport(app);
 
-// Mount user routes
-app.use("/api/v1/users", userRoutes);
-app.use("/api/v1/countries", countryRoute);
-app.use("/api/v1/blogs", blogRoutes);
-app.use("/api/v1/categories", CategoryRoutes);
-app.use("/api/v1/tags", TagRoutes);
-app.use("/api/v1", uploadRoutes);
+// Health check
+app.get("/", (req, res) => {
+  res.send("Welcome to BLOG Application - built by Ajith");
+});
 
-// Handle 404 errors for non-existent routes
+// Define API base path in one place
+const API_PREFIX = "/api/v1";
+
+// Routes
+app.use(`${API_PREFIX}/users`, userRoutes);
+app.use(`${API_PREFIX}/countries`, countryRoute);
+app.use(`${API_PREFIX}/blogs`, blogRoutes);
+app.use(`${API_PREFIX}/categories`, CategoryRoutes);
+app.use(`${API_PREFIX}/tags`, TagRoutes);
+app.use(`${API_PREFIX}`, uploadRoutes);
+
+// Error handling
 app.use(notFound);
-
-// General error handler
 app.use(errorHandler);
+
+const PORT = process.env.PORT || 4000;
 
 const startServer = async () => {
   try {
     await connectDB();
-    // Start the server
+    socketService.initialize(httpServer);
+
+    // Check Redis connection before continuing
+    if (!ConfigRedisClient.isReady) {
+      throw new Error("Redis client is not ready. Exiting...");
+    }
+
+    // Cron job to delete inactive users
     cron.schedule("0 6 * * *", async () => {
       try {
         const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
@@ -72,28 +81,25 @@ const startServer = async () => {
           createdAt: { $lt: twentyFourHoursAgo },
         });
         console.log(`Cleaned up ${result.deletedCount} inactive accounts.`);
-
-        if (!ConfigRedisClient.isReady) {
-          throw new Error("Redis client is not ready. Exiting...");
-        }
       } catch (error) {
         console.error("Error cleaning up inactive accounts:", error);
       }
     });
 
-    // Cron job to publish scheduled blogs (new)
+    // Cron job to publish scheduled blogs every minute
     cron.schedule("* * * * *", async () => {
       console.log("Checking for scheduled blogs to publish...");
       await publishScheduledBlogs();
     });
 
-    // Run immediately on startup to catch any overdue scheduled blogs
+    // Run immediately on startup to catch overdue scheduled blogs
     await publishScheduledBlogs();
-    app.listen(PORT, () => {
-      console.log(`server is running on the PORT http://localhost:${PORT}`);
+
+    httpServer.listen(PORT, () => {
+      console.log(`Server is running at http://localhost:${PORT}`);
     });
   } catch (error) {
-    console.log("error connecting to database", error.message);
+    console.error("Error starting server:", error.message);
     process.exit(1);
   }
 };

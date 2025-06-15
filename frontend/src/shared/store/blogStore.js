@@ -30,7 +30,7 @@ const INITIAL_BLOG_STATE = {
   },
   createdAt: null,
   updatedAt: null,
-  category: { _id: null, name: "" },
+  category: null,
 };
 
 const useBlogStore = create(

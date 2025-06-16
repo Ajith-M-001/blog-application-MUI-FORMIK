@@ -24,6 +24,13 @@ export const SocketProvider = ({ children }) => {
       const socket = socketRef.current;
 
       socket.on("connect", () => console.log("Socket connected"));
+
+      socket.on("newNotification", (notification) => {
+        console.log("Received notification:", notification);
+        showToast(notification.message || "You have a new notification", {
+          type: "default",
+        });
+      });
       socket.on("disconnect", () =>
         showToast("Disconnected. Attempting to reconnect...", {
           type: "warning",

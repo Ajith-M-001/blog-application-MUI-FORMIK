@@ -1,10 +1,11 @@
-import { BLOG_STATUS } from "../constants/constants.js";
+import { BLOG_STATUS, NOTIFICATION_TYPES } from "../constants/constants.js";
 import Blog from "../model/blogSchema.js";
 import userModel from "../model/user.schema.js";
 import { redisService } from "../services/redis/cacheService.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler, transactionHandler } from "../utils/AsyncHandler.js";
 import { generateSlug } from "../utils/generateSlug.js";
+import { createNotification } from "./notificationController.js";
 
 export const getPersonalizedBlogs = asyncHandler(async (req, res) => {
   const { cursor = null, limit = 10 } = req.query;
@@ -177,6 +178,35 @@ export const publishBlog = transactionHandler(
       },
       { session }
     );
+
+    if (status === BLOG_STATUS.PUBLISHED) {
+      const author = await userModel
+        .findById(userId)
+        .select("followers firstName lastName avatar username")
+        .session(session);
+
+      if (author && author.followers.length > 0) {
+        const notificationPromises = [];
+
+        for (const followerId of author.followers) {
+          notificationPromises.push(
+            createNotification({
+              recipient: followerId,
+              sender: userId,
+              type: NOTIFICATION_TYPES.NEW_BLOG_POST,
+              title: "New blog published",
+              message: `${author.firstName} ${author.lastName} published a new blog: ${title}`,
+              metadata: {
+                blogId: blog._id,
+              },
+              session,
+            })
+          );
+        }
+
+        await Promise.all(notificationPromises);
+      }
+    }
 
     let message =
       status === BLOG_STATUS.PUBLISHED ? "Blog published successfully" : null;

@@ -30,7 +30,7 @@ class SocketService {
 
     this.io.on("connection", (socket) => {
       console.log("User connected:", socket.id);
-      this.userSockets.set(socket.user._id, socket.id);
+      this.userSockets.set(socket.user._id.toString(), socket.id);
 
       socket.on("disconnect", () => {
         console.log("User disconnected:", socket.id);

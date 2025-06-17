@@ -7,31 +7,25 @@ export const createNotification = async ({
   type,
   title,
   message,
-  metadata,
-  session = null,
+  blogId,
+  slug,
 }) => {
   try {
-    const [notification] = await Notification.create(
-      [
-        {
-          recipient,
-          sender,
-          type,
-          title,
-          message,
-          metadata,
-        },
-      ],
-      { session }
-    );
-    const populatedNotification = await Notification.findById(notification._id)
-      .populate("sender", "firstName lastName username avatar")
-      .populate({
-        path: "metadata.blogId",
-        select: "title slug",
-        model: "Blog",
-      })
-      .session(session);
+    const notification = await Notification.create({
+      recipient,
+      sender,
+      type,
+      title,
+      message,
+      blogId,
+      slug,
+    });
+
+    const populatedNotification = await Notification.findById(
+      notification._id
+    ).populate("sender", "firstName lastName username avatar");
+
+    console.log("populatedNotification", populatedNotification);
 
     // Emit notification if recipient is connected
     const io = socketService.getIO();

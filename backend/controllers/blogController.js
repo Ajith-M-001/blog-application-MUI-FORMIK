@@ -168,7 +168,7 @@ export const publishBlog = transactionHandler(
     const blog = new Blog(blogData);
 
     await redisService.clearCacheByPattern("blogs:*");
-    await blog.save({ session });
+    const savedBlog = await blog.save({ session });
 
     await userModel.findByIdAndUpdate(
       userId,
@@ -196,10 +196,8 @@ export const publishBlog = transactionHandler(
               type: NOTIFICATION_TYPES.NEW_BLOG_POST,
               title: "New blog published",
               message: `${author.firstName} ${author.lastName} published a new blog: ${title}`,
-              metadata: {
-                blogId: blog._id,
-              },
-              session,
+              blogId: savedBlog._id, // Keep blogId if needed elsewhere
+              slug: savedBlog.slug,
             })
           );
         }

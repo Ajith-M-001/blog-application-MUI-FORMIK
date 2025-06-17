@@ -32,10 +32,12 @@ const notificationSchema = new Schema(
       required: true,
       maxlength: 200, // Fixed: should be lowercase "maxlength"
     },
-    metadata: {
-      blogId: { type: Schema.Types.ObjectId, ref: "Blog" },
-      commentId: { type: Schema.Types.ObjectId, ref: "Comment" },
+    blogId: {
+      type: Schema.Types.ObjectId,
+      ref: "Blog", // This ref is important for populate
     },
+    slug:{type:String},
+    commentId: { type: Schema.Types.ObjectId, ref: "Comment" },
     isRead: {
       type: Boolean,
       default: false,

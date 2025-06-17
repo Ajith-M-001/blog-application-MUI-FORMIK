@@ -3,6 +3,7 @@ import { io } from "socket.io-client";
 import PropTypes from "prop-types";
 import { showToast } from "../../shared/utils/toast";
 import { useIsAuthenticated } from "../../shared/store/userStore";
+import CustomNotificationToast from "../../components/CustomNotificationToast";
 
 const SocketContext = createContext();
 export const useSocket = () => useContext(SocketContext);
@@ -27,8 +28,10 @@ export const SocketProvider = ({ children }) => {
 
       socket.on("newNotification", (notification) => {
         console.log("Received notification:", notification);
-        showToast(notification.message || "You have a new notification", {
-          type: "default",
+        showToast(null, {
+          custom: (t) => (
+            <CustomNotificationToast notification={notification} t={t} />
+          ),
         });
       });
       socket.on("disconnect", () =>

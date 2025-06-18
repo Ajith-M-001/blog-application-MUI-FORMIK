@@ -33,7 +33,7 @@ export const SocketProvider = ({ children }) => {
         addNotification(notification);
         toastService.notification(notification, {
           onView: () => {
-            navigate(`/blogs/${notification.slug}`);
+            navigate(`/blog/${notification.slug}`);
           },
           onDismiss: () => {
             // Optional: Add logic if needed for dismiss

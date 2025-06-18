@@ -17,27 +17,25 @@ const BlogDetails = lazy(() => import("../../features/blog/pages/BlogDetails"));
 const AppRoutes = () => {
   return (
     <ErrorBoundary>
-      <BrowserRouter>
-        <Suspense fallback={<FallBackLoader />}>
-          <Routes>
-            <Route path="/" element={<AppLayout />}>
-              {/* Public Routes */}
-              <Route index element={<Home />} />
-              <Route path="about" element={<About />} />
-              <Route path="contact" element={<Contact />} />
-              <Route path="/blog/:slug" element={<BlogDetails />} />
+      <Suspense fallback={<FallBackLoader />}>
+        <Routes>
+          <Route path="/" element={<AppLayout />}>
+            {/* Public Routes */}
+            <Route index element={<Home />} />
+            <Route path="about" element={<About />} />
+            <Route path="contact" element={<Contact />} />
+            <Route path="/blog/:slug" element={<BlogDetails />} />
 
-              {/* Auth Routes */}
-              {authRoutes}
+            {/* Auth Routes */}
+            {authRoutes}
 
-              <Route path="unauthorized" element={<Unauthorized />} />
-              {/* Catch-all Route */}
-              <Route path="*" element={<NotFound />} />
-            </Route>
-            {blogRoutes}
-          </Routes>
-        </Suspense>
-      </BrowserRouter>
+            <Route path="unauthorized" element={<Unauthorized />} />
+            {/* Catch-all Route */}
+            <Route path="*" element={<NotFound />} />
+          </Route>
+          {blogRoutes}
+        </Routes>
+      </Suspense>
     </ErrorBoundary>
   );
 };

@@ -3,7 +3,9 @@ import { io } from "socket.io-client";
 import PropTypes from "prop-types";
 import { showToast } from "../../shared/utils/toast";
 import { useIsAuthenticated } from "../../shared/store/userStore";
-import CustomNotificationToast from "../../components/CustomNotificationToast";
+import { useNotificationActions } from "../../shared/store/notificationStore";
+import { toastService } from "../../shared/services/toastService";
+import { useNavigate } from "react-router";
 
 const SocketContext = createContext();
 export const useSocket = () => useContext(SocketContext);
@@ -11,8 +13,9 @@ export const useSocket = () => useContext(SocketContext);
 export const SocketProvider = ({ children }) => {
   const socketRef = useRef(null);
   const isAuthenticated = useIsAuthenticated();
+  const { addNotification } = useNotificationActions();
   console.log("isAuthenticated", isAuthenticated);
-
+  const navigate = useNavigate();
   useEffect(() => {
     if (!socketRef.current) {
       socketRef.current = io(import.meta.env.VITE_SOCKET_URL_DEV, {
@@ -27,11 +30,14 @@ export const SocketProvider = ({ children }) => {
       socket.on("connect", () => console.log("Socket connected"));
 
       socket.on("newNotification", (notification) => {
-        console.log("Received notification:", notification);
-        showToast(null, {
-          custom: (t) => (
-            <CustomNotificationToast notification={notification} t={t} />
-          ),
+        addNotification(notification);
+        toastService.notification(notification, {
+          onView: () => {
+            navigate(`/blogs/${notification.slug}`);
+          },
+          onDismiss: () => {
+            // Optional: Add logic if needed for dismiss
+          },
         });
       });
       socket.on("disconnect", () =>

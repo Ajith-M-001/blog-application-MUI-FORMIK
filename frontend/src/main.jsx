@@ -13,14 +13,21 @@ import App from "./app/App.jsx";
 import { useIsDarkTheme } from "./shared/store/themeStore.js";
 import "./index.css";
 import { SocketProvider } from "./app/providers/SocketProvider";
-
+import { BrowserRouter } from "react-router";
+import ToastProvider from "./app/providers/ToastProvider.jsx";
 const RootApp = () => {
   const isDarkTheme = useIsDarkTheme();
 
   return (
     <ThemeProvider theme={isDarkTheme ? darkTheme : lightTheme}>
       <CssBaseline enableColorScheme="true" />
-      <App />
+      <BrowserRouter>
+        <ToastProvider>
+          <SocketProvider>
+            <App />
+          </SocketProvider>
+        </ToastProvider>
+      </BrowserRouter>
     </ThemeProvider>
   );
 };
@@ -28,10 +35,8 @@ const RootApp = () => {
 createRoot(document.getElementById("root")).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <SocketProvider>
-        <RootApp />
-      </SocketProvider>
-      <NotificationToaster />
+      <RootApp />
+      {/* <NotificationToaster /> */}
       <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
   </StrictMode>

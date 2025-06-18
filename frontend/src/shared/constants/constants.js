@@ -21,3 +21,42 @@ export const GUARD_TYPE = {
   AUTH: "auth",
   NO_AUTH: "no-auth",
 };
+
+export const TOAST_TYPES = {
+  DEFAULT: "default",
+  SUCCESS: "success",
+  ERROR: "error",
+  WARNING: "warning",
+  INFO: "info",
+  LOADING: "loading",
+  PROMISE: "promise",
+  CUSTOM: "custom",
+  NOTIFICATION: "notification",
+};
+
+export const TOAST_POSITIONS = {
+  TOP_LEFT: "top-left",
+  TOP_CENTER: "top-center",
+  TOP_RIGHT: "top-right",
+  BOTTOM_LEFT: "bottom-left",
+  BOTTOM_CENTER: "bottom-center",
+  BOTTOM_RIGHT: "bottom-right",
+};
+
+export const NOTIFICATION_TYPES = {
+  NEW_BLOG_POST: "NEW_BLOG_POST",
+  NEW_COMMENT: "NEW_COMMENT",
+  NEW_LIKE: "NEW_LIKE",
+  NEW_FOLLOW: "NEW_FOLLOW",
+  SYSTEM: "SYSTEM",
+};
+
+export const DEFAULT_TOAST_CONFIG = {
+  position: TOAST_POSITIONS.TOP_RIGHT,
+  richColors: true,
+  closeButton: true,
+  expand: true,
+  visibleToasts: 5,
+  duration: 5000,
+  gap: 12,
+};

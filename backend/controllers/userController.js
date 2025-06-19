@@ -11,7 +11,11 @@ import { authConfig } from "../config/auth.config.js";
 import { getMaxAgeFromExpiresIn } from "../utils/getMaxAgeFromExpiresIn.js";
 import { redisService } from "../services/redis/cacheService.js";
 import { generateUniqueUsername } from "../utils/generateUniqueUsername.js";
-import { SESSION_PREFERENCE } from "../constants/constants.js";
+import {
+  NOTIFICATION_TYPES,
+  SESSION_PREFERENCE,
+} from "../constants/constants.js";
+import { createNotification } from "./notificationController.js";
 
 // Create cookie options for the access token
 const accessTokenCookieOptions = {
@@ -918,6 +922,14 @@ export const followUser = transactionHandler(
       currentUser.save({ session }),
       userToFollow.save({ session }),
     ]);
+
+    await createNotification({
+      recipient: userIdToFollow,
+      sender: currentUserId,
+      type: NOTIFICATION_TYPES.NEW_FOLLOWER,
+      title: "New Follower",
+      message: `${currentUser.firstName} ${currentUser.lastName} started following you.`,
+    });
 
     // Invalidate cache for both users
     await Promise.all([

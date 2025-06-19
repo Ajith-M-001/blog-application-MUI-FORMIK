@@ -1,4 +1,3 @@
-import React from "react";
 import {
   Box,
   Button,
@@ -8,6 +7,7 @@ import {
   Typography,
 } from "@mui/material";
 import { Bell, X, Eye } from "lucide-react";
+import PropTypes from "prop-types";
 import { toast } from "sonner";
 
 const NotificationToast = ({ toastId, notification, onView, onDismiss }) => {
@@ -78,3 +78,10 @@ const NotificationToast = ({ toastId, notification, onView, onDismiss }) => {
 };
 
 export { NotificationToast };
+
+NotificationToast.propTypes = {
+  toastId: PropTypes.string.isRequired,
+  notification: PropTypes.object.isRequired,
+  onView: PropTypes.func,
+  onDismiss: PropTypes.func,
+};

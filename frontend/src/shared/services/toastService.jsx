@@ -1,5 +1,5 @@
 import { toast } from "sonner";
-import NotificationToast from "../components/NotificationToast";
+import { NotificationToast } from "../components/NotificationToast";
 
 class ToastService {
   constructor() {

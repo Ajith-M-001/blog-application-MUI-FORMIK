@@ -14,15 +14,22 @@ export const SocketProvider = ({ children }) => {
   const socketRef = useRef(null);
   const isAuthenticated = useIsAuthenticated();
   const { addNotification } = useNotificationActions();
-  console.log("isAuthenticated", isAuthenticated);
+  const isProduction = import.meta.env.VITE_ENV === "production";
+  const baseURL = isProduction
+    ? import.meta.env.VITE_SOCKET_URL_PROD
+    : import.meta.env.VITE_SOCKET_URL_DEV;
   const navigate = useNavigate();
   useEffect(() => {
     if (!socketRef.current) {
-      socketRef.current = io(import.meta.env.VITE_SOCKET_URL_DEV, {
+      socketRef.current = io(baseURL, {
         withCredentials: true,
-        autoConnect: true,
-        reconnectionAttempts: 5,
         reconnectionDelay: 1000,
+        autoConnect: true,
+        reconnection: true,
+        reconnectionAttempts: isProduction ? 10 : 5,
+        reconnectionDelayMax: isProduction ? 5000 : 3000,
+        timeout: 20000,
+        transports: ["websocket", "polling"],
       });
 
       const socket = socketRef.current;

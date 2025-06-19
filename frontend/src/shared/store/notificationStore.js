@@ -1,4 +1,4 @@
-// user.store.js
+// notification.store.js
 import { create } from "zustand";
 import { devtools, persist } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
@@ -25,7 +25,9 @@ const useNotificationStore = create(
                   );
                   if (!exists) {
                     state.notification.notifications.unshift(notification);
-                    state.notification.unreadCount += 1;
+                    if (!notification.isRead) {
+                      state.notification.unreadCount += 1;
+                    }
                     state.notification.activeNotification = notification;
                   }
                 },

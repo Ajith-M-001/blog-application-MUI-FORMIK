@@ -67,10 +67,15 @@ const startServer = async () => {
     await connectDB();
     socketService.initialize(httpServer);
 
-    // Check Redis connection before continuing
-    if (!ConfigRedisClient.isReady) {
-      throw new Error("Redis client is not ready. Exiting...");
-    }
+    // Wait for Redis client to be ready
+    await new Promise((resolve, reject) => {
+      if (ConfigRedisClient.isReady) {
+        resolve();
+      } else {
+        ConfigRedisClient.once("ready", resolve);
+        ConfigRedisClient.once("error", reject);
+      }
+    });
 
     // Cron job to delete inactive users
     cron.schedule("0 6 * * *", async () => {

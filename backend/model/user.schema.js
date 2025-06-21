@@ -57,6 +57,31 @@ const countrySchema = new mongoose.Schema(
   { _id: false }
 );
 
+const fcmTokenSchema = new mongoose.Schema(
+  {
+    token: {
+      type: String,
+      required: true,
+    },
+    deviceInfo: {
+      os: String,
+      browser: String,
+      ip: String,
+      userAgent: String,
+      lastLocation: String,
+    },
+    createdAt: {
+      type: Date,
+      default: Date.now,
+    },
+    lastUsedAt: {
+      type: Date,
+      default: Date.now,
+    },
+  },
+  { _id: false }
+);
+
 // User Schema
 const userSchema = new mongoose.Schema(
   {
@@ -84,6 +109,11 @@ const userSchema = new mongoose.Schema(
       sparse: true,
     },
     bio: { type: String },
+    notificationPreferences: {
+      email: { type: Boolean, default: true },
+      push: { type: Boolean, default: true },
+      marketing: { type: Boolean, default: false },
+    },
     password: {
       type: String,
       required: function () {
@@ -190,6 +220,11 @@ const userSchema = new mongoose.Schema(
     authProviders: { type: [authProviderSchema], select: false },
     refreshTokens: {
       type: [refreshTokenSchema],
+      select: false,
+      default: [],
+    },
+    fcmToken: {
+      type: [fcmTokenSchema],
       select: false,
       default: [],
     },

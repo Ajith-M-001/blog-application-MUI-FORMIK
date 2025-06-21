@@ -8,6 +8,7 @@ import blogRoutes from "./routes/blogRoute.js";
 import CategoryRoutes from "./routes/categoryRoutes.js";
 import TagRoutes from "./routes/tagRoutes.js";
 import uploadRoutes from "./routes/uploadRoutes.js";
+import firebaseRoutes from "./routes/firebaseRoutes.js";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import { errorHandler, notFound } from "./middleware/errorMiddleware.js";
@@ -17,6 +18,7 @@ import { configurePassport } from "./config/passport.js";
 import ConfigRedisClient from "./config/redis.config.js";
 import publishScheduledBlogs from "./publishScheduledBlogs.js";
 import socketService from "./services/socket/socketService.js";
+import { initializeFirebase } from "./config/firebase.config.js";
 dotenv.config();
 
 const app = express();
@@ -24,6 +26,9 @@ const httpServer = createServer(app);
 
 //
 app.disable("x-powered-by");
+
+// Initialize Firebase
+initializeFirebase();
 
 // Middleware setup
 app.use(express.json());
@@ -55,6 +60,7 @@ app.use(`${API_PREFIX}/blogs`, blogRoutes);
 app.use(`${API_PREFIX}/categories`, CategoryRoutes);
 app.use(`${API_PREFIX}/tags`, TagRoutes);
 app.use(`${API_PREFIX}`, uploadRoutes);
+app.use(`${API_PREFIX}/firebase`, firebaseRoutes);
 
 // Error handling
 app.use(notFound);

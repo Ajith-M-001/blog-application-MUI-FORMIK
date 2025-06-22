@@ -4,7 +4,6 @@ import { useGetUserDetails } from "../features/auth/hooks/use-auth";
 import { useIsAuthenticated, useUserActions } from "../shared/store/userStore";
 import { showToast } from "../shared/utils/toast";
 import PopularCategory from "../features/blog/pages/PopularCategory";
-import FCMService from "../services/FCMService";
 const VerificationDrawer = lazy(() =>
   import("../features/auth/components/VerificationDrawer")
 );
@@ -34,20 +33,11 @@ const TabNavigation = ({ tabIndex, onTabChange, isAuthenticated }) => {
   );
 };
 
-const fcm = new FCMService({
-  vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY,
-});
-
 const Home = () => {
   const [openDrawer, setOpenDrawer] = useState(false);
   const [tabIndex, setTabIndex] = useState(TAB_INDICES.LATEST);
   const urlParams = new URLSearchParams(window.location.search);
   const authMessage = urlParams.get("auth");
-
-  useEffect(() => {
-    const userId = "123"; // get from auth context
-    fcm.initialize(userId);
-  }, []);
 
   // Get Zustand store actions
   const isAuthenticated = useIsAuthenticated();

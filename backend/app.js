@@ -17,6 +17,8 @@ import { configurePassport } from "./config/passport.js";
 import ConfigRedisClient from "./config/redis.config.js";
 import publishScheduledBlogs from "./publishScheduledBlogs.js";
 import socketService from "./services/socket/socketService.js";
+import notificationRoutes from "./routes/notificationRoute.js";
+
 dotenv.config();
 
 const app = express();
@@ -54,6 +56,7 @@ app.use(`${API_PREFIX}/countries`, countryRoute);
 app.use(`${API_PREFIX}/blogs`, blogRoutes);
 app.use(`${API_PREFIX}/categories`, CategoryRoutes);
 app.use(`${API_PREFIX}/tags`, TagRoutes);
+app.use(`${API_PREFIX}/notifications`, notificationRoutes);
 app.use(`${API_PREFIX}`, uploadRoutes);
 
 // Error handling

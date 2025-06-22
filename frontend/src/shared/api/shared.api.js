@@ -26,3 +26,11 @@ export const unfollowUser = async (userIdToUnfollow, signal) => {
   );
   return data;
 };
+
+export const registerFCMToken = async (token) => {
+  const { data } = await axiosInstance.put(
+    USER_API_ENDPOINTS.NOTIFICATION.REGISTER_TOKEN,
+    { token }
+  );
+  return data;
+};

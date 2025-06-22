@@ -1,6 +1,7 @@
 import { BLOG_STATUS, NOTIFICATION_TYPES } from "../constants/constants.js";
 import Blog from "../model/blogSchema.js";
 import userModel from "../model/user.schema.js";
+import pushNotificationService from "../services/notification/PushNotificationService.js";
 import { redisService } from "../services/redis/cacheService.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler, transactionHandler } from "../utils/AsyncHandler.js";
@@ -197,6 +198,15 @@ export const publishBlog = transactionHandler(
               title: "New blog published",
               message: `${author.firstName} ${author.lastName} published a new blog: ${title}`,
               blogId: savedBlog._id, // Keep blogId if needed elsewhere
+              slug: savedBlog.slug,
+            })
+          );
+
+          notificationPromises.push(
+            pushNotificationService.sendPushNotification(followerId, {
+              title: "New Blog Alert",
+              message: `${author.firstName} ${author.lastName} just posted: ${title}`,
+              blogId: savedBlog._id,
               slug: savedBlog.slug,
             })
           );

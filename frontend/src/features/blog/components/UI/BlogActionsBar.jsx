@@ -17,14 +17,14 @@ import {
 import PropTypes from "prop-types";
 import { memo, useState } from "react";
 import { formatViews } from "../../utils/formatViews";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import { useBlogData } from "../../../../shared/store/blogStore";
 import { useIsAuthenticated } from "../../../../shared/store/userStore";
 import LoginDialog from "./LoginDialog";
 
-const MotionStack = motion(Stack);
-const MotionIconButton = motion(IconButton);
-const MotionTypography = motion(Typography);
+const MotionStack = motion.create(Stack);
+const MotionIconButton = motion.create(IconButton);
+const MotionTypography = motion.create(Typography);
 
 const BlogActionsBar = memo(() => {
   const theme = useTheme();

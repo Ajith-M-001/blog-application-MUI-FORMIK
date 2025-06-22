@@ -70,6 +70,11 @@ const fcmTokenSchema = new mongoose.Schema(
       userAgent: String,
       lastLocation: String,
     },
+    notificationPreferences: {
+      email: { type: Boolean, default: true },
+      push: { type: Boolean, default: true },
+      marketing: { type: Boolean, default: false },
+    },
     createdAt: {
       type: Date,
       default: Date.now,
@@ -109,11 +114,6 @@ const userSchema = new mongoose.Schema(
       sparse: true,
     },
     bio: { type: String },
-    notificationPreferences: {
-      email: { type: Boolean, default: true },
-      push: { type: Boolean, default: true },
-      marketing: { type: Boolean, default: false },
-    },
     password: {
       type: String,
       required: function () {

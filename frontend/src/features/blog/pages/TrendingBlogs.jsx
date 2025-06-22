@@ -12,10 +12,10 @@ import { useGetTrendingBlogs } from "../hooks/use-blog";
 import { Eye, TrendingUp } from "lucide-react";
 import { differenceInCalendarDays, parseISO } from "date-fns";
 import { formatViews } from "../utils/formatViews";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import { TrendingPostSkeleton } from "../components/SkeltonsLoaders/TrendingPostSkeleton";
 
-const MotionCard = motion(Card);
+const MotionCard = motion.create(Card);
 
 const TrendingBlogs = () => {
   const {

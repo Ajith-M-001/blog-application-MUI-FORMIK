@@ -1,5 +1,6 @@
-import { getToken } from "firebase/messaging";
+import { getToken, onMessage } from "firebase/messaging";
 import { messaging } from "../config/firebase";
+import { registerFCMToken } from "../shared/api/shared.api";
 
 class FCMService {
   constructor({ vapidKey }) {
@@ -12,9 +13,7 @@ class FCMService {
     this.userId = null;
   }
 
-  async initialize(userId) {
-    this.userId = userId;
-
+  async initialize() {
     try {
       const permissionGranted = await this.requestPermission();
       console.log("Permission Granted:", permissionGranted);
@@ -25,7 +24,8 @@ class FCMService {
 
       this.token = await this.generateToken();
 
-      await this.registerTokenToServer(this.token, this.userId);
+      await this.registerTokenToServer(this.token);
+      this.listenForForegroundMessages();
     } catch (error) {
       console.error("[FCM] Initialization failed:", error);
       return null;
@@ -58,11 +58,25 @@ class FCMService {
     } catch (error) {
       console.error("Error getting FCM token:", error);
       //   throw error;
+      return null;
     }
   }
 
-  async registerTokenToServer(token, userId) {
-    console.log("register to server", token, userId);
+  async registerTokenToServer(token) {
+    try {
+      const dd = await registerFCMToken(token);
+      console.log("register to server", dd);
+    } catch (error) {
+      console.error("Error registering FCM token:", error);
+    }
+  }
+
+  async listenForForegroundMessages() {
+    console.log("listen to notification");
+    onMessage(messaging, (payload) => {
+      console.log("Message received. ", payload);
+      // ...
+    });
   }
 }
 

@@ -22,7 +22,7 @@ const TrendingPostSkeleton = ({ count = 3 }) => {
         </Stack>
       </Box>
       {[...Array(count)].map((_, index) => (
-        <Grid2 xs={12} key={`skeleton-${index}`} sx={{ mb: 2.5 }}>
+        <Grid2 size={{ xs: 12 }} key={`skeleton-${index}`} sx={{ mb: 2.5 }}>
           <Card
             variant="outlined"
             sx={{ display: "flex", alignItems: "center", p: 0.5 }}

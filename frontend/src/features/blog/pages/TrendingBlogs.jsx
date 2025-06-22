@@ -12,10 +12,11 @@ import { useGetTrendingBlogs } from "../hooks/use-blog";
 import { Eye, TrendingUp } from "lucide-react";
 import { differenceInCalendarDays, parseISO } from "date-fns";
 import { formatViews } from "../utils/formatViews";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import { TrendingPostSkeleton } from "../components/SkeltonsLoaders/TrendingPostSkeleton";
+import { Link } from "react-router";
 
-const MotionCard = motion(Card);
+const MotionCard = motion.create(Card);
 
 const TrendingBlogs = () => {
   const {
@@ -45,74 +46,80 @@ const TrendingBlogs = () => {
           const createdAt = parseISO(blog?.createdAt);
           const daysAgo = differenceInCalendarDays(new Date(), createdAt);
 
+          console.log("blogdfdf", blog);
           return (
             <Grid2 size={{ xs: 12 }} key={blog._id}>
-              <MotionCard
-                variant="outlined"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: index * 0.1 }}
-                whileHover={{ scale: 1.02 }}
-                sx={{
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  p: 0.5,
-                }}
+              <Link
+                to={`/blog/${blog.slug}`}
+                style={{ textDecoration: "none" }}
               >
-                <Typography
-                  variant="h5"
-                  color="text.secondary"
-                  sx={{ width: 30, textAlign: "center", pl: 1 }}
+                <MotionCard
+                  variant="outlined"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: index * 0.1 }}
+                  whileHover={{ scale: 1.02 }}
+                  sx={{
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    p: 0.5,
+                  }}
                 >
-                  {index + 1}
-                </Typography>
-
-                <CardMedia
-                  component="img"
-                  sx={{ width: 70, height: 60, borderRadius: 1, mx: 2 }}
-                  image={blog.coverImage?.url}
-                  alt={blog.title}
-                />
-
-                <CardContent sx={{ flex: 1, py: 1 }}>
-                  <Tooltip title={blog.title} placement="top" arrow>
-                    <Typography
-                      variant="subtitle2"
-                      fontWeight={500}
-                      sx={{
-                        display: "-webkit-box",
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: "vertical",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        cursor: "pointer",
-                      }}
-                    >
-                      {blog.title}
-                    </Typography>
-                  </Tooltip>
-
-                  <Stack
-                    direction="row"
-                    spacing={1}
-                    alignItems="center"
-                    mt={0.5}
+                  <Typography
+                    variant="h5"
+                    color="text.secondary"
+                    sx={{ width: 30, textAlign: "center", pl: 1 }}
                   >
-                    <Eye size={16} color="gray" />
-                    <Typography variant="body2" color="text.secondary">
-                      {formatViews(blog.blogActivity?.total_views || 0)} views
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      {daysAgo === 0
-                        ? "Today"
-                        : daysAgo === 1
-                        ? "1 day ago"
-                        : `${daysAgo} days ago`}
-                    </Typography>
-                  </Stack>
-                </CardContent>
-              </MotionCard>
+                    {index + 1}
+                  </Typography>
+
+                  <CardMedia
+                    component="img"
+                    sx={{ width: 70, height: 60, borderRadius: 1, mx: 2 }}
+                    image={blog.coverImage?.url}
+                    alt={blog.title}
+                  />
+
+                  <CardContent sx={{ flex: 1, py: 1 }}>
+                    <Tooltip title={blog.title} placement="top" arrow>
+                      <Typography
+                        variant="subtitle2"
+                        fontWeight={500}
+                        sx={{
+                          display: "-webkit-box",
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: "vertical",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          cursor: "pointer",
+                        }}
+                      >
+                        {blog.title}
+                      </Typography>
+                    </Tooltip>
+
+                    <Stack
+                      direction="row"
+                      spacing={1}
+                      alignItems="center"
+                      mt={0.5}
+                    >
+                      <Eye size={16} color="gray" />
+                      <Typography variant="body2" color="text.secondary">
+                        {formatViews(blog.blogActivity?.total_views || 0)} views
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        {daysAgo === 0
+                          ? "Today"
+                          : daysAgo === 1
+                          ? "1 day ago"
+                          : `${daysAgo} days ago`}
+                      </Typography>
+                    </Stack>
+                  </CardContent>
+                </MotionCard>
+              </Link>
             </Grid2>
           );
         })}

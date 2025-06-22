@@ -238,7 +238,7 @@ const BlogForm = () => {
     return () => {
       clearBlogData();
     };
-  }, [isEditMode, fetchedBlog, setBlogData, blog, clearBlogData]);
+  }, [isEditMode, fetchedBlog, setBlogData, clearBlogData]);
 
   const debouncedAutoSave = useCallback(
     debounce((nextValues, setFieldValue) => {

@@ -12,7 +12,7 @@ export const getPersonalizedBlogs = asyncHandler(async (req, res) => {
 
   const user = await userModel
     .findById(userId)
-    .select("followingCategories followingTags following likedBlogs")
+    .select("followingCategories followingTags following likedBlogs ")
     .lean();
 
   if (!user) {
@@ -475,7 +475,7 @@ export const getTrendingBlogs = asyncHandler(async (req, res, next) => {
       createdAt: -1, // Fallback to recency
     })
     .limit(Number(limit))
-    .select("title  blogActivity.total_views  createdAt  coverImage")
+    .select("title  blogActivity.total_views  createdAt  coverImage slug")
     .lean();
 
   await redisService.set(cacheKey, JSON.stringify(trendingBlogs), 600); // Cache for 10 mins

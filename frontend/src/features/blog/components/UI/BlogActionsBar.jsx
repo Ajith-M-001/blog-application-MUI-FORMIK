@@ -17,14 +17,14 @@ import {
 import PropTypes from "prop-types";
 import { memo, useState } from "react";
 import { formatViews } from "../../utils/formatViews";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import { useBlogData } from "../../../../shared/store/blogStore";
 import { useIsAuthenticated } from "../../../../shared/store/userStore";
 import LoginDialog from "./LoginDialog";
 
-const MotionStack = motion(Stack);
-const MotionIconButton = motion(IconButton);
-const MotionTypography = motion(Typography);
+const MotionStack = motion.create(Stack);
+const MotionIconButton = motion.create(IconButton);
+const MotionTypography = motion.create(Typography);
 
 const BlogActionsBar = memo(() => {
   const theme = useTheme();
@@ -44,28 +44,28 @@ const BlogActionsBar = memo(() => {
 
   // Custom motion variants for each icon group
   const likeVariants = {
-    rest: { color: theme.palette.text.secondary, scale: 1 },
-    hover: { color: theme.palette.error.main, scale: 1.05 },
+    rest: { color: theme.palette.text.secondary},
+    hover: { color: theme.palette.error.main },
   };
 
   const commentVariants = {
-    rest: { color: theme.palette.text.secondary, scale: 1 },
-    hover: { color: theme.palette.warning.main, scale: 1.05 },
+    rest: { color: theme.palette.text.secondary, },
+    hover: { color: theme.palette.warning.main,  },
   };
 
   const bookmarkVariants = {
-    rest: { color: theme.palette.text.secondary, scale: 1 },
-    hover: { color: theme.palette.primary.main, scale: 1.05 },
+    rest: { color: theme.palette.text.secondary, },
+    hover: { color: theme.palette.primary.main, },
   };
 
   const listenVariants = {
-    rest: { color: theme.palette.text.secondary, scale: 1 },
-    hover: { color: theme.palette.success.main, scale: 1.05 },
+    rest: { color: theme.palette.text.secondary, },
+    hover: { color: theme.palette.success.main,  },
   };
 
   const shareVariants = {
-    rest: { color: theme.palette.text.secondary, scale: 1 },
-    hover: { color: theme.palette.info.main, scale: 1.05 },
+    rest: { color: theme.palette.text.secondary,  },
+    hover: { color: theme.palette.info.main,  },
   };
 
   const textVariants = {

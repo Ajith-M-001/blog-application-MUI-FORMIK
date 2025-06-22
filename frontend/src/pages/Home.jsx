@@ -1,4 +1,4 @@
-import { Box, Divider, Grid2, Tab, Tabs, useTheme } from "@mui/material";
+import { Box, Divider, Grid2, Tab, Tabs } from "@mui/material";
 import { lazy, Suspense, useEffect, useState } from "react";
 import { useGetUserDetails } from "../features/auth/hooks/use-auth";
 import { useIsAuthenticated, useUserActions } from "../shared/store/userStore";
@@ -43,7 +43,6 @@ const Home = () => {
   // Get Zustand store actions
   const isAuthenticated = useIsAuthenticated();
   const { setUserData, setIsAuthenticated } = useUserActions();
-  const theme = useTheme();
 
   const {
     data: user,
@@ -97,7 +96,7 @@ const Home = () => {
   return (
     <>
       <Grid2 container spacing={2} sx={{ height: "100%" }}>
-        <Grid2 size={{ xs: 12, md: 8.8 }}>
+        <Grid2 size={{ xs: 12, lg: 7.8 }}>
           <TabNavigation
             tabIndex={tabIndex}
             onTabChange={handleTabChange}
@@ -106,8 +105,17 @@ const Home = () => {
           {showLatestTab && <LatestBlogs />}
           {showForYouTab && <ForYouBlogs />}
         </Grid2>
-        <Divider orientation="vertical" flexItem />
-        <Grid2 size={{ xs: 12, md: 3 }}>
+        <Divider
+          orientation="vertical"
+          flexItem
+          sx={{
+            display: {
+              xs: "none",
+              lg: "block",
+            },
+          }}
+        />
+        <Grid2 size={{ xs: 12, lg: 4 }}>
           <TrendingBlogs />
           <PopularCategory />
         </Grid2>

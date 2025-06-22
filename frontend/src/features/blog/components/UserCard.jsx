@@ -41,6 +41,7 @@ const UserCard = () => {
     enabled: isAuthenticated && !!authorId && user?._id !== authorId,
   });
 
+  console.log("isFollowingData", isFollowingData);
   const handleCloseLoginDialog = () => {
     setLoginDialogOpen(false);
   };
@@ -50,8 +51,8 @@ const UserCard = () => {
   const { mutate: unfollow, isPending: isUnfollowPending } =
     useUnfollowUser(authorId);
 
-  const isDataEmpty =
-    !isFollowingLoading && !isFollowingError && isEmpty(isFollowingData?.data);
+  // const isDataEmpty =
+  //   !isFollowingLoading && !isFollowingError && isEmpty(isFollowingData?.data);
 
   const handleFollowToggle = () => {
     if (!isAuthenticated) {
@@ -87,7 +88,7 @@ const UserCard = () => {
         showRetryButton={true}
         retryAttempts={3}
         // isRefetching={isFollowingFetching}
-        isEmpty={isAuthenticated ? isDataEmpty : false}
+        isEmpty={isAuthenticated ? false : false}
       >
         <Box
           sx={{

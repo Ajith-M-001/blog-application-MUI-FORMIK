@@ -4,7 +4,8 @@ import { FolderKanban } from "lucide-react";
 import { motion } from "motion/react";
 import PopularCategorySkeleton from "../components/SkeltonsLoaders/PopularCategorySkeleton";
 
-const MotionChip = motion(Chip);
+const MotionChip = motion.create(Chip);
+
 
 const PopularCategory = () => {
   const theme = useTheme();

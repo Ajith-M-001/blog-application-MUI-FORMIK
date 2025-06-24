@@ -44,28 +44,28 @@ const BlogActionsBar = memo(() => {
 
   // Custom motion variants for each icon group
   const likeVariants = {
-    rest: { color: theme.palette.text.secondary},
+    rest: { color: theme.palette.text.secondary },
     hover: { color: theme.palette.error.main },
   };
 
   const commentVariants = {
-    rest: { color: theme.palette.text.secondary, },
-    hover: { color: theme.palette.warning.main,  },
+    rest: { color: theme.palette.text.secondary },
+    hover: { color: theme.palette.warning.main },
   };
 
   const bookmarkVariants = {
-    rest: { color: theme.palette.text.secondary, },
-    hover: { color: theme.palette.primary.main, },
+    rest: { color: theme.palette.text.secondary },
+    hover: { color: theme.palette.primary.main },
   };
 
   const listenVariants = {
-    rest: { color: theme.palette.text.secondary, },
-    hover: { color: theme.palette.success.main,  },
+    rest: { color: theme.palette.text.secondary },
+    hover: { color: theme.palette.success.main },
   };
 
   const shareVariants = {
-    rest: { color: theme.palette.text.secondary,  },
-    hover: { color: theme.palette.info.main,  },
+    rest: { color: theme.palette.text.secondary },
+    hover: { color: theme.palette.info.main },
   };
 
   const textVariants = {

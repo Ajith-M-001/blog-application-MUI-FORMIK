@@ -22,6 +22,7 @@ const BlogDetails = () => {
     staleTime: 10000,
     gcTime: 15000,
   });
+  
 
   useEffect(() => {
     if (blogDetails?.data) {

@@ -118,3 +118,11 @@ export const getPopularCategory = async ({ signal }) => {
   });
   return response.data;
 };
+
+export const getRelatedBlogs = async ({ slug, signal, params = {} }) => {
+  const response = await axiosInstance.get(API_ENDPOINTS.blogs.related(slug), {
+    signal,
+    params,
+  });
+  return response.data;
+};

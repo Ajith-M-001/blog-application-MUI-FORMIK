@@ -13,7 +13,6 @@ import {
   useUserFollowingStatus,
 } from "../../../shared/hooks/use-shared";
 import QueryHandler from "../../../shared/QueryHandler";
-import { isEmpty } from "../../../shared/utils/isEmpty";
 import { useState } from "react";
 import LoginDialog from "./UI/LoginDialog";
 
@@ -88,7 +87,7 @@ const UserCard = () => {
         showRetryButton={true}
         retryAttempts={3}
         // isRefetching={isFollowingFetching}
-        isEmpty={isAuthenticated ? false : false}
+        isEmpty={false}
       >
         <Box
           sx={{

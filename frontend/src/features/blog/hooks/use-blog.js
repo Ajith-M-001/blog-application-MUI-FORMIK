@@ -13,6 +13,7 @@ import {
   getBlogBySlug,
   getPersonalizedBlogs,
   getPopularCategory,
+  getRelatedBlogs,
   getTrendingBlogs,
   publishBlog,
   updateBlog,
@@ -149,6 +150,15 @@ export const useGetPopularCategories = (options = {}) => {
   return useQuery({
     queryKey: QUERY_KEYS.POPULAR_CATEGORIES,
     queryFn: ({ signal }) => getPopularCategory({ signal }),
+    ...options,
+  });
+};
+
+
+export const useGetRelatedBlogs = (slug, options = {}, params = {}) => {
+  return useQuery({
+    queryKey: [QUERY_KEYS.RELATED_BLOGS, slug, params],
+    queryFn: ({ signal }) => getRelatedBlogs({ slug, signal, params }),
     ...options,
   });
 };

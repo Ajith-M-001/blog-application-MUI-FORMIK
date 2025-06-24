@@ -11,6 +11,7 @@ export const API_ENDPOINTS = {
     delete: (id) => `${BLOGS_URL}/${id}`,
     forYou: `${BLOGS_URL}/for_you`,
     trending: `${BLOGS_URL}/trending`,
+    related: (slug) => `${BLOGS_URL}/related/${slug}`,
   },
   upload: {
     uploadImages: `/upload-images`,

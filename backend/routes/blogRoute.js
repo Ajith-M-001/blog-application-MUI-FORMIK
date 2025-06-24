@@ -7,6 +7,7 @@ import {
   updateBlog,
   deleteBlog,
   getTrendingBlogs,
+  getRelatedBlogs,
 } from "../controllers/blogController.js";
 import { verifyAccessToken } from "../utils/verifyToken.js";
 import { validatePublishBlog } from "../middleware/blogValidators.js";
@@ -22,6 +23,7 @@ router.post(
 router.get("/for_you", verifyAccessToken, getPersonalizedBlogs);
 router.get("/all", getAllBlog);
 router.get("/trending", getTrendingBlogs);
+router.get("/related/:slug", getRelatedBlogs);
 router.get("/:slug", getBlogBySlug);
 router.put("/:id", verifyAccessToken, updateBlog);
 router.delete("/:id", verifyAccessToken, deleteBlog);

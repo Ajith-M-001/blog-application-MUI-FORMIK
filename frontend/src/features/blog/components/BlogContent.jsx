@@ -11,11 +11,14 @@ import {
 } from "@cloudinary/react";
 import BlogActionsBar from "./UI/BlogActionsBar";
 import PropTypes from "prop-types";
+import { RelatedBlogs } from "./UI/RelatedBlogs";
 
 const BlogContent = () => {
   const theme = useTheme();
 
   const blog = useBlogData();
+
+  console.log("blogdfdfdfd", blog);
 
   const renderContent = useMemo(() => {
     if (!blog?.content?.content) return null;
@@ -266,7 +269,15 @@ const BlogContent = () => {
 
         <Box>{renderContent}</Box>
 
+        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+          {blog?.tags.map((tag) => (
+            <Chip key={tag._id} label={tag.name} variant="filled" />
+          ))}
+        </Box>
+
         <BlogActionsBar />
+
+        <RelatedBlogs slug={blog?.slug} />
       </>
     </Stack>
   );

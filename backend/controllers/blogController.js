@@ -484,3 +484,85 @@ export const getTrendingBlogs = asyncHandler(async (req, res, next) => {
     .status(200)
     .json(ApiResponse.success("Trending Blogs", trendingBlogs));
 });
+
+export const getRelatedBlogs = asyncHandler(async (req, res, next) => {
+  const { slug } = req.params;
+  const { limit = 3 } = req.query;
+
+  console.log("slug", slug);
+  console.log("limit", limit);
+
+  if (!slug) {
+    return res
+      .status(400)
+      .json(ApiResponse.error("Blog slug is required", 400));
+  }
+
+  const currentBlog = await Blog.findOne({ slug })
+    .select("category tags author _id")
+    .lean();
+
+  console.log("currentBlog", currentBlog);
+
+  if (!currentBlog) {
+    return res.status(404).json(ApiResponse.error("Blog not found", 404));
+  }
+
+  const cacheKey = `blogs:related:slug=${slug}:limit=${limit}`;
+  const cachedBlogs = await redisService.get(cacheKey);
+
+  if (cachedBlogs) {
+    return res
+      .status(200)
+      .json(
+        ApiResponse.success("Related Blogs (cached)", JSON.parse(cachedBlogs))
+      );
+  }
+
+  const query = {
+    status: BLOG_STATUS.PUBLISHED,
+    _id: { $ne: currentBlog._id }, // Exclude current blog
+    $or: [],
+  };
+
+  // Add conditions based on available data
+  if (currentBlog.category) {
+    query.$or.push({ category: currentBlog.category });
+  }
+
+  if (currentBlog.tags && currentBlog.tags.length > 0) {
+    query.$or.push({ tags: { $in: currentBlog.tags } });
+  }
+
+  if (currentBlog.author) {
+    query.$or.push({ author: currentBlog.author });
+  }
+
+  // If no related criteria, fall back to popular blogs
+  if (query.$or.length === 0) {
+    delete query.$or;
+  }
+
+  console.log("query", query);
+
+  let relatedBlogs = await Blog.find(query)
+    .select(
+      "title description slug coverImage author category tags createdAt readingTime blogActivity"
+    )
+    .populate("author", "username avatar firstName lastName")
+    .populate("category", "name")
+    .populate("tags", "name")
+    .sort({
+      "blogActivity.total_views": -1,
+      createdAt: -1,
+    })
+    .limit(Number(limit))
+    .lean();
+
+  console.log("relatedBlogs", relatedBlogs);
+  await redisService.set(cacheKey, JSON.stringify(relatedBlogs), 600);
+
+  return res
+    .status(200)
+    .json(ApiResponse.success("Related Blogs", relatedBlogs));
+});

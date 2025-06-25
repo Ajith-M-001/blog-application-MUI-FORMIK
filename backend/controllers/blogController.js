@@ -511,37 +511,15 @@ export const getRelatedBlogs = asyncHandler(async (req, res, next) => {
   const cacheKey = `blogs:related:slug=${slug}:limit=${limit}`;
   const cachedBlogs = await redisService.get(cacheKey);
 
-  if (cachedBlogs) {
-    return res
-      .status(200)
-      .json(
-        ApiResponse.success("Related Blogs (cached)", JSON.parse(cachedBlogs))
-      );
-  }
-
   const query = {
     status: BLOG_STATUS.PUBLISHED,
-    _id: { $ne: currentBlog._id }, // Exclude current blog
-    $or: [],
+    _id: { $ne: currentBlog._id }, // Exclude the current blog
+    $or: [
+      { category: currentBlog.category },
+      { tags: { $in: currentBlog.tags || [] } },
+      { author: currentBlog.author },
+    ],
   };
-
-  // Add conditions based on available data
-  if (currentBlog.category) {
-    query.$or.push({ category: currentBlog.category });
-  }
-
-  if (currentBlog.tags && currentBlog.tags.length > 0) {
-    query.$or.push({ tags: { $in: currentBlog.tags } });
-  }
-
-  if (currentBlog.author) {
-    query.$or.push({ author: currentBlog.author });
-  }
-
-  // If no related criteria, fall back to popular blogs
-  if (query.$or.length === 0) {
-    delete query.$or;
-  }
 
   console.log("query", query);
 

@@ -6,6 +6,7 @@ import countryRoute from "./routes/countriesRoute.js";
 import blogRoutes from "./routes/blogRoute.js";
 import CategoryRoutes from "./routes/categoryRoutes.js";
 import TagRoutes from "./routes/tagRoutes.js";
+import commentRoutes from "./routes/commentRoute.js";
 import uploadRoutes from "./routes/uploadRoutes.js";
 import cookieParser from "cookie-parser";
 import cors from "cors";
@@ -46,13 +47,16 @@ app.use(cookieParser());
 
 configurePassport(app);
 
+const API_PREFIX = "/api/v1";
+
 // Mount user routes
-app.use("/api/v1/users", userRoutes);
-app.use("/api/v1/countries", countryRoute);
-app.use("/api/v1/blogs", blogRoutes);
-app.use("/api/v1/categories", CategoryRoutes);
-app.use("/api/v1/tags", TagRoutes);
-app.use("/api/v1", uploadRoutes);
+app.use(`${API_PREFIX}/users`, userRoutes);
+app.use(`${API_PREFIX}/countries`, countryRoute);
+app.use(`${API_PREFIX}/blogs`, blogRoutes);
+app.use(`${API_PREFIX}/categories`, CategoryRoutes);
+app.use(`${API_PREFIX}/tags`, TagRoutes);
+app.use(`${API_PREFIX}/comments`, commentRoutes);
+app.use(`${API_PREFIX}`, uploadRoutes);
 
 // Handle 404 errors for non-existent routes
 app.use(notFound);

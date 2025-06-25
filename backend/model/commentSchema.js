@@ -19,7 +19,7 @@ const commentSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
-    parent: {
+    parentComment: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Comment",
       default: null,
@@ -31,20 +31,15 @@ const commentSchema = new mongoose.Schema(
         default: [],
       },
     ],
-    replies: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Comment", // Store references to replies to this comment
-        default: [],
-      },
-    ],
+    // replyTo is for UI/display purposes: mentions who the reply is aimed at
+    replyTo: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
     isEdited: {
       type: Boolean,
       default: false,
-    },
-    level: {
-      type: Number,
-      default: 0, // 0 for parent comments, 1 for first-level replies, 2 for second-level replies
     },
   },
   {

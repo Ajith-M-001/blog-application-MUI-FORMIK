@@ -31,16 +31,18 @@ const commentSchema = new mongoose.Schema(
         default: [],
       },
     ],
-    // replyTo is for UI/display purposes: mentions who the reply is aimed at
-    replyTo: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      default: null,
-    },
+    mentions: [
+      {
+        _id: false,
+        userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+        username: String,
+      },
+    ],
     isEdited: {
       type: Boolean,
       default: false,
     },
+    isPinned: { type: Boolean, default: false },
   },
   {
     timestamps: true,
@@ -48,7 +50,7 @@ const commentSchema = new mongoose.Schema(
 );
 
 // Indexing the blog and parent fields for faster lookups
-commentSchema.index({ parent: 1 });
+commentSchema.index({ parentComment: 1 });
 
 const Comment = mongoose.model("Comment", commentSchema);
 

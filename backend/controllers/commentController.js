@@ -11,7 +11,7 @@ const SORT_OPTIONS = {
 };
 
 export const addComment = asyncHandler(async (req, res, next) => {
-  const { content, blogId, parentCommentId, replyTo } = req.body;
+  const { content, blogId, parentCommentId, mentions } = req.body;
   const userId = req.user._id;
 
   if (!content || !blogId) {
@@ -46,26 +46,20 @@ export const addComment = asyncHandler(async (req, res, next) => {
     }
   }
 
-  if (replyTo) {
-    const user = await userModel.findById(replyTo);
-    if (!user) {
-      return res.status(404).json(ApiResponse.error("User not found"));
-    }
-  }
-
   const newComment = new Comment({
     content,
     blog: blogId,
     author: userId,
     parentComment: parentCommentId || null,
-    replyTo: replyTo || null,
   });
 
+  if (mentions) {
+    newComment.mentions = mentions;
+  }
   await newComment.save();
 
   const populatedComment = await Comment.findById(newComment._id)
     .populate("author", "name email avatar")
-    .populate("replyTo", "name")
     .populate("likes", "name");
 
   res
@@ -95,6 +89,19 @@ export const getCommentsForBlog = asyncHandler(async (req, res, next) => {
     return res.status(400).json(ApiResponse.error("Blog not found", 400));
   }
   const sortBy = SORT_OPTIONS[sortKey] || SORT_OPTIONS.top;
+  const com = await Comment.find()
+    .populate("author", "name username avatar username")
+    .populate("likes", "name")
+    .sort(sortBy)
+    .limit(limit);
 
-  return res.status(200).json({ message: blogId, sort: sortBy });
+  const comIds = com.map((c) => c._id);
+
+  const replies = await Comment.find({ parentComment: { $in: comIds } })
+    .populate("author", "name email avatar username")
+    .populate("likes", "name")
+    .sort({ createdAt: 1 }) // replies sorted oldest first
+    .lean();
+
+  return res.status(200).json({ com });
 });
